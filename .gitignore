@@ -1,6 +1,8 @@
 # Stuff
 /build
 /.vs
+/.idea
+/cmake-build-debug
 
 # Prerequisites
 *.d

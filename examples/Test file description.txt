@@ -1,0 +1,4 @@
+01 - Uncompressed 2D image, no mips, no layers, no cubemap
+02 - Uncompressed 2D image, mips, no layers, no cubemap
+03 - BC7 RGBA compressed 2D image, mips, no layers, no cubemap
+04 - BC3 RGBA compressed 2D image, mips, no layers, no cubemap

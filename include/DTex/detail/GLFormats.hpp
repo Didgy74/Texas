@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "../Typedefs.hpp"
+
 namespace DTex
 {
 	namespace detail
@@ -20,6 +22,10 @@ namespace DTex
 			constexpr auto GL_RGBA = 0x1908;
 
 			// BCn
+			constexpr auto GL_COMPRESSED_RGB_S3TC_DXT1_ANGLE = 0x83F0;
+			constexpr auto GL_COMPRESSED_RGBA_S3TC_DXT1_ANGLE = 0x83F1;
+			constexpr auto GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE = 0x83F2;
+			constexpr auto GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE = 0x83F3;
 			constexpr auto GL_COMPRESSED_RGBA_BPTC_UNORM = 0x8E8C;
 			constexpr auto GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM = 0x8E8D;
 		}
@@ -28,20 +34,12 @@ namespace DTex
 		{
 			constexpr auto GL_UNSIGNED_BYTE = 0x1401;
 		}
-	}
-}
 
-#include "../TextureDocument.hpp"
-
-namespace DTex
-{
-	namespace detail
-	{
-		constexpr uint32_t ToGLTarget(TextureDocument::Target target)
+		constexpr uint32_t ToGLTarget(Target target)
 		{
 			using namespace GLTextureTargets;
 
-			using T = TextureDocument::Target;
+			using T = Target;
 
 			switch (target)
 			{
@@ -56,11 +54,11 @@ namespace DTex
 			return 0;
 		}
 
-		constexpr uint32_t ToGLType(TextureDocument::Format format)
+		constexpr uint32_t ToGLType(Format format)
 		{
 			using namespace GLTypes;
 
-			using F = TextureDocument::Format;
+			using F = Format;
 
 			switch (format)
 			{
@@ -72,11 +70,11 @@ namespace DTex
 			return 0;
 		}
 
-		constexpr uint32_t ToGLFormat(TextureDocument::Format format)
+		constexpr uint32_t ToGLFormat(Format format)
 		{
 			using namespace GLFormats;
 
-			using F = TextureDocument::Format;
+			using F = Format;
 
 			switch (format)
 			{
@@ -87,6 +85,14 @@ namespace DTex
 				return GL_RGBA;
 
 				// BCn
+			case F::BC1_RGB_UNorm:
+				return GL_COMPRESSED_RGB_S3TC_DXT1_ANGLE;
+			case F::BC1_RGBA_UNorm:
+				return GL_COMPRESSED_RGBA_S3TC_DXT1_ANGLE;
+			case F::BC2_UNorm:
+				return GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE;
+			case F::BC3_UNorm:
+				return GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE;
 			case F::BC7_RGBA_Unorm:
 				return GL_COMPRESSED_RGBA_BPTC_UNORM;
 			case F::BC7_sRGB_Unorm:
@@ -96,15 +102,17 @@ namespace DTex
 			return 0;
 		}
 
-		constexpr TextureDocument::Format GLFormatAndGLTypeToFormat(uint32_t glFormat, uint32_t glType)
+		constexpr Format ToFormat(uint32_t glFormat, uint32_t glType, bool& isCompressedFormat)
 		{
 			using namespace GLFormats;
 			using namespace GLTypes;
 
-			using F = TextureDocument::Format;
+			using F = Format;
 
+			isCompressedFormat = false;
 			switch (glFormat)
 			{
+
 				// Standard
 			case GL_RGB:
 				switch (glType)
@@ -119,14 +127,36 @@ namespace DTex
 					return F::R8G8B8A8_UNorm;
 				}
 
+			}
+
+			isCompressedFormat = true;
+			switch (glFormat)
+			{
+
 				// BCn
+			case GL_COMPRESSED_RGB_S3TC_DXT1_ANGLE:
+				return F::BC1_RGB_UNorm;
+			case GL_COMPRESSED_RGBA_S3TC_DXT1_ANGLE:
+				return F::BC1_RGBA_UNorm;
+			case GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE:
+				return F::BC2_UNorm;
+			case GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE:
+				return F::BC3_UNorm;
 			case GL_COMPRESSED_RGBA_BPTC_UNORM:
 				return F::BC7_RGBA_Unorm;
 			case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
 				return F::BC7_sRGB_Unorm;
+
 			}
 
+			isCompressedFormat = false;
 			return F::Invalid;
+		}
+
+		constexpr Format ToFormat(uint32_t glFormat, uint32_t glType)
+		{
+			bool unusedBool{};
+			return ToFormat(glFormat, glType, unusedBool);
 		}
 	}
 }
