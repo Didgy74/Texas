@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(TextureLoader)
+project(DTex)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -16,6 +16,7 @@ target_include_directories(
 )
 
 # Compile example
+#set(COMPILE_EXAMPLES 1)
 if (${COMPILE_EXAMPLES})
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 	

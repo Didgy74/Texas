@@ -7,6 +7,7 @@
 #include <cassert>
 #include <array>
 #include <vector>
+#include <cstring>
 
 namespace DTex
 {
@@ -16,15 +17,20 @@ namespace DTex
 		enum class Target : uint32_t;
 		enum class Format : uint32_t;
 
+		struct DataInfo
+		{
+			size_t offset;
+			size_t byteLength;
+		};
 		struct CreateInfo;
 
 		TextureDocument() = delete;
 		TextureDocument(const TextureDocument&) = delete;
 		explicit TextureDocument(CreateInfo&&);
-		explicit TextureDocument(TextureDocument&&);
+		TextureDocument(TextureDocument&&) = default;
 
 		TextureDocument& operator=(const TextureDocument&) = delete;
-		TextureDocument& operator=(TextureDocument&&) = delete;
+		TextureDocument& operator=(TextureDocument&&) = default;
 
 		std::array<uint32_t, 3> GetDimensions(uint32_t mipLevel) const;
 		const std::byte* GetData(uint32_t mipLevel) const;
@@ -47,8 +53,8 @@ namespace DTex
 
 	private:
 		std::vector<std::byte> byteArray;
+		std::array<DataInfo, 16> mipMapDataInfo;
 		std::array<uint32_t, 3> baseDimensions{};
-		uint32_t imageByteLength{};
 		Target target{};
 		Format format{};
 		uint32_t mipLevels{};
@@ -75,8 +81,8 @@ namespace DTex
 	struct TextureDocument::CreateInfo
 	{
 		std::vector<std::byte> byteArray;
+		std::array<DataInfo, 16> mipMapDataInfo;
 		std::array<uint32_t, 3> baseDimensions{};
-		uint32_t imageByteLength{};
 		Target target{};
 		Format format{};
 		uint32_t mipLevels{};
@@ -111,9 +117,9 @@ namespace DTex
 	{
 		namespace KTX
 		{
-			constexpr std::array<char, 12> kTXIdentifier = { '«', 'K', 'T', 'X', ' ', '1', '1', '»', '\r', '\n', '\x1A', '\n' };
+			//std::array<uint_8_t, 12> kTXIdentifier = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
 
-			constexpr uint32_t correctEndian = 0x04030201;
+			//uint32_t correctEndian = 0x04030201;
 
 			struct Header
 			{
@@ -141,7 +147,7 @@ namespace DTex
 	{
 		std::ifstream file(path.data(), std::ios::binary);
 
-		assert(file.is_open());
+		//assert(file.is_open());
 
 		detail::KTX::Header head;
 
@@ -150,10 +156,10 @@ namespace DTex
 
 		file.read(head.identifier.data(), head.identifier.size());
 
-		assert(head.identifier == detail::KTX::kTXIdentifier);
+		//assert(head.identifier == detail::KTX::kTXIdentifier);
 
 		file.read(reinterpret_cast<char*>(&head.endianness), sizeof(head.endianness));
-		assert(head.endianness == detail::KTX::correctEndian);
+		//assert(head.endianness == detail::KTX::correctEndian);
 
 		file.read(reinterpret_cast<char*>(&head.glType), sizeof(head.glType));
 		
@@ -207,33 +213,50 @@ namespace DTex
 		}
 
 		// Loads all the image data
-		uint32_t imageByteLength;
-		file.read(reinterpret_cast<char*>(&imageByteLength), sizeof(imageByteLength));
+		std::vector<std::byte> imageData;
 
-		std::vector<std::byte> imageData(imageByteLength + sizeof(imageByteLength));
-		std::byte* ptr = imageData.data();
-		std::memcpy(ptr, &imageByteLength, sizeof(imageByteLength));
-		ptr += sizeof(imageByteLength);
+		std::streampos imageDataStart = file.tellg();
+		file.seekg(0, file.end);
+		std::streampos imageDataEnd = file.tellg();
 
-		file.read(reinterpret_cast<char*>(ptr), imageByteLength);
+		size_t imageDataByteLength = imageDataEnd - imageDataStart;
+		imageData.resize(imageDataByteLength);
+		
+		file.seekg(imageDataStart);
+
+		file.read(reinterpret_cast<char*>(imageData.data()), imageDataByteLength);
 
 		file.close();
 
 
 		// Converts loaded info to TexDoc
-
-		TextureDocument::CreateInfo createInfo;
+		TextureDocument::CreateInfo createInfo{};
 
 		createInfo.byteArray = std::move(imageData);
+
 		createInfo.baseDimensions = { head.pixelWidth, head.pixelHeight, head.pixelDepth };
-		createInfo.imageByteLength = imageByteLength;
 
 		createInfo.arrayLayers = head.numberOfArrayElements;
-		createInfo.mipLevels = head.numberOfMipmapLevels;
 
+		createInfo.mipLevels = head.numberOfMipmapLevels;
+		
 		createInfo.target = detail::ToTarget(createInfo.baseDimensions, createInfo.arrayLayers);
 
 		createInfo.format = detail::GLFormatAndGLTypeToFormat(head.glFormat, head.glType);
+
+
+		// Read DataInfo from the imageData buffer
+		const std::byte* ptr = createInfo.byteArray.data();
+		for (size_t i = 0; i < createInfo.mipLevels; i++)
+		{
+			uint32_t imageByteLength = *reinterpret_cast<const uint32_t*>(ptr);
+			size_t offset = ptr - createInfo.byteArray.data();
+
+			createInfo.mipMapDataInfo[i].byteLength = imageByteLength;
+			createInfo.mipMapDataInfo[i].offset = offset;
+
+			ptr += sizeof(imageByteLength) + imageByteLength + (offset % 4);
+		}
 
 		return std::optional<TextureDocument>{ std::move(createInfo) };
 	}
@@ -243,20 +266,23 @@ namespace DTex
 #ifdef DTEX_IMPLEMENTATION
 namespace DTex
 {
-	TextureDocument::TextureDocument(CreateInfo&& in) :
-		byteArray(std::move(in.byteArray)),
-		baseDimensions(in.baseDimensions),
-		imageByteLength(in.imageByteLength),
-		target(in.target),
-		format(in.format),
-		mipLevels(in.mipLevels),
-		arrayLayers(in.arrayLayers)
+	TextureDocument::TextureDocument(CreateInfo&& in)
 	{
+		byteArray = std::move(in.byteArray);
+		mipMapDataInfo = in.mipMapDataInfo;
+		baseDimensions = in.baseDimensions;
+		target = in.target;
+		format = in.format;
+		mipLevels = in.mipLevels;
+		arrayLayers = in.arrayLayers;
 	}
 
 	std::array<uint32_t, 3> TextureDocument::GetDimensions(uint32_t mipLevel) const
 	{
-		return baseDimensions;
+		std::array<uint32_t, 3> returnValue;
+		for (size_t dim = 0; dim < 3; dim++)
+			returnValue[dim] = uint32_t(baseDimensions[dim] / (std::pow(2, mipLevel)));
+		return returnValue;
 	}
 
 	const std::byte* TextureDocument::GetData(uint32_t mipLevel) const
@@ -266,12 +292,12 @@ namespace DTex
 
 	size_t TextureDocument::GetDataOffset(uint32_t mipLevel) const
 	{
-		return 4;
+		return mipMapDataInfo[mipLevel].offset;
 	}
 
 	uint32_t TextureDocument::GetByteLength(uint32_t mipLevel) const
 	{
-		return imageByteLength;
+		return uint32_t(mipMapDataInfo[mipLevel].byteLength);
 	}
 
 	TextureDocument::Target TextureDocument::GetTarget() const
@@ -307,6 +333,11 @@ namespace DTex
 	uint32_t TextureDocument::GetGLType() const
 	{
 		return detail::ToGLType(format);
+	}
+
+	uint32_t TextureDocument::GetGLTarget() const
+	{
+		return detail::ToGLTarget(target);
 	}
 }
 #endif
