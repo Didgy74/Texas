@@ -97,7 +97,7 @@ namespace DTex
 	}
 }
 
-//#ifdef DTEX_IMPLEMENTATION
+#ifdef DTEX_IMPLEMENTATION
 namespace DTex
 {
 	TextureDocument::TextureDocument(CreateInfo&& in)
@@ -180,4 +180,4 @@ namespace DTex
 		return detail::ToVkFormat(format);
 	}
 }
-//#endif
+#endif

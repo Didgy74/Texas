@@ -12,7 +12,7 @@ namespace DTex
 	std::optional<TexDoc> LoadFromFile(std::string_view path);
 }
 
-//#ifdef DTEX_IMPLEMENTATION
+#ifdef DTEX_IMPLEMENTATION
 namespace DTex
 {
 	std::optional<TexDoc> LoadFromFile(std::string_view path)
@@ -134,4 +134,4 @@ namespace DTex
 		return std::optional<TextureDocument>{ std::move(createInfo) };
 	}
 }
-//#endif
+#endif
