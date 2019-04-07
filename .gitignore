@@ -1,3 +1,7 @@
+# Stuff
+/build
+/.vs
+
 # Prerequisites
 *.d
 
