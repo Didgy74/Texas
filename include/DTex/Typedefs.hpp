@@ -2,14 +2,23 @@
 
 namespace DTex
 {
+	enum class ResultInfo : uint32_t;
 	enum class Format : uint32_t;
-	enum class Target : uint32_t;
-
+	enum class Type : uint32_t;
+	
 	class TextureDocument;
 	using TexDoc = TextureDocument;
 }
 
-enum class DTex::Target : uint32_t
+enum class DTex::ResultInfo : uint32_t
+{
+	Success,
+	CouldNotLoadFile,
+	CorruptFileData,
+	FileNotSupported
+};
+
+enum class DTex::Type : uint32_t
 {
 	Invalid,
 	Texture1D,
@@ -40,6 +49,6 @@ enum class DTex::Format : uint32_t
 	BC5_SNorm,
 	BC6H_UFloat,
 	BC6H_SFloat,
-	BC7_RGBA_Unorm,
-	BC7_sRGB_Unorm,
+	BC7_UNorm,
+	BC7_sRGB,
 };

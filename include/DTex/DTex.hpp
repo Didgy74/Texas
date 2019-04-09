@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include "detail/KTX.hpp"
+#include "detail/GLFormats.hpp"
 
 #include "TextureDocument.hpp"
 
@@ -19,18 +20,20 @@ namespace DTex
 	{
 		std::ifstream file(path.data(), std::ios::binary);
 
-		assert(file.is_open());
+		if (!file.is_open())
+			return {};
 
 		detail::KTX::Header head{};
-
 
 		// Loads all header data.
 
 		file.read(reinterpret_cast<char*>(head.identifier.data()), head.identifier.size());
-		assert(head.identifier == detail::KTX::kTXIdentifier);
+		if (head.identifier != detail::KTX::kTXIdentifier)
+			return {};
 
 		file.read(reinterpret_cast<char*>(&head.endianness), sizeof(head.endianness));
-		assert(head.endianness == detail::KTX::correctEndian);
+		if (head.endianness != detail::KTX::correctEndian)
+			return {};
 
 		file.read(reinterpret_cast<char*>(&head.glType), sizeof(head.glType));
 
@@ -53,9 +56,12 @@ namespace DTex
 		file.read(reinterpret_cast<char*>(&head.numberOfFaces), sizeof(head.numberOfFaces));
 
 		file.read(reinterpret_cast<char*>(&head.numberOfMipmapLevels), sizeof(head.numberOfMipmapLevels));
+		if (head.numberOfMipmapLevels <= 0)
+			return {};
 
 		file.read(reinterpret_cast<char*>(&head.bytesOfKeyValueData), sizeof(head.bytesOfKeyValueData));
-
+		if (file.eof())
+			return {};
 
 		// Load KeyValuePair. Currently doesn't do anything.
 		struct KeyValuePair
@@ -111,24 +117,25 @@ namespace DTex
 
 		createInfo.mipLevels = head.numberOfMipmapLevels;
 
-		createInfo.target = detail::ToTarget(createInfo.baseDimensions, createInfo.arrayLayers);
+		createInfo.type = detail::ToType(createInfo.baseDimensions, createInfo.arrayLayers);
 
-		bool isCompressed;
+		bool isCompressed = false;
 		createInfo.format = detail::ToFormat(head.glInternalFormat, head.glType, isCompressed);
 		
 		createInfo.isCompressed = isCompressed;
 
 		// Read DataInfo from the imageData buffer
-		const std::byte * ptr = createInfo.byteArray.data();
+		size_t index = 0;
 		for (size_t i = 0; i < createInfo.mipLevels; i++)
 		{
-			uint32_t imageByteLength = *reinterpret_cast<const uint32_t*>(ptr);
-			size_t offset = ptr - createInfo.byteArray.data();
+			uint32_t imageByteLength = *reinterpret_cast<const uint32_t*>(&createInfo.byteArray.at(index));
+			index += sizeof(imageByteLength);
 
 			createInfo.mipMapDataInfo[i].byteLength = imageByteLength;
-			createInfo.mipMapDataInfo[i].offset = offset;
+			createInfo.mipMapDataInfo[i].offset = index;
 
-			ptr += sizeof(imageByteLength) + imageByteLength + (offset % 4);
+			size_t padding = (index % 4);
+			index += imageByteLength + padding;
 		}
 
 		return std::optional<TextureDocument>{ std::move(createInfo) };

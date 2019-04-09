@@ -8,6 +8,32 @@ namespace DTex
 {
 	namespace detail
 	{
+		namespace VkImageTypes
+		{
+			constexpr auto VK_IMAGE_TYPE_1D = 0;
+			constexpr auto VK_IMAGE_TYPE_2D = 1;
+			constexpr auto VK_IMAGE_TYPE_3D = 2;
+		}
+
+		constexpr uint32_t ToVkImageType(Type type)
+		{
+			using namespace VkImageTypes;
+
+			using T = Type;
+
+			switch (type)
+			{
+			case T::Texture1D:
+				return VK_IMAGE_TYPE_1D;
+			case T::Texture2D:
+				return VK_IMAGE_TYPE_2D;
+			case T::Texture3D:
+				return VK_IMAGE_TYPE_3D;
+			}
+
+			return static_cast<uint32_t>(-1);
+		}
+
 		namespace VkFormats
 		{
 			constexpr auto VK_FORMAT_UNDEFINED = 0;
@@ -56,9 +82,37 @@ namespace DTex
 
 
 			// BCn
-			case F::BC7_RGBA_Unorm:
+			case F::BC1_RGB_UNorm:
+				return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+			case F::BC1_RGB_sRGB:
+				return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+			case F::BC1_RGBA_UNorm:
+				return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+			case F::BC1_RGBA_sRGB:
+				return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
+			case F::BC2_UNorm:
+				return VK_FORMAT_BC2_UNORM_BLOCK;
+			case F::BC2_sRGB:
+				return VK_FORMAT_BC2_SRGB_BLOCK;
+			case F::BC3_UNorm:
+				return VK_FORMAT_BC3_UNORM_BLOCK;
+			case F::BC3_sRGB:
+				return VK_FORMAT_BC3_SRGB_BLOCK;
+			case F::BC4_UNorm:
+				return VK_FORMAT_BC4_UNORM_BLOCK;
+			case F::BC4_SNorm:
+				return VK_FORMAT_BC4_SNORM_BLOCK;
+			case F::BC5_UNorm:
+				return VK_FORMAT_BC5_UNORM_BLOCK;
+			case F::BC5_SNorm:
+				return VK_FORMAT_BC5_SNORM_BLOCK;
+			case F::BC6H_UFloat:
+				return VK_FORMAT_BC6H_UFLOAT_BLOCK;
+			case F::BC6H_SFloat:
+				return VK_FORMAT_BC6H_SFLOAT_BLOCK;
+			case F::BC7_UNorm:
 				return VK_FORMAT_BC7_UNORM_BLOCK;
-			case F::BC7_sRGB_Unorm:
+			case F::BC7_sRGB:
 				return VK_FORMAT_BC7_SRGB_BLOCK;
 			}
 
