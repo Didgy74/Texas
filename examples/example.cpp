@@ -1,6 +1,7 @@
 
-#define DTEX_IMPLEMENTATION
 #include "DTex/DTex.hpp"
+#include "DTex/VkFormats.hpp"
+#include "DTex/GLFormats.hpp"
 
 #include <iostream>
 
@@ -20,7 +21,7 @@ int main()
 	std::cout << "Loaded file '" << path << "' succesfully." << std::endl;
 	
 	auto baseDimensions = texDoc.GetDimensions(0);
-	std::cout << "Base dimensions are " << baseDimensions[0] << " x " << baseDimensions[1] << " x " << baseDimensions[2] << "." << std::endl;
+	std::cout << "Base dimensions are " << baseDimensions.width << " x " << baseDimensions.height << " x " << baseDimensions.depth << "." << std::endl;
 
 	if (texDoc.IsCompressed())
 		std::cout << "The loaded image uses a compressed pixel format." << std::endl;
@@ -29,11 +30,20 @@ int main()
 
 	std::cout << "TextureDocument's internal buffer contains " << texDoc.GetInternalBufferSize() << " bytes of data." << std::endl;
 
-	if (texDoc.GetGLFormat() == DTex::detail::ToGLFormat(DTex::Format::BC7_UNorm))
-		std::cout << "TextureDocument's OpenGL image format is GL_COMPRESSED_RGBA_BPTC_UNORM." << std::endl;
+	std::cout << std::endl << std::endl;
+	std::cout << "OpenGL info:" << std::endl;
 
-	if (texDoc.GetVkFormat() == DTex::detail::ToVkFormat(DTex::Format::BC7_UNorm))
-		std::cout << "TextureDocument's Vulkan format is VK_FORMAT_BC7_UNORM_BLOCK." << std::endl;
+	if (DTex::ToGLFormat(texDoc.GetPixelFormat()) == DTex::ToGLFormat(DTex::PixelFormat::BC7_UNorm))
+		std::cout << "Image format is GL_COMPRESSED_RGBA_BPTC_UNORM." << std::endl;
+
+	std::cout << std::endl << std::endl;
+	std::cout << "Vulkan info:" << std::endl;
+
+	if (DTex::ToVkFormat(texDoc.GetPixelFormat()) == DTex::ToVkFormat(DTex::PixelFormat::BC7_UNorm))
+		std::cout << "Format is VK_FORMAT_BC7_UNORM_BLOCK." << std::endl;
+
+	if (DTex::ToVkImageType(texDoc.GetTextureType()) == DTex::ToVkImageType(DTex::TextureType::Texture2D))
+		std::cout << "ImageType is VK_IMAGE_TYPE_2D" << std::endl;
 
 
 	return 0;

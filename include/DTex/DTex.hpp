@@ -4,19 +4,14 @@
 #include <string_view>
 
 #include "detail/KTX.hpp"
-#include "detail/GLFormats.hpp"
+#include "GLFormats.hpp"
 
 #include "TextureDocument.hpp"
 
-namespace DTex
-{
-	std::optional<TexDoc> LoadFromFile(std::string_view path);
-}
 
-#ifdef DTEX_IMPLEMENTATION
 namespace DTex
 {
-	std::optional<TexDoc> LoadFromFile(std::string_view path)
+	inline std::optional<TexDoc> LoadFromFile(std::string_view path)
 	{
 		std::ifstream file(path.data(), std::ios::binary);
 
@@ -117,10 +112,10 @@ namespace DTex
 
 		createInfo.mipLevels = head.numberOfMipmapLevels;
 
-		createInfo.type = detail::ToType(createInfo.baseDimensions, createInfo.arrayLayers);
+		createInfo.type = ToTextureType(createInfo.baseDimensions, createInfo.arrayLayers);
 
 		bool isCompressed = false;
-		createInfo.format = detail::ToFormat(head.glInternalFormat, head.glType, isCompressed);
+		createInfo.format = ToFormat(head.glInternalFormat, head.glType, isCompressed);
 		
 		createInfo.isCompressed = isCompressed;
 
@@ -141,4 +136,3 @@ namespace DTex
 		return std::optional<TextureDocument>{ std::move(createInfo) };
 	}
 }
-#endif
