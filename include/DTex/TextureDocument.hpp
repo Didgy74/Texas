@@ -26,11 +26,11 @@ namespace DTex
 
 		TextureDocument() = delete;
 		TextureDocument(const TextureDocument&) = delete;
+		TextureDocument(TextureDocument&&) = default;
 		explicit TextureDocument(CreateInfo&&);
-		explicit TextureDocument(TextureDocument&&) = default;
 
 		TextureDocument& operator=(const TextureDocument&) = delete;
-		TextureDocument& operator=(TextureDocument&&) = default;
+		TextureDocument& operator=(TextureDocument&&) = delete;
 
 		/*
 			Returns the dimensions of the mipmap at the specified miplevel.
@@ -75,8 +75,8 @@ namespace DTex
 		std::vector<std::byte> byteArray;
 		std::array<DataInfo, 16> mipMapDataInfo;
 		Dimensions baseDimensions{};
-		TextureType type{};
-		PixelFormat format{};
+		TextureType textureType{};
+		PixelFormat pixelFormat{};
 		bool isCompressed{};
 		uint32_t mipLevels{};
 		uint32_t arrayLayers{};
@@ -87,8 +87,8 @@ namespace DTex
 		std::vector<std::byte> byteArray;
 		std::array<DataInfo, 16> mipMapDataInfo;
 		Dimensions baseDimensions{};
-		TextureType type{};
-		PixelFormat format{};
+		TextureType textureType{};
+		PixelFormat pixelFormat{};
 		bool isCompressed{};
 		uint32_t mipLevels{};
 		uint32_t arrayLayers{};
@@ -105,8 +105,8 @@ namespace DTex
 		byteArray = std::move(in.byteArray);
 		mipMapDataInfo = in.mipMapDataInfo;
 		baseDimensions = in.baseDimensions;
-		type = in.type;
-		format = in.format;
+		textureType = in.textureType;
+		pixelFormat = in.pixelFormat;
 		isCompressed = in.isCompressed;
 		mipLevels = in.mipLevels;
 		arrayLayers = in.arrayLayers;
@@ -142,12 +142,12 @@ namespace DTex
 
 	inline TextureType TextureDocument::GetTextureType() const
 	{
-		return type;
+		return textureType;
 	}
 
 	inline PixelFormat TextureDocument::GetPixelFormat() const
 	{
-		return format;
+		return pixelFormat;
 	}
 
 	inline bool TextureDocument::IsCompressed() const

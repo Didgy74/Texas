@@ -5,7 +5,7 @@
 
 namespace DTex
 {
-	enum class ResultInfo : uint32_t;
+	enum class ResultInfo : uint32_t;	
 	enum class PixelFormat : uint32_t;
 	enum class TextureType : uint32_t;
 	
@@ -20,9 +20,10 @@ namespace DTex
 enum class DTex::ResultInfo : uint32_t
 {
 	Success,
-	CouldNotLoadFile,
+	CouldNotReadFile,
 	CorruptFileData,
-	FileNotSupported
+	FileNotSupported,
+	PixelFormatNotSupported,
 };
 
 enum class DTex::TextureType : uint32_t

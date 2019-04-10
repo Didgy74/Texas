@@ -63,11 +63,15 @@ ETC and ASTC support is planned.
 #include "DTex/DTex.hpp"
 #include "DTex/GLFormats.hpp"
 
-auto texDocOpt = DTex::LoadFromFile("Data/Textures/02.ktx");
-if (texDocOpt.has_value() == false)
-	std::cout << "Error. Could not load file!" << std::endl;
+auto loadResult = DTex::LoadFromFile("Data/Textures/02.ktx");
 
-auto& texDoc = texDocOpt.value();
+if (loadResult.GetResultInfo() != DTex::ResultInfo::Success)
+{
+	// Could not load file. Do error handling.
+	return;
+}
+
+auto& texDoc = loadResult.GetValue();
 
 GLuint textureHandle;
 

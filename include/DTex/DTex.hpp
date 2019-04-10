@@ -2,21 +2,26 @@
 
 #include <optional>
 #include <string_view>
+#include <variant>
 
 #include "detail/KTX.hpp"
+
 #include "GLFormats.hpp"
+
+#include "LoadResult.hpp"
 
 #include "TextureDocument.hpp"
 
-
 namespace DTex
 {
-	inline std::optional<TexDoc> LoadFromFile(std::string_view path)
+	inline LoadResult<TextureDocument> LoadFromFile(std::string_view path)
 	{
+		using ReturnType = LoadResult<TextureDocument>;
+
 		std::ifstream file(path.data(), std::ios::binary);
 
 		if (!file.is_open())
-			return {};
+			return ReturnType{ ResultInfo::CouldNotReadFile };
 
 		detail::KTX::Header head{};
 
@@ -24,11 +29,11 @@ namespace DTex
 
 		file.read(reinterpret_cast<char*>(head.identifier.data()), head.identifier.size());
 		if (head.identifier != detail::KTX::kTXIdentifier)
-			return {};
+			return ReturnType{ ResultInfo::CorruptFileData };
 
 		file.read(reinterpret_cast<char*>(&head.endianness), sizeof(head.endianness));
 		if (head.endianness != detail::KTX::correctEndian)
-			return {};
+			return ReturnType{ ResultInfo::CorruptFileData };
 
 		file.read(reinterpret_cast<char*>(&head.glType), sizeof(head.glType));
 
@@ -52,11 +57,11 @@ namespace DTex
 
 		file.read(reinterpret_cast<char*>(&head.numberOfMipmapLevels), sizeof(head.numberOfMipmapLevels));
 		if (head.numberOfMipmapLevels <= 0)
-			return {};
+			return ReturnType{ ResultInfo::FileNotSupported };
 
 		file.read(reinterpret_cast<char*>(&head.bytesOfKeyValueData), sizeof(head.bytesOfKeyValueData));
 		if (file.eof())
-			return {};
+			return ReturnType{ ResultInfo::CorruptFileData };
 
 		// Load KeyValuePair. Currently doesn't do anything.
 		struct KeyValuePair
@@ -112,11 +117,13 @@ namespace DTex
 
 		createInfo.mipLevels = head.numberOfMipmapLevels;
 
-		createInfo.type = ToTextureType(createInfo.baseDimensions, createInfo.arrayLayers);
+		createInfo.textureType = ToTextureType(createInfo.baseDimensions, createInfo.arrayLayers);
 
 		bool isCompressed = false;
-		createInfo.format = ToFormat(head.glInternalFormat, head.glType, isCompressed);
-		
+		createInfo.pixelFormat = ToFormat(head.glInternalFormat, head.glType, isCompressed);
+		if (createInfo.pixelFormat == PixelFormat::Invalid)
+			return ReturnType{ ResultInfo::PixelFormatNotSupported };
+
 		createInfo.isCompressed = isCompressed;
 
 		// Read DataInfo from the imageData buffer
@@ -129,10 +136,10 @@ namespace DTex
 			createInfo.mipMapDataInfo[i].byteLength = imageByteLength;
 			createInfo.mipMapDataInfo[i].offset = index;
 
-			size_t padding = (index % 4);
+			size_t padding = ((index + 4) % 4);
 			index += imageByteLength + padding;
 		}
 
-		return std::optional<TextureDocument>{ std::move(createInfo) };
+		return ReturnType{ TextureDocument{ std::move(createInfo) } };
 	}
 }
