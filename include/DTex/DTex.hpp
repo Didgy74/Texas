@@ -96,7 +96,7 @@ namespace DTex
 		file.seekg(0, std::ifstream::end);
 		std::streampos imageDataEnd = file.tellg();
 
-		size_t imageDataByteLength = imageDataEnd - imageDataStart;
+		size_t imageDataByteLength = size_t(imageDataEnd - imageDataStart);
 		imageData.resize(imageDataByteLength);
 
 		file.seekg(imageDataStart);
@@ -130,7 +130,13 @@ namespace DTex
 		size_t index = 0;
 		for (size_t i = 0; i < createInfo.mipLevels; i++)
 		{
+			if (index > createInfo.byteArray.size() - sizeof(uint32_t))
+				return ReturnType{ ResultInfo::CorruptFileData };
+
 			uint32_t imageByteLength = *reinterpret_cast<const uint32_t*>(&createInfo.byteArray.at(index));
+			if (imageByteLength > createInfo.byteArray.size() - index)
+				return ReturnType{ ResultInfo::CorruptFileData };
+
 			index += sizeof(imageByteLength);
 
 			createInfo.mipMapDataInfo[i].byteLength = imageByteLength;
