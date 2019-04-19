@@ -14,6 +14,9 @@ namespace DTex
 	class TextureDocument;
 	using TexDoc = TextureDocument;
 
+	template<typename T>
+	class LoadResult;
+
 	inline constexpr TextureType ToTextureType(Dimensions dimensions, uint32_t arrayLayers);
 }
 

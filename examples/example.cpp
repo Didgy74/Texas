@@ -7,16 +7,16 @@
 
 int main()
 {
-	auto path = "resources/02.ktx";
-	auto texDocOpt = DTex::LoadFromFile(path);
+	auto path = "resources/test.png";
+	auto loadResult = DTex::LoadFromFile(path);
 
-	if (!texDocOpt.has_value())
+	if (loadResult.GetResultInfo() != DTex::ResultInfo::Success)
 	{
 		std::cout << "Failed to load file '" << path << "'. Terminating.." << std::endl;
 		std::exit(0);
 	}
 
-	auto& texDoc = texDocOpt.value();
+	auto& texDoc = loadResult.GetValue();
 
 	std::cout << "Loaded file '" << path << "' succesfully." << std::endl;
 	
