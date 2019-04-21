@@ -5,18 +5,48 @@
 
 #include <iostream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 int main()
 {
-	auto path = "resources/test.png";
+    auto path = "resources/test.png";
+
+	int x;
+	int y;
+	int comps;
+	auto img = stbi_load(path, &x, &y, &comps, 4);
+
+	
+
 	auto loadResult = DTex::LoadFromFile(path);
+
+	if (loadResult.GetResultInfo() != DTex::ResultInfo::Success)
+	{
+		std::cout << loadResult.GetErrorMessage() << std::endl;
+		std::exit(0);
+	}
+
+	auto& texDoc = loadResult.GetValue();
+
+	for (size_t i = 0; i < texDoc.GetDataSize(0); i++)
+	{
+		if (texDoc.GetInternalBuffer()[i] != img[i])
+		{
+			std::cout << "NO: " << std::to_string(i) << std::endl;
+			std::cout << "STBI: " << std::to_string(img[i]) << std::endl;
+			std::cout << "DTex: " << std::to_string(texDoc.GetInternalBuffer()[i]) << std::endl;
+			std::exit(0);
+		}
+	}
+
+	stbi_image_free(img);
 
 	if (loadResult.GetResultInfo() != DTex::ResultInfo::Success)
 	{
 		std::cout << "Failed to load file '" << path << "'. Terminating.." << std::endl;
 		std::exit(0);
 	}
-
-	auto& texDoc = loadResult.GetValue();
 
 	std::cout << "Loaded file '" << path << "' succesfully." << std::endl;
 	

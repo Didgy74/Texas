@@ -15,6 +15,16 @@ target_include_directories(
     $<INSTALL_INTERFACE:include>
 )
 
+file(GLOB_RECURSE SOURCE_FILES 
+"${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl"
+"${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+"${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+)
+
+target_sources(${LIB_NAME} INTERFACE ${SOURCE_FILES})
+
 # Compile example
 set(COMPILE_EXAMPLES 1)
 if (${COMPILE_EXAMPLES})

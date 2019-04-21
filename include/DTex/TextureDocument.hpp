@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <fstream>
@@ -42,7 +43,7 @@ namespace DTex
 			Returns a pointer to the texture-data at the specified miplevel.
 			Use miplevel 0 for base-texture.
 		*/
-		const std::byte* GetData(uint32_t mipLevel) const;
+		const uint8_t* GetData(uint32_t mipLevel) const;
 
 		/*
 			Returns buffer-size of texture at specified miplevel.
@@ -55,7 +56,7 @@ namespace DTex
 			Returns a pointer to the first element in the internal buffer.
 			Mipmaps may or may not be stored contiguously in this buffer.
 		*/
-		const std::byte* GetInternalBuffer() const;
+		const uint8_t* GetInternalBuffer() const;
 
 		/*
 			Returns the total byte size of the internal buffer.
@@ -72,7 +73,7 @@ namespace DTex
 
 
 	private:
-		std::vector<std::byte> byteArray;
+		std::vector<uint8_t> byteArray;
 		std::array<DataInfo, 16> mipMapDataInfo;
 		Dimensions baseDimensions{};
 		TextureType textureType{};
@@ -84,7 +85,7 @@ namespace DTex
 
 	struct TextureDocument::CreateInfo
 	{
-		std::vector<std::byte> byteArray;
+		std::vector<uint8_t> byteArray;
 		std::array<DataInfo, 16> mipMapDataInfo;
 		Dimensions baseDimensions{};
 		TextureType textureType{};
@@ -95,73 +96,4 @@ namespace DTex
 	};
 
 	using TexDoc = TextureDocument;
-}
-
-
-namespace DTex
-{
-	inline TextureDocument::TextureDocument(CreateInfo&& in)
-	{
-		byteArray = std::move(in.byteArray);
-		mipMapDataInfo = in.mipMapDataInfo;
-		baseDimensions = in.baseDimensions;
-		textureType = in.textureType;
-		pixelFormat = in.pixelFormat;
-		isCompressed = in.isCompressed;
-		mipLevels = in.mipLevels;
-		arrayLayers = in.arrayLayers;
-	}
-
-	inline Dimensions TextureDocument::GetDimensions(uint32_t mipLevel) const
-	{
-		Dimensions returnValue;
-		for (size_t dim = 0; dim < 3; dim++)
-			returnValue[dim] = uint32_t(baseDimensions[dim] / (std::pow(2, mipLevel)));
-		return returnValue;
-	}
-
-	inline const std::byte* TextureDocument::GetData(uint32_t mipLevel) const
-	{
-		return byteArray.data() + mipMapDataInfo[mipLevel].offset;
-	}
-
-	inline uint32_t TextureDocument::GetDataSize(uint32_t mipLevel) const
-	{
-		return uint32_t(mipMapDataInfo[mipLevel].byteLength);
-	}
-
-	inline const std::byte* TextureDocument::GetInternalBuffer() const
-	{
-		return byteArray.data();
-	}
-
-	inline size_t TextureDocument::GetInternalBufferSize() const
-	{
-		return byteArray.size();
-	}
-
-	inline TextureType TextureDocument::GetTextureType() const
-	{
-		return textureType;
-	}
-
-	inline PixelFormat TextureDocument::GetPixelFormat() const
-	{
-		return pixelFormat;
-	}
-
-	inline bool TextureDocument::IsCompressed() const
-	{
-		return isCompressed;
-	}
-
-	inline uint32_t TextureDocument::GetArrayLayers() const
-	{
-		return arrayLayers;
-	}
-
-	inline uint32_t TextureDocument::GetMipLevels() const
-	{
-		return mipLevels;
-	}
 }
