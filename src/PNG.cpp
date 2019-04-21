@@ -10,7 +10,11 @@ namespace DTex
 	{
 		namespace PNG
 		{
+			constexpr uint8_t GetPixelWidth(uint8_t colorType, uint8_t bitDepth);
+			bool DecompressIDATs(std::vector<uint8_t>& fileStream, size_t& streamPos, std::vector<uint8_t>& uncompressedData);
 			uint8_t PaethPredictor(uint8_t a, uint8_t b, uint8_t c);
+
+			constexpr PixelFormat ToPixelFormat(uint8_t colorType, uint8_t bitDepth);
 
 			LoadResult<TextureDocument> LoadPNG(std::filesystem::path path)
 			{
@@ -31,23 +35,22 @@ namespace DTex
 				auto imageDataStart = file.tellg();
 				file.seekg(0, std::ifstream::end);
 				auto imageDataEnd = file.tellg();
-
-				std::vector<uint8_t> fileData;
-				fileData.resize(size_t(imageDataEnd - imageDataStart));
+				
+				size_t restOfFileSize = size_t(imageDataEnd - imageDataStart);
+				if (restOfFileSize <= PNG::IHDRChunkSize)
+					return ReturnType(ResultInfo::CorruptFileData, "Reached premature end-of-file when loading header data.");
+				std::vector<uint8_t> fileData(restOfFileSize);
 
 				file.seekg(imageDataStart);
-
 				file.read(reinterpret_cast<char*>(fileData.data()), fileData.size());
 				file.close();
 
 				size_t streamPos = 0;
 
-				// First chunk length must be always 13. No need to check
+				// First chunk length must be always 13. Add validation here.
 				streamPos += sizeof(uint32_t);
-
-				std::array<char, 4> chunkType1{};
-				std::memcpy(chunkType1.data(), &fileData[streamPos], sizeof(chunkType1));
-				streamPos += sizeof(chunkType1);
+				// First chunk type must always be IHDR. Add validation here.
+				streamPos += sizeof(uint32_t);
 
 				uint32_t imageWidth = (fileData[streamPos + 3] << 0) | (fileData[streamPos + 2] << 8) | (fileData[streamPos + 1] << 16) | (fileData[streamPos + 0] << 24);
 				streamPos += sizeof(imageWidth);
@@ -88,52 +91,36 @@ namespace DTex
 				// Skip CRC
 				streamPos += sizeof(uint32_t);
 
-				uint8_t* dataPtr = nullptr;
-				uint32_t dataLength = 0;
-				while (true)
+				size_t pixelByteLength = PNG::GetPixelWidth(colorType, bitDepth);
+				if (pixelByteLength == 0)
+					return ReturnType(ResultInfo::CorruptFileData, "PNG has invalid combination of color-type and bit-depth.");
+
+				// We use +imageheight to take account into the filteringType at the start of every scanline
+				std::vector<uint8_t> uncompressed(imageHeight * imageWidth * pixelByteLength + imageHeight);
+
+				while (streamPos <= fileData.size() - PNG::minimumChunkSize)
 				{
 					uint32_t chunkLength = (fileData[streamPos + 3] << 0) | (fileData[streamPos + 2] << 8) | (fileData[streamPos + 1] << 16) | (fileData[streamPos + 0] << 24);
 					streamPos += sizeof(chunkLength);
 
-					std::array<char, 4> chunkType{};
-					std::memcpy(chunkType.data(), &fileData[streamPos], sizeof(chunkType));
-					streamPos += sizeof(chunkType);
-					if (std::string_view(chunkType.data(), 4) == "IDAT")
+					if (std::string_view(reinterpret_cast<char*>(&fileData[streamPos]), 4) == "IDAT")
 					{
-						dataPtr = &fileData[streamPos];
-						dataLength = chunkLength;
+						// Process IDAT chunks
+						streamPos -= sizeof(chunkLength);
+						bool success = DecompressIDATs(fileData, streamPos, uncompressed);
+						if (success == false)
+							return ReturnType(ResultInfo::CorruptFileData, "Could not decompress PNG filestream.");
+					}
+					else
+					{
+						// Skip chunk type
+						streamPos += 4;
+
 						streamPos += chunkLength;
 						// Skip CRC
 						streamPos += 4;
-						break;
 					}
-
-					streamPos += chunkLength;
-					// Skip CRC
-					streamPos += 4;
 				}
-
-				size_t pixelByteLength = 4;
-
-				// We use + imageheight to take account into the filteringType at the start of every scanline
-				std::vector<uint8_t> uncompressed(imageHeight * imageWidth * pixelByteLength + imageHeight);
-
-				z_stream zLibDecompressJob{};
-				zLibDecompressJob.next_in = (Bytef*)dataPtr;
-				zLibDecompressJob.next_out = (Bytef*)uncompressed.data();
-				zLibDecompressJob.avail_in = dataLength;
-				zLibDecompressJob.avail_out = uInt(uncompressed.size());
-
-				auto test = inflateInit(&zLibDecompressJob);
-
-				constexpr auto ok = Z_OK;
-				assert(test == ok);
-				auto err = inflate(&zLibDecompressJob, Z_FINISH);
-				constexpr auto streamend = Z_STREAM_END;
-				assert(err == Z_STREAM_END);
-				std::string errorMessage = zError(err);
-				inflateEnd(&zLibDecompressJob);
-
 
 				// UNFILTERING
 
@@ -252,7 +239,9 @@ namespace DTex
 				TexDoc::CreateInfo createInfo;
 				createInfo.byteArray = std::move(unfiltered);
 				createInfo.baseDimensions = { imageWidth, imageHeight, 1 };
-				createInfo.pixelFormat = PixelFormat::R8G8B8A8_UNorm;
+				createInfo.pixelFormat = ToPixelFormat(colorType, bitDepth);
+				if (createInfo.pixelFormat == PixelFormat::Invalid)
+					return ReturnType(ResultInfo::PixelFormatNotSupported, "Loader limitation: Can't load PNG of colorType " + std::to_string(colorType) + "and bitdepth " + std::to_string(bitDepth));
 				createInfo.mipMapDataInfo[0].offset = 0;
 				createInfo.mipMapDataInfo[0].byteLength = createInfo.byteArray.size();
 
@@ -265,13 +254,159 @@ namespace DTex
 				return ReturnType(TexDoc(std::move(createInfo)));
 			}
 
+			constexpr uint8_t GetPixelWidth(uint8_t colorType, uint8_t bitDepth)
+			{
+				constexpr auto greyscale = 0;
+				constexpr auto truecolor = 2;
+				constexpr auto indexedColor = 3;
+				constexpr auto greyscaleWithAlpha = 4;
+				constexpr auto trueColorWithAlpha = 6;
+
+				switch (colorType)
+				{
+				case greyscale:
+					switch (bitDepth)
+					{
+					case 1:
+					case 2:
+					case 4:
+					case 8:
+						return sizeof(uint8_t);
+					case 16:
+						return sizeof(uint16_t);
+					}
+				case truecolor:
+					switch (bitDepth)
+					{
+					case 8:
+						return sizeof(uint8_t) * 3;
+					case 16:
+						return sizeof(uint16_t) * 3;
+					}
+				case indexedColor:
+					switch (bitDepth)
+					{
+					case 1:
+					case 2:
+					case 4:
+					case 8:
+						return sizeof(uint8_t);
+					}
+				case greyscaleWithAlpha:
+					switch (bitDepth)
+					{
+					case 8:
+						return sizeof(uint8_t) * 2;
+					case 16:
+						return sizeof(uint16_t) * 2;
+					}
+				case trueColorWithAlpha:
+					switch (bitDepth)
+					{
+					case 8:
+						return sizeof(uint8_t) * 4;
+					case 16:
+						return sizeof(uint16_t) * 4;
+					}
+				default:
+					return 0;
+				}
+			}
+
+			bool DecompressIDATs(std::vector<uint8_t>& fileStream, size_t& streamPos, std::vector<uint8_t>& uncompressedData)
+			{
+				z_stream zLibDecompressJob{};
+				zLibDecompressJob.next_out = (Bytef*)uncompressedData.data();
+				zLibDecompressJob.avail_out = (uInt)uncompressedData.size();
+
+				auto initErr = inflateInit(&zLibDecompressJob);
+				if (initErr != Z_OK)
+				{
+					inflateEnd(&zLibDecompressJob);
+					return false;
+				}
+
+				while (streamPos <= fileStream.size() - PNG::minimumChunkSize)
+				{
+					uint32_t chunkLength = (fileStream[streamPos + 3] << 0) | (fileStream[streamPos + 2] << 8) | (fileStream[streamPos + 1] << 16) | (fileStream[streamPos + 0] << 24);
+					streamPos += sizeof(chunkLength);
+
+					if (std::string_view(reinterpret_cast<const char*>(&fileStream[streamPos]), sizeof(uint32_t)) != "IDAT")
+					{
+						inflateEnd(&zLibDecompressJob);
+						return false;
+					}
+					// Skip length of the chunkType field.
+					streamPos += sizeof(uint32_t);
+
+					zLibDecompressJob.next_in = (Bytef*)&fileStream[streamPos];
+					zLibDecompressJob.avail_in = (uInt)chunkLength;
+					
+					auto err = inflate(&zLibDecompressJob, 0);
+					if (err == Z_STREAM_END)
+					{
+						streamPos += chunkLength;
+						// Skip CRC
+						streamPos += sizeof(uint32_t);
+
+						inflateEnd(&zLibDecompressJob);
+						return true;
+					}
+
+					streamPos += chunkLength;
+					// Skip CRC
+					streamPos += sizeof(uint32_t);
+				}
+
+				return false;
+			}
+
 			uint8_t PaethPredictor(uint8_t a, uint8_t b, uint8_t c)
 			{
 				const int16_t p = a + b - c;
-				const int16_t pa = p > a ? (p - a) : (a - p);
-				const int16_t pb = p > b ? (p - b) : (b - p);
-				const int16_t pc = p > c ? (p - c) : (c - p);
-				return int16_t((pa <= pb && pa <= pc) ? a : pb <= pc ? b : c);
+
+				const int16_t pa = std::abs(p - a);
+				const int16_t pb = std::abs(p - b);
+				const int16_t pc = std::abs(p - c);
+
+				if (pa <= pb && pa <= pc)
+					return a;
+				else
+				{
+					if (pb <= pc)
+						return b;
+					else
+						return c;
+				}
+			}
+
+			constexpr PixelFormat ToPixelFormat(uint8_t colorType, uint8_t bitDepth)
+			{
+				using F = PixelFormat;
+
+				constexpr auto greyscale = 0;
+				constexpr auto truecolor = 2;
+				constexpr auto indexedColor = 3;
+				constexpr auto greyscaleWithAlpha = 4;
+				constexpr auto trueColorWithAlpha = 6;
+
+				switch (colorType)
+				{
+				case truecolor:
+					switch (bitDepth)
+					{
+					case 8:
+						return F::R8G8B8_UNorm;
+					}
+				case trueColorWithAlpha:
+					switch (bitDepth)
+					{
+					case 8:
+						return F::R8G8B8A8_UNorm;
+					}
+				default:
+					return F::Invalid;
+				}
 			}
 		}
 	}

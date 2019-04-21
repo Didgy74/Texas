@@ -10,13 +10,12 @@
 
 int main()
 {
-    auto path = "resources/test.png";
+    auto path = "resources/test3.png";
 
 	int x;
 	int y;
 	int comps;
-	auto img = stbi_load(path, &x, &y, &comps, 4);
-
+	auto img = stbi_load(path, &x, &y, &comps, 0);
 	
 
 	auto loadResult = DTex::LoadFromFile(path);
