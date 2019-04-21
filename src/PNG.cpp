@@ -267,16 +267,11 @@ namespace DTex
 
 			uint8_t PaethPredictor(uint8_t a, uint8_t b, uint8_t c)
 			{
-				uint16_t p = uint16_t(a) + uint16_t(b) - uint16_t(c);
-				uint16_t pa = std::abs(p - a);
-				uint16_t pb = std::abs(p - b);
-				uint16_t pc = std::abs(p - c);
-				if (pa <= pb && pa <= pc)
-					return uint8_t(a);
-				else if (pb <= pc)
-					return uint8_t(b);
-				else
-					return uint8_t(c);
+				const int16_t p = a + b - c;
+				const int16_t pa = p > a ? (p - a) : (a - p);
+				const int16_t pb = p > b ? (p - b) : (b - p);
+				const int16_t pc = p > c ? (p - c) : (c - p);
+				return int16_t((pa <= pb && pa <= pc) ? a : pb <= pc ? b : c);
 			}
 		}
 	}
