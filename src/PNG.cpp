@@ -47,10 +47,8 @@ namespace DTex
 
 				size_t streamPos = 0;
 
-				// First chunk length must be always 13. Add validation here.
-				streamPos += sizeof(uint32_t);
-				// First chunk type must always be IHDR. Add validation here.
-				streamPos += sizeof(uint32_t);
+				// Skip chunk length and chunk type
+				streamPos += sizeof(uint32_t) * 2;
 
 				uint32_t imageWidth = (fileData[streamPos + 3] << 0) | (fileData[streamPos + 2] << 8) | (fileData[streamPos + 1] << 16) | (fileData[streamPos + 0] << 24);
 				streamPos += sizeof(imageWidth);
@@ -58,9 +56,8 @@ namespace DTex
 				uint32_t imageHeight = (fileData[streamPos + 3] << 0) | (fileData[streamPos + 2] << 8) | (fileData[streamPos + 1] << 16) | (fileData[streamPos + 0] << 24);
 				streamPos += sizeof(imageHeight);
 
-				uint8_t bitDepth{};
-				std::memcpy(&bitDepth, &fileData[streamPos], sizeof(bitDepth));
-				streamPos += sizeof(bitDepth);
+				const uint8_t& bitDepth = fileData[streamPos];
+				streamPos += sizeof(uint8_t);
 				if (bitDepth != 8)
 					return ReturnType(ResultInfo::FileNotSupported, "Loader limitation: Can't read PNGs with bitdepth NOT 8.");
 
@@ -91,12 +88,12 @@ namespace DTex
 				// Skip CRC
 				streamPos += sizeof(uint32_t);
 
-				size_t pixelByteLength = PNG::GetPixelWidth(colorType, bitDepth);
-				if (pixelByteLength == 0)
+				size_t pixelWidth = PNG::GetPixelWidth(colorType, bitDepth);
+				if (pixelWidth == 0)
 					return ReturnType(ResultInfo::CorruptFileData, "PNG has invalid combination of color-type and bit-depth.");
 
 				// We use +imageheight to take account into the filteringType at the start of every scanline
-				std::vector<uint8_t> uncompressed(imageHeight * imageWidth * pixelByteLength + imageHeight);
+				std::vector<uint8_t> uncompressed(imageHeight * imageWidth * pixelWidth + imageHeight);
 
 				while (streamPos <= fileData.size() - PNG::minimumChunkSize)
 				{
@@ -124,120 +121,112 @@ namespace DTex
 
 				// UNFILTERING
 
-				std::vector<uint8_t> unfiltered(imageHeight * imageWidth * pixelByteLength);
-
 				// Unfilter first row
 				const uint8_t filterType = uncompressed[0];
 				if (filterType == 0)
-					std::memcpy(&unfiltered[0], &uncompressed[1], imageWidth * pixelByteLength);
+					std::copy(&uncompressed[1], &uncompressed[1 + imageWidth * pixelWidth], &uncompressed[0]);
 				else if (filterType == 1)
 				{
-					std::memcpy(&unfiltered[0], &uncompressed[1], pixelByteLength);
-					for (size_t widthByte = pixelByteLength; widthByte < imageWidth * pixelByteLength; widthByte++)
+					std::copy(&uncompressed[1], &uncompressed[1 + pixelWidth], &uncompressed[0]);
+					for (size_t widthByte = pixelWidth; widthByte < imageWidth * pixelWidth; widthByte++)
 					{
 						const uint8_t filterX = uncompressed[widthByte + 1];
-						const uint8_t reconA = unfiltered[widthByte - pixelByteLength];
-						unfiltered[widthByte] = filterX + reconA;
+						const uint8_t reconA = uncompressed[widthByte - pixelWidth];
+						uncompressed[widthByte] = filterX + reconA;
 					}
 				}
 				else if (filterType == 2)
 				{
-					for (size_t widthByte = 0; widthByte < imageWidth * pixelByteLength; widthByte++)
-					{
-						const uint8_t filterX = uncompressed[1 + widthByte];
-						const uint8_t reconB = 0;
-						unfiltered[0 + widthByte] = filterX + reconB;
-					}
+					std::copy(&uncompressed[1], &uncompressed[1 + imageWidth * pixelWidth], &uncompressed[0]);
 				}
 				else if (filterType == 3)
 				{
-					// NOT WORKING I THINK
-					for (size_t widthByte = 0; widthByte < imageWidth * pixelByteLength; widthByte++)
+					std::copy(&uncompressed[1], &uncompressed[1 + imageWidth * pixelWidth], &uncompressed[0]);
+
+					for (size_t widthByte = pixelWidth; widthByte < imageWidth * pixelWidth; widthByte++)
 					{
 						const uint8_t filterX = uncompressed[1 + widthByte];
-						const uint8_t reconA = unfiltered[widthByte - pixelByteLength];
-						const uint8_t reconB = 0;
-						unfiltered[0 + widthByte] = filterX + uint8_t(std::floor((reconA + reconB) / float(2)));
+						const uint8_t reconA = uncompressed[widthByte - pixelWidth];
+						uncompressed[widthByte] = filterX + uint8_t((uint16_t(reconA)) / float(2));
 					}
 				}
 				else
 					return ReturnType(ResultInfo::FileNotSupported, "");
+
 				for (size_t y = 1; y < imageHeight; y++)
 				{
-					const size_t filterTypeIndex = y * imageWidth * pixelByteLength + y;
+					const size_t filterTypeIndex = y * imageWidth * pixelWidth + y;
 					const uint8_t filterType = uncompressed[filterTypeIndex];
 
-					const size_t uncompressedRow = filterTypeIndex + 1;
-					const size_t unfilteredRow = filterTypeIndex - y;
+					const size_t uncompRow = filterTypeIndex + 1;
+					const size_t unfiltRow = filterTypeIndex - y;
 
 					// Copy all the pixels in the scanline
 					if (filterType == 0)
-						std::memcpy(&unfiltered[unfilteredRow], &uncompressed[uncompressedRow], imageWidth * pixelByteLength);
+						std::copy(&uncompressed[uncompRow], &uncompressed[uncompRow + imageWidth * pixelWidth], &uncompressed[unfiltRow]);
 					else if (filterType == 1)
 					{
-						std::memcpy(&unfiltered[unfilteredRow], &uncompressed[uncompressedRow], pixelByteLength);
-						for (size_t widthByte = pixelByteLength; widthByte < imageWidth * pixelByteLength; widthByte++)
+						std::copy(&uncompressed[uncompRow], &uncompressed[uncompRow + pixelWidth], &uncompressed[unfiltRow]);
+
+						for (size_t xByte = pixelWidth; xByte < imageWidth * pixelWidth; xByte++)
 						{
-							const uint8_t filterX = uncompressed[uncompressedRow + widthByte];
-							const uint8_t reconA = unfiltered[unfilteredRow + widthByte - pixelByteLength];
-							unfiltered[unfilteredRow + widthByte] = filterX + reconA;
+							const uint8_t filterX = uncompressed[uncompRow + xByte];
+							const uint8_t reconA = uncompressed[unfiltRow + xByte - pixelWidth];
+							uncompressed[unfiltRow + xByte] = filterX + reconA;
 						}
 					}
 					else if (filterType == 2)
 					{
-						for (size_t widthByte = 0; widthByte < imageWidth * pixelByteLength; widthByte++)
+						for (size_t xByte = 0; xByte < imageWidth * pixelWidth; xByte++)
 						{
-							const uint8_t filterX = uncompressed[uncompressedRow + widthByte];
-							const uint8_t reconB = unfiltered[unfilteredRow + widthByte - (imageWidth * pixelByteLength)];
-							unfiltered[unfilteredRow + widthByte] = filterX + reconB;
+							const uint8_t filterX = uncompressed[uncompRow + xByte];
+							const uint8_t reconB = uncompressed[unfiltRow + xByte - (imageWidth * pixelWidth)];
+							uncompressed[unfiltRow + xByte] = filterX + reconB;
 						}
 					}
 					else if (filterType == 3)
 					{
-						for (size_t widthByte = 0; widthByte < pixelByteLength; widthByte++)
+						for (size_t widthByte = 0; widthByte < pixelWidth; widthByte++)
 						{
-							const uint8_t filterX = uncompressed[uncompressedRow + widthByte];
-							const uint8_t reconA = 0;
-							const uint8_t reconB = unfiltered[unfilteredRow + widthByte - (imageWidth * pixelByteLength)];
-							unfiltered[unfilteredRow + widthByte] = filterX + uint8_t(std::floor((uint16_t(reconA) + uint16_t(reconB)) / float(2)));
+							const uint8_t filterX = uncompressed[uncompRow + widthByte];
+							const uint8_t reconB = uncompressed[unfiltRow + widthByte - (imageWidth * pixelWidth)];
+							uncompressed[unfiltRow + widthByte] = filterX + uint8_t((uint16_t(reconB)) / float(2));
 						}
 
-						for (size_t widthByte = pixelByteLength; widthByte < imageWidth * pixelByteLength; widthByte++)
+						for (size_t widthByte = pixelWidth; widthByte < imageWidth * pixelWidth; widthByte++)
 						{
-							const uint8_t filterX = uncompressed[uncompressedRow + widthByte];
-							const uint8_t reconA = unfiltered[unfilteredRow + widthByte - pixelByteLength];
-							const uint8_t reconB = unfiltered[unfilteredRow + widthByte - (imageWidth * pixelByteLength)];
-							unfiltered[unfilteredRow + widthByte] = filterX + uint8_t(std::floor((uint16_t(reconA) + uint16_t(reconB)) / float(2)));
+							const uint8_t filterX = uncompressed[uncompRow + widthByte];
+							const uint8_t reconA = uncompressed[unfiltRow + widthByte - pixelWidth];
+							const uint8_t reconB = uncompressed[unfiltRow + widthByte - (imageWidth * pixelWidth)];
+							uncompressed[unfiltRow + widthByte] = filterX + uint8_t((uint16_t(reconA) + uint16_t(reconB)) / float(2));
 						}
 					}
 					else if (filterType == 4)
 					{
-						for (size_t widthByte = 0; widthByte < pixelByteLength; widthByte++)
+						for (size_t xByte = 0; xByte < pixelWidth; xByte++)
 						{
-							const uint8_t filterX = uncompressed[uncompressedRow + widthByte];
-							const size_t currentByteIndex = unfilteredRow + widthByte;
-							const uint8_t reconA = 0;
-							const uint8_t reconB = unfiltered[currentByteIndex - (imageWidth * pixelByteLength)];
-							const uint8_t reconC = 0;
-							unfiltered[unfilteredRow + widthByte] = filterX + PaethPredictor(reconA, reconB, reconC);
+							const uint8_t filterX = uncompressed[uncompRow + xByte];
+							const uint8_t reconB = uncompressed[unfiltRow + xByte - (imageWidth * pixelWidth)];
+							uncompressed[unfiltRow + xByte] = filterX + reconB;
 						}
 
-						for (size_t widthByte = pixelByteLength; widthByte < imageWidth * pixelByteLength; widthByte++)
+						for (size_t xByte = pixelWidth; xByte < imageWidth * pixelWidth; xByte++)
 						{
-							const uint8_t filterX = uncompressed[uncompressedRow + widthByte];
-							const size_t currentByteIndex = unfilteredRow + widthByte;
-							const uint8_t reconA = unfiltered[currentByteIndex - pixelByteLength];
-							const uint8_t reconB = unfiltered[currentByteIndex - (imageWidth * pixelByteLength)];
-							const uint8_t reconC = unfiltered[currentByteIndex - (imageWidth * pixelByteLength) - pixelByteLength];
-							unfiltered[unfilteredRow + widthByte] = filterX + PaethPredictor(reconA, reconB, reconC);
+							const uint8_t filterX = uncompressed[uncompRow + xByte];
+							const uint8_t reconA = uncompressed[unfiltRow + xByte - pixelWidth];
+							const uint8_t reconB = uncompressed[unfiltRow + xByte - (imageWidth * pixelWidth)];
+							const uint8_t reconC = uncompressed[unfiltRow + xByte - (imageWidth * pixelWidth) - pixelWidth];
+							uncompressed[unfiltRow + xByte] = filterX + PaethPredictor(reconA, reconB, reconC);
 						}
 					}
 					else
 						return ReturnType(ResultInfo::FileNotSupported, "Library limitiation: Can't decode PNG scanline filterType " + std::to_string(filterType));
 				}
 
+				uncompressed.resize(imageWidth * imageHeight * pixelWidth);
+
 				TexDoc::CreateInfo createInfo;
-				createInfo.byteArray = std::move(unfiltered);
+				createInfo.byteArray = std::move(uncompressed);
 				createInfo.baseDimensions = { imageWidth, imageHeight, 1 };
 				createInfo.pixelFormat = ToPixelFormat(colorType, bitDepth);
 				if (createInfo.pixelFormat == PixelFormat::Invalid)

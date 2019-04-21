@@ -11,13 +11,12 @@ Hopefully the library should work on any C++17 compliant compiler.
 The library has been tested to run on the following
 #### Windows x64
  - MSVC v14
- - MinGW 7.0
 
  #### Ubuntu x64
  - GCC 8.2.0
 
 ## Installation
-You can copy the contents of the `include` folder directly into your project.
+You can copy the contents of the `include` and `src` folder directly into your project. Remember to add all source-files in `src` as targets for compilation.
 
 Alternatively, you can use CMake. You can add all the correct files to your project by adding the following lines to your CMakeLists.txt
 
@@ -44,16 +43,19 @@ project(DTex)
 set(COMPILE_EXAMPLES 1)
 ```
 ## Limitations
-The current version of the library should (hopefully) work on KTX files, containing 2D images, compressed or uncompressed with mipmaps. The limitations of the library over time, as it is currently under testing.
+The current version of the library should work on KTX files, containing 2D images, compressed or uncompressed with mipmaps. The limitations of the library will change over time, as it is currently under testing.
+Simple 8-bit RGB / RGBA PNGs should work as well.
+
+PNG files are always uncompressed to RGB or RGBA format upon loading.
 
 1D textures, 3D textures, texture arrays, cubemaps are **not** supported. Support for these will be added over time.
 
-PNG and JPEG support is planned to be added eventually, but this library will focus on loading KTX and KTX2 textures first and foremost.
+JPEG support is planned to be added eventually, but this library will focus on loading KTX and KTX2 textures first and foremost.
 
-Currently supported compression formats:
+Currently supported pixel-formats:
 
- - Uncompressed RGB, unsigned normalized
- - Uncompressed RGBA unsigned normalized
+ - Uncompressed RGB, unsigned normalized, 8-bit
+ - Uncompressed RGBA unsigned normalized, 8-bit
  - All BCn formats (needs testing to confirm)
  - All DXT formats (needs testing to confirm)
 
@@ -67,6 +69,7 @@ auto loadResult = DTex::LoadFromFile("Data/Textures/02.ktx");
 
 if (loadResult.GetResultInfo() != DTex::ResultInfo::Success)
 {
+	std::string detailedErrorMessage = loadResult.GetErrorMessage();
 	// Could not load file. Do error handling.
 	return;
 }
@@ -105,10 +108,15 @@ if (texDoc.GetMipLevels() > 1)
 ```
 A Vulkan example will be provided eventually. For now you can use `uint32_t DTex::GetVkFormat()` to get the correct `VkFormat`, and `uint32_t DTex::GetVkImageType()` to get the correct `VkImageType`.  These functions can be found in the `VkFormats.hpp` header file. Although tools for simplifying loading into Vulkan have not been made yet, I am 90% certain you will find all the information necessary to do so in this library.
 
-## Contribution and Feedback
+### Dependencies
+
+ - zLib 1.2.11 - [zLib Home Site](https://www.zlib.net/)
+
+### Contribution and Feedback
 I will very much welcome feedback or any suggestions. Please open issues or pull requests to show me what can be improved.
 
  
 ### Thank you for using my library
 Sincerely, Nils Petter Skålerud aka "Didgy"
+
 
