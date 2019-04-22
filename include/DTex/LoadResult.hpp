@@ -2,7 +2,7 @@
 
 #include <variant>
 #include <cassert>
-#include <string_view>
+#include <string>
 
 #include "Typedefs.hpp"
 

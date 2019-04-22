@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <array>
-#include <filesystem>
-
 #include "DTex/LoadResult.hpp"
 #include "DTex/TextureDocument.hpp"
+
+#include <filesystem>
 
 namespace DTex
 {
@@ -17,7 +15,7 @@ namespace DTex
 
 			constexpr uint32_t correctEndian = 0x04030201;
 
-			constexpr size_t KTXHeaderSize = sizeof(uint8_t) * 64;
+			constexpr size_t headerSize = sizeof(uint8_t) * 64;
 
 			struct Header
 			{
@@ -37,7 +35,7 @@ namespace DTex
 				uint32_t bytesOfKeyValueData;
 			};
 
-			static_assert(sizeof(Header) == KTXHeaderSize, "Error. DTex::detail::KTX::Header must be a tightly packed struct.");
+			static_assert(sizeof(Header) == KTX::headerSize, "Error. DTex::detail::KTX::Header must be a tightly packed struct.");
 
 			LoadResult<TextureDocument> LoadKTX(std::filesystem::path path);
 		}

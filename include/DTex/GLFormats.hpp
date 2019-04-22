@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "Typedefs.hpp"
+#include "DTex/Typedefs.hpp"
 
 namespace DTex
 {

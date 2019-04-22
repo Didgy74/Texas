@@ -1,17 +1,10 @@
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
-#include <optional>
-#include <string>
-#include <fstream>
-#include <cassert>
-#include <array>
-#include <vector>
-#include <cstring>
-#include <cmath>
+#include "DTex/Typedefs.hpp"
+#include "DTex/Dimensions.hpp"
 
-#include "Typedefs.hpp"
+#include <vector>
+#include <array>
 
 namespace DTex
 {

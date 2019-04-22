@@ -8,7 +8,7 @@
 
 int main()
 {
-    auto path = "resources/test.png";
+	auto path = "resources/test.png";
 
 	auto now = std::chrono::high_resolution_clock::now();
 	auto loadResult = DTex::LoadFromFile(path);

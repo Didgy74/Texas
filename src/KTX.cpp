@@ -1,12 +1,15 @@
-#pragma once
+#include "KTX.hpp"
+
+#include "DTex/DTex.hpp"
 
 #include "DTex/GLFormats.hpp"
-
-#include "detail/KTX.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <array>
+#include <fstream>
+#include <cstring>
 
 namespace DTex
 {
@@ -18,7 +21,7 @@ namespace DTex
 			{
 				using ReturnType = LoadResult<TextureDocument>;
 
-				std::array<uint8_t, KTXHeaderSize> headerData{};
+				std::array<uint8_t, KTX::headerSize> headerData{};
 
 				std::ifstream file(path, std::ios::binary);
 				if (!file.is_open())

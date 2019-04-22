@@ -1,8 +1,8 @@
-#pragma once
-
-#include "detail/PNG.hpp"
+#include "PNG.hpp"
 
 #include "zlib/zlib.h"
+
+#include <cstring>
 
 namespace DTex
 {
