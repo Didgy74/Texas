@@ -76,10 +76,10 @@ inline size_t DTex::Tools::detail::CalcImageDataSize_Impl(const Dimensions& dime
 
 	if (IsBCnCompressed(pixelFormat))
 	{
-		size_t blockCountX = size_t(std::ceilf(float(dimensions.width) / float(blockInfo.width)));
+		size_t blockCountX = size_t(ceilf(float(dimensions.width) / float(blockInfo.width)));
 		if (blockCountX <= 0)
 			blockCountX = 1;
-		size_t blockCountY = size_t(std::ceilf(float(dimensions.height) / float(blockInfo.height)));
+		size_t blockCountY = size_t(ceilf(float(dimensions.height) / float(blockInfo.height)));
 		if (blockCountY <= 0)
 			blockCountY = 1;
 
@@ -96,6 +96,8 @@ inline size_t DTex::Tools::detail::CalcImageDataSize_Impl(const Dimensions& dime
 		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 3;
 	case PixelFormat::RGBA_8:
 		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 4;
+	default:
+		break;
 	}
 
 	return 0;

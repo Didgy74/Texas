@@ -21,7 +21,7 @@ int main()
 		// Handle error
 	}
 
-	std::vector<std::byte> buffer(loadResult.GetValue().GetTotalSizeRequired());
+	std::vector<uint8_t> buffer(loadResult.GetValue().GetTotalSizeRequired());
 
 	DTex::LoadFromOpenFile(loadResult.GetValue(), buffer.data());
 

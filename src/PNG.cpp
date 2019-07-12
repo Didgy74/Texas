@@ -6,6 +6,8 @@
 
 #include <vector>
 
+#include <cstring>
+
 namespace DTex::detail::PNG
 {
 	static constexpr uint8_t GetPixelWidth(PixelFormat pixelFormat)
@@ -98,7 +100,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	metaData.colorSpace = ColorSpace::Linear;
 
 	const Header::Identifier_T& fileIdentifier = *reinterpret_cast<Header::Identifier_T*>(headerBuffer + Header::identifierOffset);
-	if (std::memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
+	if (memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
 	{
 		resultInfo = ResultInfo::CorruptFileData;
 		errorMessage = "File-identifier does not match PNG file-identifier.";

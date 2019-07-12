@@ -54,7 +54,7 @@ namespace DTex
 	template<typename T>
 	inline const std::string& LoadResult<T>::GetErrorMessage() const
 	{
-		return errorMessage;
+		return std::get<std::string&>(variant);
 	}
 
 	template<typename T>

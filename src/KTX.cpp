@@ -5,6 +5,8 @@
 #include "PrivateAccessor.hpp"
 #include "DTex/Tools.hpp"
 
+#include <cstring>
+
 bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string& errorMessage)
 {
 	uint8_t headerBuffer[Header::totalSize];
