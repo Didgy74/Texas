@@ -2,7 +2,8 @@
 
 #include <cstdint>
 
-#include "Typedefs.hpp"
+#include "DTex/PixelFormat.hpp"
+#include "DTex/Colorspace.hpp"
 
 namespace DTex
 {
@@ -46,75 +47,93 @@ namespace DTex
 		}
 	}
 
+	/*
+		Returns max value of uint32_t upon failure.
+	*/
 	constexpr uint32_t ToVkImageType(TextureType type)
 	{
 		using namespace detail::VkImageTypes;
 
-		using T = TextureType;
-
 		switch (type)
 		{
-		case T::Texture1D:
+		case TextureType::Texture1D:
 			return vk_IMAGE_TYPE_1D;
-		case T::Texture2D:
+		case TextureType::Texture2D:
 			return vk_IMAGE_TYPE_2D;
-		case T::Texture3D:
+		case TextureType::Texture3D:
 			return vk_IMAGE_TYPE_3D;
 		}
 
 		return static_cast<uint32_t>(-1);
 	}
 
-	constexpr uint32_t ToVkFormat(PixelFormat format)
+	constexpr uint32_t ToVkFormat(PixelFormat format, ColorSpace colorSpace)
 	{
 		using namespace detail::VkFormats;
-
-		using F = PixelFormat;
 
 		switch (format)
 		{
 
-
 		// Standard
-		case F::R8G8B8_UNorm:
+		case PixelFormat::RGB_8:
 			return vk_FORMAT_R8G8B8_UNORM;
-		case F::R8G8B8A8_UNorm:
+		case PixelFormat::RGBA_8:
 			return vk_FORMAT_R8G8B8A8_UNORM;
 
 
 		// BCn
-		case F::BC1_RGB_UNorm:
-			return vk_FORMAT_BC1_RGB_UNORM_BLOCK;
-		case F::BC1_RGB_sRGB:
-			return vk_FORMAT_BC1_RGB_SRGB_BLOCK;
-		case F::BC1_RGBA_UNorm:
-			return vk_FORMAT_BC1_RGBA_UNORM_BLOCK;
-		case F::BC1_RGBA_sRGB:
-			return vk_FORMAT_BC1_RGBA_SRGB_BLOCK;
-		case F::BC2_UNorm:
-			return vk_FORMAT_BC2_UNORM_BLOCK;
-		case F::BC2_sRGB:
-			return vk_FORMAT_BC2_SRGB_BLOCK;
-		case F::BC3_UNorm:
-			return vk_FORMAT_BC3_UNORM_BLOCK;
-		case F::BC3_sRGB:
-			return vk_FORMAT_BC3_SRGB_BLOCK;
-		case F::BC4_UNorm:
+		case PixelFormat::BC1_RGB:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return vk_FORMAT_BC1_RGB_UNORM_BLOCK;
+			case ColorSpace::sRGB:
+				return vk_FORMAT_BC1_RGB_SRGB_BLOCK;
+			}
+		case PixelFormat::BC1_RGBA:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return vk_FORMAT_BC1_RGBA_UNORM_BLOCK;
+			case ColorSpace::sRGB:
+				return vk_FORMAT_BC1_RGBA_SRGB_BLOCK;
+			}
+		case PixelFormat::BC2:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return vk_FORMAT_BC2_UNORM_BLOCK;
+			case ColorSpace::sRGB:
+				return vk_FORMAT_BC2_SRGB_BLOCK;
+			}
+		case PixelFormat::BC3:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return vk_FORMAT_BC3_UNORM_BLOCK;
+			case ColorSpace::sRGB:
+				return vk_FORMAT_BC3_SRGB_BLOCK;
+			}
+		case PixelFormat::BC4_Unsigned:
 			return vk_FORMAT_BC4_UNORM_BLOCK;
-		case F::BC4_SNorm:
+		case PixelFormat::BC4_Signed:
 			return vk_FORMAT_BC4_SNORM_BLOCK;
-		case F::BC5_UNorm:
+		case PixelFormat::BC5_Unsigned:
 			return vk_FORMAT_BC5_UNORM_BLOCK;
-		case F::BC5_SNorm:
+		case PixelFormat::BC5_Signed:
 			return vk_FORMAT_BC5_SNORM_BLOCK;
-		case F::BC6H_UFloat:
+		case PixelFormat::BC6H_UFloat:
 			return vk_FORMAT_BC6H_UFLOAT_BLOCK;
-		case F::BC6H_SFloat:
+		case PixelFormat::BC6H_SFloat:
 			return vk_FORMAT_BC6H_SFLOAT_BLOCK;
-		case F::BC7_UNorm:
-			return vk_FORMAT_BC7_UNORM_BLOCK;
-		case F::BC7_sRGB:
-			return vk_FORMAT_BC7_SRGB_BLOCK;
+		case PixelFormat::BC7:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return vk_FORMAT_BC7_UNORM_BLOCK;
+			case ColorSpace::sRGB:
+				return vk_FORMAT_BC7_SRGB_BLOCK;
+			}
 		}
 
 		return vk_FORMAT_UNDEFINED;

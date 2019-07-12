@@ -3,6 +3,10 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+#if defined( _MSC_VER )
+#	define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "gzguts.h"
 
 #if defined(_WIN32) && !defined(__BORLANDC__) && !defined(__MINGW32__)
@@ -242,7 +246,11 @@ local gzFile gz_open(path, fd, mode)
 #ifdef WIDECHAR
         fd == -2 ? _wopen(path, oflag, 0666) :
 #endif
+#if defined( _MSC_VER )
+		_open((const char *)path, oflag, 0666));
+#else
         open((const char *)path, oflag, 0666));
+#endif
     if (state->fd == -1) {
         free(state->path);
         free(state);

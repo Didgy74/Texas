@@ -2,16 +2,31 @@
 #include "DTex/DTex.hpp"
 #include "DTex/VkFormats.hpp"
 #include "DTex/GLFormats.hpp"
+#include "DTex/Tools.hpp"
 
 #include <chrono>
 #include <iostream>
+#include <vector>
 
 int main()
 {
-	auto path = "resources/test.png";
+	auto yo = DTex::Tools::CalcMaxMipLevelCount({256, 256, 1});
 
-	auto now = std::chrono::high_resolution_clock::now();
-	auto loadResult = DTex::LoadFromFile(path);
+	auto path = "resources/test.ktx";
+
+	DTex::LoadResult<DTex::OpenFile> loadResult = DTex::LoadFromFile_CustomBuffer(path);
+
+	if (loadResult.GetResultInfo() != DTex::ResultInfo::Success)
+	{
+		// Handle error
+	}
+
+	std::vector<std::byte> buffer(loadResult.GetValue().GetTotalSizeRequired());
+
+	DTex::LoadFromOpenFile(loadResult.GetValue(), buffer.data());
+
+	/*
+
 	auto now2 = std::chrono::high_resolution_clock::now();
 	auto duration = now2 - now;
 	std::cout << "Time taken to load in seconds: " << duration.count() / double(1000) / 1000 / 1000 << std::endl;
@@ -64,6 +79,6 @@ int main()
 	if (DTex::ToVkImageType(texDoc.GetTextureType()) == DTex::ToVkImageType(DTex::TextureType::Texture2D))
 		std::cout << "ImageType is VK_IMAGE_TYPE_2D" << std::endl;
 
-
+		*/
 	return 0;
 }

@@ -2,42 +2,51 @@
 
 #include "DTex/LoadResult.hpp"
 #include "DTex/TextureDocument.hpp"
+#include "DTex/OpenFile.hpp"
+#include "DTex/MetaData.hpp"
 
-#include <filesystem>
+#include <fstream>
+#include <string>
 
-namespace DTex
+namespace DTex::detail::KTX
 {
-	namespace detail
+	struct Header
 	{
-		namespace KTX
-		{
-			constexpr std::array<uint8_t, 12> identifier = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
+		static constexpr size_t totalSize = sizeof(uint8_t) * 64;
 
-			constexpr uint32_t correctEndian = 0x04030201;
+		using Member_T = uint32_t;
 
-			constexpr size_t headerSize = sizeof(uint8_t) * 64;
+		using Identifier_T = uint8_t[12];
+		static constexpr size_t identifierOffset = 0;
+		static constexpr Identifier_T correctIdentifier = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
 
-			struct Header
-			{
-				std::array<unsigned char, 12> identifier;
-				uint32_t endianness;
-				uint32_t glType;
-				uint32_t glTypeSize;
-				uint32_t glFormat;
-				uint32_t glInternalFormat;
-				uint32_t glBaseInternalFormat;
-				uint32_t pixelWidth;
-				uint32_t pixelHeight;
-				uint32_t pixelDepth;
-				uint32_t numberOfArrayElements;
-				uint32_t numberOfFaces;
-				uint32_t numberOfMipmapLevels;
-				uint32_t bytesOfKeyValueData;
-			};
+		static constexpr uint32_t correctEndian = 0x04030201;
+		static constexpr size_t endianOffset = identifierOffset + sizeof(Identifier_T);
 
-			static_assert(sizeof(Header) == KTX::headerSize, "Error. DTex::detail::KTX::Header must be a tightly packed struct.");
+		static constexpr size_t glTypeOffset = endianOffset + sizeof(Member_T);
 
-			LoadResult<TextureDocument> LoadKTX(std::filesystem::path path);
-		}
-	}
+		static constexpr size_t glTypeSizeOffset = glTypeOffset + sizeof(Member_T);
+
+		static constexpr size_t glFormatOffset = glTypeSizeOffset + sizeof(Member_T);
+
+		static constexpr size_t glInternalFormatOffset = glFormatOffset + sizeof(Member_T);
+
+		static constexpr size_t glBaseInternalFormatOffset = glInternalFormatOffset + sizeof(Member_T);
+
+		static constexpr size_t pixelWidthOffset = glBaseInternalFormatOffset + sizeof(Member_T);
+
+		static constexpr size_t pixelHeightOffset = pixelWidthOffset + sizeof(Member_T);
+
+		static constexpr size_t pixelDepthOffset = pixelHeightOffset + sizeof(Member_T);
+
+		static constexpr size_t numberOfArrayElementsOffset = pixelDepthOffset + sizeof(Member_T);
+
+		static constexpr size_t numberOfFacesOffset = numberOfArrayElementsOffset + sizeof(Member_T);
+
+		static constexpr size_t numberOfMipmapLevelsOffset = numberOfFacesOffset + sizeof(Member_T);
+
+		static constexpr size_t bytesOfKeyValueDataOffset = numberOfMipmapLevelsOffset + sizeof(Member_T);
+	};
+
+	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string& errorMessage);
 }

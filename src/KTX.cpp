@@ -1,101 +1,94 @@
 #include "KTX.hpp"
 
 #include "DTex/DTex.hpp"
-
 #include "DTex/GLFormats.hpp"
+#include "PrivateAccessor.hpp"
+#include "DTex/Tools.hpp"
 
-#include <cstddef>
-#include <cstdint>
-#include <filesystem>
-#include <array>
-#include <fstream>
-#include <cstring>
-
-namespace DTex
+bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string& errorMessage)
 {
-	namespace detail
+	uint8_t headerBuffer[Header::totalSize];
+	fstream.read(reinterpret_cast<char*>(headerBuffer), sizeof(headerBuffer));
+
+	// Check for end of file while reading header
+	if (fstream.eof())
 	{
-		namespace KTX
-		{
-			LoadResult<TextureDocument> LoadKTX(std::filesystem::path path)
-			{
-				using ReturnType = LoadResult<TextureDocument>;
+		resultInfo = ResultInfo::CorruptFileData;
+		errorMessage = "Reached end-of-file while reading file header.";
+		return false;
+	}
 
-				std::array<uint8_t, KTX::headerSize> headerData{};
+	metaData.srcFileFormat = FileFormat::KTX;
 
-				std::ifstream file(path, std::ios::binary);
-				if (!file.is_open())
-					return ReturnType(ResultInfo::CouldNotReadFile, "Could not open file with path: " + path.string());
+	// Check for correct identifier
+	const Header::Identifier_T& fileIdentifier = *reinterpret_cast<const Header::Identifier_T*>(headerBuffer + Header::identifierOffset);
+	if (std::memcmp(fileIdentifier, Header::correctIdentifier, sizeof(Header::Identifier_T)) != 0)
+	{
+		resultInfo = ResultInfo::CorruptFileData;
+		errorMessage = "File identifier does not match KTX identifier.";
+		return false;
+	}
 
-				file.read(reinterpret_cast<char*>(headerData.data()), sizeof(headerData));
-				if (file.eof())
-					return ReturnType(ResultInfo::CorruptFileData, "Reached end-of-file while reading file identifier.");
+	// Check if file endianness matches system's
+	const Header::Member_T& fileEndian = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::endianOffset);
+	if (fileEndian != Header::correctEndian)
+	{
+		resultInfo = ResultInfo::FileNotSupported;
+		errorMessage = "Loader limitation: File endianness does not match system endianness. Loader is not capable of converting.";
+		return false;
+	}
 
-				Header& head = *reinterpret_cast<Header*>(headerData.data());
-				if (head.identifier != identifier)
-					return ReturnType(ResultInfo::CorruptFileData, "File identifier does not match KTX identifier.");
-				else if (head.endianness != correctEndian)
-					return ReturnType(ResultInfo::FileNotSupported, "Loader limitation: File endianness does not match system endianness. Loader is not capable of converting.");
-				else if (head.glInternalFormat == 0)
-					return ReturnType(ResultInfo::PixelFormatNotSupported, "glInternalFormat of KTX file was 0.");
+	// Load dimension data
+	metaData.baseDimensions.width = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::pixelWidthOffset);
+	if (metaData.baseDimensions.width <= 0)
+		metaData.baseDimensions.width = 1;
+	metaData.baseDimensions.height = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::pixelHeightOffset);
+	if (metaData.baseDimensions.height <= 0)
+		metaData.baseDimensions.height = 1;
+	metaData.baseDimensions.depth = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::pixelDepthOffset);
+	if (metaData.baseDimensions.depth <= 0)
+		metaData.baseDimensions.depth = 1;
 
-				// Loads rest of the file data
-				auto imageDataStart = file.tellg();
-				file.seekg(0, std::ifstream::end);
-				auto imageDataEnd = file.tellg();
-				file.seekg(imageDataStart);
+	metaData.arrayLayerCount = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::numberOfArrayElementsOffset);
+	if (metaData.arrayLayerCount <= 0)
+		metaData.arrayLayerCount = 1;
 
-				std::vector<uint8_t> fileData(size_t(imageDataEnd - imageDataStart));
+	metaData.mipLevelCount = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::numberOfMipmapLevelsOffset);
+	if (metaData.mipLevelCount <= 0)
+		metaData.mipLevelCount = 1;
 
-				file.read(reinterpret_cast<char*>(fileData.data()), fileData.size());
-				file.close();
+	// Grab pixel format
+	const Header::Member_T& fileGLInternalFormat = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::glInternalFormatOffset);
 
-				size_t indexInBuffer = 0;
+	const Header::Member_T& fileGLType = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::glTypeOffset);
 
-				// Round keyValueDataByteLength down to nearest multiplum of 4
-				size_t keyValueDataLength = head.bytesOfKeyValueData - (head.bytesOfKeyValueData % sizeof(uint32_t));
-				std::vector<std::byte> keyValueData(keyValueDataLength);
-				std::memcpy(keyValueData.data(), &fileData[indexInBuffer], keyValueDataLength);
-				indexInBuffer += keyValueDataLength;
+	auto [pixelFormat, colorSpace] = ToPixelFormat(fileGLInternalFormat, fileGLType);
+	metaData.pixelFormat = pixelFormat;
+	metaData.colorSpace = colorSpace;
+	if (metaData.pixelFormat == PixelFormat::Invalid || metaData.colorSpace == ColorSpace::Invalid)
+	{
+		resultInfo = ResultInfo::PixelFormatNotSupported;
+		errorMessage = "KTX pixel format not supported.";
+		return false;
+	}
 
+	// Read key value data (Right now we ignore it)
+	const Header::Member_T& fileKeyValueDataLength = *reinterpret_cast<Header::Member_T*>(headerBuffer + Header::bytesOfKeyValueDataOffset);
+	fstream.ignore(fileKeyValueDataLength);
 
-				// Converts loaded info to TexDoc
-				TextureDocument::CreateInfo createInfo{};
-				createInfo.byteArray = std::move(fileData);
-				createInfo.baseDimensions = { head.pixelWidth, head.pixelHeight, head.pixelDepth };
-				createInfo.arrayLayers = std::max(uint32_t(1), head.numberOfArrayElements);
-				createInfo.mipLevels = std::max(uint32_t(1), head.numberOfMipmapLevels);
-				createInfo.textureType = ToTextureType(createInfo.baseDimensions, createInfo.arrayLayers);
+	return true;
+}
 
-				bool isCompressed = false;
-				createInfo.pixelFormat = ToFormat(head.glInternalFormat, head.glType, isCompressed);
-				if (createInfo.pixelFormat == PixelFormat::Invalid)
-					return ReturnType{ ResultInfo::PixelFormatNotSupported, "Loader limitation: KTX file is encoded in a pixel format currently not supported." };
+void DTex::detail::PrivateAccessor::KTX_LoadImageData_CustomBuffer(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
+{
+	for (size_t i = 0; i < metaData.mipLevelCount; i++)
+	{
+		KTX::Header::Member_T imageSize;
 
-				createInfo.isCompressed = isCompressed;
+		fstream.read(reinterpret_cast<char*>(&imageSize), sizeof(imageSize));
 
-				// Read DataInfo from the imageData buffer
-				for (size_t i = 0; i < createInfo.mipLevels; i++)
-				{
-					if (indexInBuffer > createInfo.byteArray.size() - sizeof(uint32_t))
-						return ReturnType{ ResultInfo::CorruptFileData, "Reached premature end-of-file when loading mipmaps in KTX-file." };
+		fstream.read(reinterpret_cast<char*>(dstBuffer), imageSize);
 
-					uint32_t imageByteLength{};
-					std::memcpy(&imageByteLength, &createInfo.byteArray[indexInBuffer], sizeof(imageByteLength));
-					if (imageByteLength > createInfo.byteArray.size() - indexInBuffer)
-						return ReturnType{ ResultInfo::CorruptFileData, "" };
-
-					indexInBuffer += sizeof(imageByteLength);
-
-					createInfo.mipMapDataInfo[i].byteLength = imageByteLength;
-					createInfo.mipMapDataInfo[i].offset = indexInBuffer;
-
-					size_t padding = ((indexInBuffer + 4) % 4);
-					indexInBuffer += imageByteLength + padding;
-				}
-
-				return ReturnType{ TextureDocument{ std::move(createInfo) } };
-			}
-		}
+		dstBuffer += imageSize;
 	}
 }

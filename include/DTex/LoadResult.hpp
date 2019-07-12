@@ -15,7 +15,7 @@ namespace DTex
 		LoadResult() = delete;
 		LoadResult(const LoadResult&) = default;
 		LoadResult(LoadResult&&) = default;
-		constexpr explicit LoadResult(ResultInfo result, std::string errorMessage);
+		constexpr explicit LoadResult(ResultInfo result, std::string&& errorMessage);
 		constexpr explicit LoadResult(T&& data);
 
 		LoadResult& operator=(const LoadResult&) = default;
@@ -28,24 +28,20 @@ namespace DTex
 		constexpr const T& GetValue() const;
 	private:
 		ResultInfo resultInfo;
-		std::string errorMessage;
-		std::variant<uint8_t, T> data;
+		std::variant<T, std::string> variant;
 	};
 
 	template<typename T>
-	inline constexpr LoadResult<T>::LoadResult(ResultInfo result, std::string errorMessage) :
+	inline constexpr LoadResult<T>::LoadResult(ResultInfo result, std::string&& errorMessage) :
 		resultInfo(result),
-		errorMessage(std::move(errorMessage)),
-		data(uint8_t{})
+		variant(std::move(errorMessage))
 	{
-		if (resultInfo != ResultInfo::Success)
-			errorMessage = std::move("DTex developer error: LoadResult returned no data, but ResultInfo is set to Success.");
 	}
 
 	template<typename T>
-	inline constexpr LoadResult<T>::LoadResult(T&& data) :
+	inline constexpr LoadResult<T>::LoadResult(T&& in) :
 		resultInfo(ResultInfo::Success),
-		data(std::move(data))
+		variant(std::move(in))
 	{
 	}
 
@@ -64,12 +60,12 @@ namespace DTex
 	template<typename T>
 	inline constexpr T& LoadResult<T>::GetValue()
 	{
-		return std::get<T>(data);
+		return std::get<T>(variant);
 	}
 
 	template<typename T>
 	inline constexpr const T& LoadResult<T>::GetValue() const
 	{
-		return std::get<T>(data);
+		return std::get<T>(variant);
 	}
 }

@@ -111,6 +111,7 @@ A Vulkan example will be provided eventually. For now you can use `uint32_t DTex
 ### Dependencies
 
  - zLib 1.2.11 - [zLib Home Site](https://www.zlib.net/)
+ I have made small changes to the source code to silence some error messages on MSVC compiler.
 
 ### Contribution and Feedback
 I will very much welcome feedback or any suggestions. Please open issues or pull requests to show me what can be improved.

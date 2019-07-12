@@ -25,15 +25,9 @@ file(GLOB_RECURSE SOURCE_FILES
 
 target_sources(${LIB_NAME} INTERFACE ${SOURCE_FILES})
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	target_link_libraries(${LIB_NAME} INTERFACE stdc++fs)
-endif()
-
 # Compile example
 #set(COMPILE_EXAMPLES 1)
 if (${COMPILE_EXAMPLES})
-	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
-	
 	set(EXAMPLE1_NAME "Example")
 	add_executable(${EXAMPLE1_NAME} "examples/example.cpp")
 	

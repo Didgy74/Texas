@@ -1,68 +1,64 @@
 #pragma once
 
-#include <cstdint>
+#include "DTex/PixelFormat.hpp"
+#include "DTex/Colorspace.hpp"
 
-#include "DTex/Typedefs.hpp"
+#include <cstdint>
+#include <utility>
 
 namespace DTex
 {
-	namespace detail
+	namespace Tools
 	{
-		namespace GLTextureTargets
+		namespace GLEnums
 		{
-			constexpr auto gl_TEXTURE_1D = 0x0DE0;
-			constexpr auto gl_TEXTURE_2D = 0x0DE1;
-			constexpr auto gl_TEXTURE_3D = 0x806F;
-		}
+			constexpr uint32_t gl_TEXTURE_1D = 0x0DE0;
+			constexpr uint32_t gl_TEXTURE_2D = 0x0DE1;
+			constexpr uint32_t gl_TEXTURE_3D = 0x806F;
 
-		namespace GLFormats
-		{
+			constexpr auto gl_UNSIGNED_BYTE = 0x1401;
+
 			// Standard
-			constexpr auto gl_RGB = 0x1907;
-			constexpr auto gl_RGBA = 0x1908;
-			constexpr auto gl_RGB4 = 0x804F;
-			constexpr auto gl_RGB5 = 0x8050;
-			constexpr auto gl_RGB8 = 0x8051;
-			constexpr auto gl_RGB10 = 0x8052;
-			constexpr auto gl_RGB12 = 0x8053;
-			constexpr auto gl_RGB16 = 0x8054;
-			constexpr auto gl_RGBA2 = 0x8055;
-			constexpr auto gl_RGBA4 = 0x8056;
-			constexpr auto gl_RGB5_A1 = 0x8057;
-			constexpr auto gl_RGBA8 = 0x8058;
-			constexpr auto gl_RGB10_A2 = 0x8059;
-			constexpr auto gl_RGBA12 = 0x805A;
-			constexpr auto gl_RGBA16 = 0x805B;
+			constexpr uint32_t gl_RED = 0x1903;
+			constexpr uint32_t gl_RG = 0x8227;
+			constexpr uint32_t gl_RGB = 0x1907;
+			constexpr uint32_t gl_RGBA = 0x1908;
+
+			constexpr uint32_t gl_R8 = 0x8229;
+			constexpr uint32_t gl_RG8 = 0x822B;
+			constexpr uint32_t gl_RGB8 = 0x8051;
+			constexpr uint32_t gl_RGBA8 = 0x8058;
+
+			constexpr uint32_t gl_SRGB = 0x8C40;
+			constexpr uint32_t gl_SRGB8 = 0x8C41; // Core
+			constexpr uint32_t gl_SRGB_ALPHA = 0x8C42;
+			constexpr uint32_t gl_SRGB8_ALPHA8 = 0x8C43; // Core
 
 			// BCn
 			// BC1 - BC3
-			constexpr auto gl_COMPRESSED_SRGB_S3TC_DXT1_EXT = 0x8C4C;
-			constexpr auto gl_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT = 0x8C4D;
-			constexpr auto gl_COMPRESSED_RGB_S3TC_DXT1_ANGLE = 0x83F0;
-			constexpr auto gl_COMPRESSED_RGBA_S3TC_DXT1_ANGLE = 0x83F1;
-			constexpr auto gl_COMPRESSED_RGBA_S3TC_DXT3_ANGLE = 0x83F2;
-			constexpr auto gl_COMPRESSED_RGBA_S3TC_DXT5_ANGLE = 0x83F3;
+			constexpr uint32_t gl_COMPRESSED_SRGB_S3TC_DXT1_EXT = 0x8C4C;
+			constexpr uint32_t gl_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT = 0x8C4D;
+			constexpr uint32_t gl_COMPRESSED_RGB_S3TC_DXT1_ANGLE = 0x83F0;
+			constexpr uint32_t gl_COMPRESSED_RGBA_S3TC_DXT1_ANGLE = 0x83F1;
+			constexpr uint32_t gl_COMPRESSED_RGBA_S3TC_DXT3_ANGLE = 0x83F2;
+			constexpr uint32_t gl_COMPRESSED_RGBA_S3TC_DXT5_ANGLE = 0x83F3;
 			// BC4 - BC5
-			constexpr auto gl_COMPRESSED_RED_RGTC1 = 0x8DBB;
-			constexpr auto gl_COMPRESSED_SIGNED_RED_RGTC1 = 0x8DBC;
-			constexpr auto gl_COMPRESSED_RG_RGTC2 = 0x8DBD;
-			constexpr auto gl_COMPRESSED_SIGNED_RG_RGTC2 = 0x8DBE;
+			constexpr uint32_t gl_COMPRESSED_RED_RGTC1 = 0x8DBB;
+			constexpr uint32_t gl_COMPRESSED_SIGNED_RED_RGTC1 = 0x8DBC;
+			constexpr uint32_t gl_COMPRESSED_RG_RGTC2 = 0x8DBD;
+			constexpr uint32_t gl_COMPRESSED_SIGNED_RG_RGTC2 = 0x8DBE;
 			// B6H - BC7
-			constexpr auto gl_COMPRESSED_RGB_BPTC_SIGNED_FLOAT = 0x8E8E;
-			constexpr auto gl_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT = 0x8E8F;
-			constexpr auto gl_COMPRESSED_RGBA_BPTC_UNORM = 0x8E8C;
-			constexpr auto gl_COMPRESSED_SRGB_ALPHA_BPTC_UNORM = 0x8E8D;
+			constexpr uint32_t gl_COMPRESSED_RGB_BPTC_SIGNED_FLOAT = 0x8E8E;
+			constexpr uint32_t gl_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT = 0x8E8F;
+			constexpr uint32_t gl_COMPRESSED_RGBA_BPTC_UNORM = 0x8E8C;
+			constexpr uint32_t gl_COMPRESSED_SRGB_ALPHA_BPTC_UNORM = 0x8E8D;
 		}
 
-		namespace GLTypes
-		{
-			constexpr auto gl_UNSIGNED_BYTE = 0x1401;
-		}
 	}
 
 	inline constexpr uint32_t ToGLTarget(TextureType target)
 	{
-		using namespace detail::GLTextureTargets;
+		using namespace Tools::GLEnums;
 
 		using T = TextureType;
 
@@ -81,147 +77,185 @@ namespace DTex
 
 	inline constexpr uint32_t ToGLType(PixelFormat format)
 	{
-		using namespace detail::GLTypes;
-
-		using F = PixelFormat;
+		using namespace Tools::GLEnums;
 
 		switch (format)
 		{
-		case F::R8G8B8_UNorm:
-		case F::R8G8B8A8_UNorm:
+		case PixelFormat::RGB_8:
+		case PixelFormat::RGBA_8:
 			return gl_UNSIGNED_BYTE;
 		}
 
 		return 0;
 	}
 
+	/*
+		Returns 0 on error.
+	*/
 	inline constexpr uint32_t ToGLFormat(PixelFormat format)
 	{
-		using namespace detail::GLFormats;
-
-		using F = PixelFormat;
+		using namespace Tools::GLEnums;
 
 		switch (format)
 		{
-			// Standard
-		case F::R8G8B8_UNorm:
+		case PixelFormat::R_8:
+			return gl_RED;
+		case PixelFormat::RG_8:
+			return gl_RG;
+		case PixelFormat::RGB_8:
 			return gl_RGB;
-		case F::R8G8B8A8_UNorm:
+		case PixelFormat::RGBA_8:
 			return gl_RGBA;
-
-
-
-			/*
-				BCn
-			*/
-		case F::BC1_RGB_UNorm:
-			return gl_COMPRESSED_RGB_S3TC_DXT1_ANGLE;
-		case F::BC1_RGB_sRGB:
-			return gl_COMPRESSED_SRGB_S3TC_DXT1_EXT;
-		case F::BC1_RGBA_UNorm:
-			return gl_COMPRESSED_RGBA_S3TC_DXT1_ANGLE;
-		case F::BC1_RGBA_sRGB:
-			return gl_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
-		case F::BC2_UNorm:
-			return gl_COMPRESSED_RGBA_S3TC_DXT3_ANGLE;
-		case F::BC3_UNorm:
-			return gl_COMPRESSED_RGBA_S3TC_DXT5_ANGLE;
-		case F::BC4_UNorm:
-			return gl_COMPRESSED_RED_RGTC1;
-		case F::BC4_SNorm:
-			return gl_COMPRESSED_SIGNED_RED_RGTC1;
-		case F::BC5_UNorm:
-			return gl_COMPRESSED_RG_RGTC2;
-		case F::BC5_SNorm:
-			return gl_COMPRESSED_SIGNED_RG_RGTC2;
-		case F::BC6H_SFloat:
-			return gl_COMPRESSED_RGB_BPTC_SIGNED_FLOAT;
-		case F::BC6H_UFloat:
-			return gl_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT;
-		case F::BC7_UNorm:
-			return gl_COMPRESSED_RGBA_BPTC_UNORM;
-		case F::BC7_sRGB:
-			return gl_COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
 		}
 
 		return 0;
 	}
 
-	inline constexpr PixelFormat ToFormat(uint32_t glFormat, uint32_t glType, bool& isCompressedFormat)
+	/*
+		Returns 0 on error.
+	*/
+	inline constexpr uint32_t ToGLInternalFormat(PixelFormat format, ColorSpace colorSpace)
 	{
-		using namespace detail::GLFormats;
-		using namespace detail::GLTypes;
+		using namespace Tools::GLEnums;
 
-		using F = PixelFormat;
+		switch (format)
+		{
+			// Standard
+		case PixelFormat::R_8:
+			return gl_R8;
+		case PixelFormat::RG_8:
+			return gl_RG8;
+		case PixelFormat::RGB_8:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return gl_RGB8;
+			case ColorSpace::sRGB:
+				return gl_SRGB8;
+			}
+			break;
+		case PixelFormat::RGBA_8:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return gl_RGBA8;
+			case ColorSpace::sRGB:
+				return gl_SRGB8_ALPHA8;
+			}
+			break;
 
-		isCompressedFormat = false;
+
+			/*
+				BCn
+			*/
+		case PixelFormat::BC1_RGB:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return gl_COMPRESSED_RGB_S3TC_DXT1_ANGLE;
+			case ColorSpace::sRGB:
+				return gl_COMPRESSED_SRGB_S3TC_DXT1_EXT;
+			}
+			break;
+		case PixelFormat::BC1_RGBA:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return gl_COMPRESSED_RGBA_S3TC_DXT1_ANGLE;
+			case ColorSpace::sRGB:
+				return gl_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
+			}
+			break;
+		case PixelFormat::BC2:
+			return gl_COMPRESSED_RGBA_S3TC_DXT3_ANGLE;
+		case PixelFormat::BC3:
+			return gl_COMPRESSED_RGBA_S3TC_DXT5_ANGLE;
+		case PixelFormat::BC4_Unsigned:
+			return gl_COMPRESSED_RED_RGTC1;
+		case PixelFormat::BC4_Signed:
+			return gl_COMPRESSED_SIGNED_RED_RGTC1;
+		case PixelFormat::BC5_Unsigned:
+			return gl_COMPRESSED_RG_RGTC2;
+		case PixelFormat::BC5_Signed:
+			return gl_COMPRESSED_SIGNED_RG_RGTC2;
+		case PixelFormat::BC6H_SFloat:
+			return gl_COMPRESSED_RGB_BPTC_SIGNED_FLOAT;
+		case PixelFormat::BC6H_UFloat:
+			return gl_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT;
+		case PixelFormat::BC7:
+			switch (colorSpace)
+			{
+			case ColorSpace::Linear:
+				return gl_COMPRESSED_RGBA_BPTC_UNORM;
+			case ColorSpace::sRGB:
+				return gl_COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
+			}
+			break;
+		}
+
+		return 0;
+	}
+
+	constexpr std::pair<PixelFormat, ColorSpace> ToPixelFormat(uint32_t glFormat, uint32_t glType)
+	{
+		using namespace Tools::GLEnums;
+
 		switch (glFormat)
 		{
-
 			// Standard
 		case gl_RGB:
 			switch (glType)
 			{
 			case gl_UNSIGNED_BYTE:
-				return F::R8G8B8_UNorm;
+				return { PixelFormat::RGB_8, ColorSpace::Linear };
 			}
+			break;
 		case gl_RGBA:
 			switch (glType)
 			{
 			case gl_UNSIGNED_BYTE:
-				return F::R8G8B8A8_UNorm;
+				return { PixelFormat::RGBA_8,  ColorSpace::Linear };
 			}
-				
+			break;
 		case gl_RGB8:
-			return F::R8G8B8_UNorm;
+			return { PixelFormat::RGB_8, ColorSpace::Linear };
 		case gl_RGBA8:
-			return F::R8G8B8A8_UNorm;
-
+			return { PixelFormat::RGBA_8, ColorSpace::Linear };
 		}
 
-		isCompressedFormat = true;
 		switch (glFormat)
 		{
-
 			// BCn
 		case gl_COMPRESSED_RGB_S3TC_DXT1_ANGLE:
-			return F::BC1_RGB_UNorm;
+			return { PixelFormat::BC1_RGB, ColorSpace::Linear };
 		case gl_COMPRESSED_SRGB_S3TC_DXT1_EXT:
-			return F::BC1_RGB_sRGB;
+			return { PixelFormat::BC1_RGB, ColorSpace::sRGB };
 		case gl_COMPRESSED_RGBA_S3TC_DXT1_ANGLE:
-			return F::BC1_RGBA_UNorm;
+			return { PixelFormat::BC1_RGBA, ColorSpace::Linear };
 		case gl_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
-			return F::BC1_RGBA_sRGB;
+			return { PixelFormat::BC1_RGBA, ColorSpace::sRGB };
 		case gl_COMPRESSED_RGBA_S3TC_DXT3_ANGLE:
-			return F::BC2_UNorm;
+			return { PixelFormat::BC2, ColorSpace::Linear };
 		case gl_COMPRESSED_RGBA_S3TC_DXT5_ANGLE:
-			return F::BC3_UNorm;
+			return { PixelFormat::BC3, ColorSpace::sRGB };
 		case gl_COMPRESSED_RED_RGTC1:
-			return F::BC4_UNorm;
+			return { PixelFormat::BC4_Unsigned, ColorSpace::Linear };
 		case gl_COMPRESSED_SIGNED_RED_RGTC1:
-			return F::BC4_SNorm;
+			return { PixelFormat::BC4_Signed, ColorSpace::Linear };
 		case gl_COMPRESSED_RG_RGTC2:
-			return F::BC5_UNorm;
+			return { PixelFormat::BC5_Unsigned, ColorSpace::Linear };
 		case gl_COMPRESSED_SIGNED_RG_RGTC2:
-			return F::BC5_SNorm;
+			return { PixelFormat::BC5_Signed, ColorSpace::Linear };
 		case gl_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
-			return F::BC6H_SFloat;
+			return { PixelFormat::BC6H_SFloat, ColorSpace::Linear };
 		case gl_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
-			return F::BC6H_UFloat;
+			return { PixelFormat::BC6H_UFloat, ColorSpace::Linear };
 		case gl_COMPRESSED_RGBA_BPTC_UNORM:
-			return F::BC7_UNorm;
+			return { PixelFormat::BC7, ColorSpace::Linear };
 		case gl_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
-			return F::BC7_sRGB;
+			return { PixelFormat::BC7, ColorSpace::sRGB };
 
 		}
-
-		isCompressedFormat = false;
-		return F::Invalid;
-	}
-
-	constexpr PixelFormat ToFormat(uint32_t glFormat, uint32_t glType)
-	{
-		bool unusedBool{};
-		return ToFormat(glFormat, glType, unusedBool);
+		return { PixelFormat::Invalid, ColorSpace::Invalid };
 	}
 }

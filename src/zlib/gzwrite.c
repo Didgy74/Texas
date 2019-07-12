@@ -3,6 +3,10 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+#if defined( _MSC_VER )
+#	define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "gzguts.h"
 
 /* Local functions */
@@ -86,7 +90,11 @@ local int gz_comp(state, flush)
     if (state->direct) {
         while (strm->avail_in) {
             put = strm->avail_in > max ? max : strm->avail_in;
-            writ = write(state->fd, strm->next_in, put);
+#if defined( _MSC_VER )
+            writ = _write(state->fd, strm->next_in, put);
+#else
+			writ = write(state->fd, strm->next_in, put);
+#endif
             if (writ < 0) {
                 gz_error(state, Z_ERRNO, zstrerror());
                 return -1;
@@ -107,7 +115,11 @@ local int gz_comp(state, flush)
             while (strm->next_out > state->x.next) {
                 put = strm->next_out - state->x.next > (int)max ? max :
                       (unsigned)(strm->next_out - state->x.next);
-                writ = write(state->fd, state->x.next, put);
+#if defined( _MSC_VER )
+                writ = _write(state->fd, state->x.next, put);
+#else
+				writ = write(state->fd, state->x.next, put);
+#endif
                 if (writ < 0) {
                     gz_error(state, Z_ERRNO, zstrerror());
                     return -1;
@@ -209,7 +221,7 @@ local z_size_t gz_write(state, buf, len)
                               state->in);
             copy = state->size - have;
             if (copy > len)
-                copy = len;
+                copy = (unsigned int)len;
             memcpy(state->in + have, buf, copy);
             state->strm.avail_in += copy;
             state->x.pos += copy;
@@ -229,7 +241,7 @@ local z_size_t gz_write(state, buf, len)
         do {
             unsigned n = (unsigned)-1;
             if (n > len)
-                n = len;
+                n = (unsigned int)len;
             state->strm.avail_in = n;
             state->x.pos += n;
             if (gz_comp(state, Z_NO_FLUSH) == -1)
@@ -368,7 +380,7 @@ int ZEXPORT gzputs(file, str)
 
     /* write string */
     len = strlen(str);
-    ret = gz_write(state, str, len);
+    ret = (int)gz_write(state, str, len);
     return ret == 0 && len != 0 ? -1 : ret;
 }
 
@@ -658,7 +670,11 @@ int ZEXPORT gzclose_w(file)
     }
     gz_error(state, Z_OK, NULL);
     free(state->path);
-    if (close(state->fd) == -1)
+#if defined( _MSC_VER )
+    if (_close(state->fd) == -1)
+#else
+	if (close(state->fd) == -1)
+#endif
         ret = Z_ERRNO;
     free(state);
     return ret;

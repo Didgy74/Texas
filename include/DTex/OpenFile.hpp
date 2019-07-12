@@ -1,22 +1,24 @@
 #pragma once
 
-#include "DTex/MetaData.hpp"
-
-#include <vector>
+#include <fstream>
 #include <optional>
+
+#include "DTex/MetaData.hpp"
+#include "DTex/Typedefs.hpp"
+#include "DTex/FileFormat.hpp"
+#include "DTex/Dimensions.hpp"
+#include "DTex/PixelFormat.hpp"
+#include "DTex/Colorspace.hpp"
+
+#include "DTex/Tools.hpp"
 
 namespace DTex
 {
-	namespace detail
-	{
-		class PrivateAccessor;
-	}
-
-	class TextureDocument
+	class OpenFile
 	{
 	public:
 		/*
-			Gets the file format of the file that was loaded.
+		Gets the file format of the file that was loaded.
 		*/
 		FileFormat GetSourceFileFormat() const;
 
@@ -76,68 +78,48 @@ namespace DTex
 
 		uint32_t GetArrayLayerCount() const;
 
-		/*
-			Returns the size of the image at the specified mipLevel.
-		*/
-		std::optional<size_t> GetDataSize(uint32_t mipLevel) const;
-
-		/*
-			Gets a pointer to the imagedata of the specified mipLevel.
-		*/
-		std::optional<const uint8_t*> GetData(uint32_t mipLevel) const;
-
-		uint8_t* GetInternalBufferData() const;
-
 	private:
+		OpenFile() = default;
+
 		MetaData metaData;
 
-		std::vector<uint8_t> byteArray;
+		mutable std::ifstream filestream;
 
 		friend class detail::PrivateAccessor;
 	};
-
-	using TexDoc = TextureDocument;
 }
 
-inline DTex::FileFormat DTex::TextureDocument::GetSourceFileFormat() const
+inline DTex::FileFormat DTex::OpenFile::GetSourceFileFormat() const
 {
 	return metaData.srcFileFormat;
 }
 
-inline const DTex::Dimensions& DTex::TextureDocument::GetBaseDimensions() const
+inline const DTex::Dimensions& DTex::OpenFile::GetBaseDimensions() const
 {
 	return metaData.baseDimensions;
 }
 
-inline DTex::PixelFormat DTex::TextureDocument::GetPixelFormat() const
+inline DTex::PixelFormat DTex::OpenFile::GetPixelFormat() const
 {
 	return metaData.pixelFormat;
 }
 
-inline bool DTex::TextureDocument::IsCompressed() const
+inline bool DTex::OpenFile::IsCompressed() const
 {
 	return Tools::IsCompressed(metaData.pixelFormat);
 }
 
-inline DTex::ColorSpace DTex::TextureDocument::GetColorSpace() const
+inline DTex::ColorSpace DTex::OpenFile::GetColorSpace() const
 {
 	return metaData.colorSpace;
 }
 
-inline DTex::TextureType DTex::TextureDocument::GetTextureType() const
+inline DTex::TextureType DTex::OpenFile::GetTextureType() const
 {
 	return Tools::ToTextureType(metaData.baseDimensions, metaData.arrayLayerCount);
 }
 
-inline uint32_t DTex::TextureDocument::GetMipLevelCount() const
+inline uint32_t DTex::OpenFile::GetMipLevelCount() const
 {
 	return metaData.mipLevelCount;
-}
-
-inline std::optional<size_t> DTex::TextureDocument::GetDataSize(uint32_t mipLevel) const
-{
-	if (mipLevel >= metaData.mipLevelCount)
-		return {};
-
-	return Tools::CalcImageDataSize_Unsafe(Tools::CalcMipmapDimensions(metaData.baseDimensions, mipLevel), metaData.pixelFormat);
 }
