@@ -8,10 +8,10 @@ std::filesystem::path pathToFile = "test.ktx";
 
 DTex::LoadInfo<DTex::TexDoc> loadInfo = DTex::LoadFromFile(pathToFile);
 
-if (loadInfo.GetResultInfo() != DTex::ResultInfo::Success)
+if (loadInfo.IsSuccessful() == false)
 {
 	DTex::ResultInfo errorCode = loadInfo.GetResultInfo();
-	const std::string_view& errorMessage = loadInfo.GetErrorMessage();
+	std::string_view errorMessage = loadInfo.GetErrorMessage();
 	// Handle error
 }
 
@@ -68,10 +68,10 @@ std::filesystem::path pathToFile = "test.ktx";
 
 DTex::LoadInfo<DTex::OpenFile> loadInfo = DTex::LoadFromFile(pathToFile);
 
-if (loadInfo.GetResultInfo() != DTex::ResultInfo::Success)
+if (loadInfo.IsSuccessful() == false)
 {
 	DTex::ResultInfo errorCode = loadInfo.GetResultInfo();
-	const std::string_view& errorMessage = loadInfo.GetErrorMessage();
+	std::string_view errorMessage = loadInfo.GetErrorMessage();
 	// Handle error
 }
 

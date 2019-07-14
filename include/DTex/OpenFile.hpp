@@ -76,7 +76,7 @@ namespace DTex
 		TextureType GetTextureType() const;
 
 		/*
-			Returns the total size required for storing all the mips and image array elements.
+			Returns the total size required for storing all of the imagedata.
 		*/
 		size_t GetTotalSizeRequired() const;
 

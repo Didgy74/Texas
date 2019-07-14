@@ -27,8 +27,41 @@ namespace DTex
 		ResultInfo GetResultInfo() const;
 		const std::string_view& GetErrorMessage() const;
 
-		T& GetValue();
-		const T& GetValue() const;
+		/*
+			Returns the loaded struct.
+
+			Warning! Using this method when IsSuccessful() returns false, will result in undefined behavior.
+		*/
+		T& GetValue()
+		{
+			return value;
+		}
+
+		/*
+			Returns the loaded struct.
+
+			Warning! Using this method when IsSuccessful() returns false, will result in undefined behavior.
+		*/
+		const T& GetValue() const
+		{
+			return value;
+		}
+
+		/*
+			Returns true if GetResultInfo() returns ResultInfo::Success.
+		*/
+		bool IsSuccessful() const
+		{
+			return resultInfo == ResultInfo::Success;
+		}
+		/*
+			Does the same as IsSuccessful().
+		*/
+		operator bool() const
+		{
+			return resultInfo == ResultInfo::Success;
+		}
+
 	private:
 		ResultInfo resultInfo;
 		union
@@ -109,17 +142,5 @@ namespace DTex
 	inline const std::string_view& LoadInfo<T>::GetErrorMessage() const
 	{
 		return errorMessage;
-	}
-
-	template<typename T>
-	inline T& LoadInfo<T>::GetValue()
-	{
-		return value;
-	}
-
-	template<typename T>
-	inline const T& LoadInfo<T>::GetValue() const
-	{
-		return value;
 	}
 }

@@ -29,19 +29,6 @@ You can gain access to the library from a source file by using `#include` at the
 ```cpp
 #include "DTex/DTex.hpp"
 ```
-## Examples
-The example(s) can be compiled using a compiler of your choice, refer to the "Requirements" section for a list of tested compilers
-
-You can tell CMake to automatically compile the example(s) into their own executables. This can be done by adding the following line to the CMakeLists.txt in the root of the library (not the root of your project.
-```cmake
-set(COMPILE_EXAMPLES 1)
-```
-How the start of the CMakeLists.txt should look afterwards:
-```cmake
-cmake_minimum_required(VERSION 3.12)
-project(DTex)
-set(COMPILE_EXAMPLES 1)
-```
 ## Limitations
 The current version is capable of loading KTX and PNG files. It will auto-detect the format based on the path provided.
 

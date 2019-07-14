@@ -9,7 +9,7 @@ int main()
 
 	DTex::LoadInfo<DTex::TextureDocument> loadInfo = DTex::LoadFromFile(path);
 
-	if (loadInfo.GetResultInfo() != DTex::ResultInfo::Success)
+	if (loadInfo.IsSuccessful() == false)
 	{
 		std::cout << DTex::ToString(loadInfo.GetResultInfo()) << std::endl;
 		std::cout << loadInfo.GetErrorMessage() << std::endl;
