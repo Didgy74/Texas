@@ -1,10 +1,11 @@
 #pragma once
 
-#include "DTex/LoadResult.hpp"
 #include "DTex/TextureDocument.hpp"
+#include "DTex/ResultInfo.hpp"
 
 #include <fstream>
 #include <filesystem>
+#include <string_view>
 
 namespace DTex::detail::PNG
 {
@@ -42,7 +43,5 @@ namespace DTex::detail::PNG
 
 	};
 
-	LoadResult<TextureDocument> LoadPNG(std::filesystem::path path);
-
-	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string& errorMessage);
+	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string_view& errorMessage);
 }

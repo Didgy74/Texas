@@ -1,2 +1,0 @@
-01 - Uncompressed 2D image, no mips, no layers, no cubemap
-02 - BC7 RGBA compressed 2D image, mips, no layers, no cubemap

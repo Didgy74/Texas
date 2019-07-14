@@ -1,12 +1,12 @@
 #pragma once
 
-#include "DTex/LoadResult.hpp"
+#include "DTex/LoadInfo.hpp"
 #include "DTex/TextureDocument.hpp"
 #include "DTex/OpenFile.hpp"
 #include "DTex/MetaData.hpp"
 
 #include <fstream>
-#include <string>
+#include <string_view>
 
 namespace DTex::detail::KTX
 {
@@ -48,5 +48,5 @@ namespace DTex::detail::KTX
 		static constexpr size_t bytesOfKeyValueDataOffset = numberOfMipmapLevelsOffset + sizeof(Member_T);
 	};
 
-	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string& errorMessage);
+	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string_view& errorMessage);
 }

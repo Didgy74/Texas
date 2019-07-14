@@ -1,11 +1,23 @@
 #include "DTex/OpenFile.hpp"
 
-
-#include "DTex/DTex.hpp"
-
 #include "DTex/Tools.hpp"
 
-std::optional<DTex::Dimensions> DTex::OpenFile::GetDimensions(uint32_t mipLevel) const
+uint32_t DTex::OpenFile::GetArrayLayerCount() const
+{
+	return metaData.arrayLayerCount;
+}
+
+const DTex::Dimensions& DTex::OpenFile::GetBaseDimensions() const
+{
+	return metaData.baseDimensions;
+}
+
+DTex::ColorSpace DTex::OpenFile::GetColorSpace() const
+{
+	return metaData.colorSpace;
+}
+
+std::optional<DTex::Dimensions> DTex::OpenFile::GetMipDimensions(uint32_t mipLevel) const
 {
 	if (mipLevel >= metaData.mipLevelCount)
 		return {};
@@ -13,9 +25,9 @@ std::optional<DTex::Dimensions> DTex::OpenFile::GetDimensions(uint32_t mipLevel)
 	return Tools::CalcMipmapDimensions(metaData.baseDimensions, mipLevel);
 }
 
-size_t DTex::OpenFile::GetTotalSizeRequired() const
+uint32_t DTex::OpenFile::GetMipLevelCount() const
 {
-	return Tools::CalcTotalSizeRequired(metaData.baseDimensions, metaData.mipLevelCount, metaData.arrayLayerCount, metaData.pixelFormat);
+	return metaData.mipLevelCount;
 }
 
 std::optional<size_t> DTex::OpenFile::GetMipLevelOffset(uint32_t mipLevel) const
@@ -32,4 +44,29 @@ std::optional<size_t> DTex::OpenFile::GetMipLevelSize(uint32_t mipLevel) const
 		return {};
 
 	return Tools::CalcImageDataSize(Tools::CalcMipmapDimensions(metaData.baseDimensions, mipLevel), metaData.pixelFormat);
+}
+
+DTex::PixelFormat DTex::OpenFile::GetPixelFormat() const
+{
+	return metaData.pixelFormat;
+}
+
+DTex::FileFormat DTex::OpenFile::GetSourceFileFormat() const
+{
+	return metaData.srcFileFormat;
+}
+
+DTex::TextureType DTex::OpenFile::GetTextureType() const
+{
+	return Tools::ToTextureType(metaData.baseDimensions, metaData.arrayLayerCount);
+}
+
+size_t DTex::OpenFile::GetTotalSizeRequired() const
+{
+	return Tools::CalcTotalSizeRequired(metaData.baseDimensions, metaData.mipLevelCount, metaData.arrayLayerCount, metaData.pixelFormat);
+}
+
+bool DTex::OpenFile::IsCompressed() const
+{
+	return Tools::IsCompressed(metaData.pixelFormat);
 }

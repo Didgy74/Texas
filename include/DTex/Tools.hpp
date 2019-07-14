@@ -3,7 +3,6 @@
 #include "DTex/PixelFormat.hpp"
 #include "DTex/Dimensions.hpp"
 #include "DTex/TextureType.hpp"
-
 #include "DTex/BlockInfo.hpp"
 
 #include <cstdint>
@@ -43,6 +42,30 @@ namespace DTex::Tools
 	constexpr TextureType ToTextureType(const Dimensions& dimensions, uint32_t arrayLayers);
 }
 
+constexpr DTex::BlockInfo DTex::Tools::GetBlockInfo(PixelFormat pixelFormat)
+{
+	switch (pixelFormat)
+	{
+	case PixelFormat::BC1_RGB:
+	case PixelFormat::BC1_RGBA:
+		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 8 };
+	case PixelFormat::BC2:
+	case PixelFormat::BC3:
+		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 16 };
+	case PixelFormat::BC4_Signed:
+	case PixelFormat::BC4_Unsigned:
+		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 8 };
+	case PixelFormat::BC5_Signed:
+	case PixelFormat::BC5_Unsigned:
+	case PixelFormat::BC6H_SFloat:
+	case PixelFormat::BC6H_UFloat:
+	case PixelFormat::BC7:
+		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 16 };
+	}
+
+	return {};
+}
+
 constexpr bool DTex::Tools::IsBCnCompressed(PixelFormat pixelFormat)
 {
 	switch (pixelFormat)
@@ -68,32 +91,6 @@ constexpr bool DTex::Tools::IsCompressed(PixelFormat pixelFormat)
 {
 	return IsBCnCompressed(pixelFormat);
 }
-
-constexpr DTex::BlockInfo DTex::Tools::GetBlockInfo(PixelFormat pixelFormat)
-{
-	switch (pixelFormat)
-	{
-	case PixelFormat::BC1_RGB:
-	case PixelFormat::BC1_RGBA:
-		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 8 };
-	case PixelFormat::BC2:
-	case PixelFormat::BC3:
-		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 16 };
-	case PixelFormat::BC4_Signed:
-	case PixelFormat::BC4_Unsigned:
-		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 8 };
-	case PixelFormat::BC5_Signed:
-	case PixelFormat::BC5_Unsigned:
-	case PixelFormat::BC6H_SFloat:
-	case PixelFormat::BC6H_UFloat:
-	case PixelFormat::BC7:
-		return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 16 };
-	}
-
-	return {};
-}
-
-
 
 constexpr DTex::TextureType DTex::Tools::ToTextureType(const Dimensions& dimensions, uint32_t arrayLayers)
 {

@@ -15,10 +15,7 @@ namespace DTex
 	class TextureDocument
 	{
 	public:
-		/*
-			Gets the file format of the file that was loaded.
-		*/
-		FileFormat GetSourceFileFormat() const;
+		uint32_t GetArrayLayerCount() const;
 
 		/*
 			Returns the base dimensions of the loaded image.
@@ -26,36 +23,25 @@ namespace DTex
 		const Dimensions& GetBaseDimensions() const;
 
 		/*
-			Returns the dimensions of the mipmap at the specified miplevel.
-			Use miplevel 0 for base dimensions.
-			Returns an empty optional if MipLevel argument is equal or higher than GetMipLevelCount()
-		*/
-		std::optional<Dimensions> GetDimensions(uint32_t mipLevel = 0) const;
-
-		/*
-			Returns the pixel format of the loaded image.
-		*/
-		PixelFormat GetPixelFormat() const;
-
-		/*
-			Returns true if the PixelFormat of the image is a compressed type.
-		*/
-		bool IsCompressed() const;
-
-		/*
 			Returns the color space type of the loaded image.
 		*/
 		ColorSpace GetColorSpace() const;
 
-		/*
-			Returns the texture type of the loaded image.
-		*/
-		TextureType GetTextureType() const;
+		const uint8_t* GetInternalBufferData() const;
+
+		constexpr const MetaData& GetMetaData() const;
 
 		/*
-			Returns the total size required for storing all the mips and image array elements.
+			Gets a pointer to the imagedata of the specified mipLevel.
 		*/
-		size_t GetTotalSizeRequired() const;
+		std::optional<const uint8_t*> GetMipData(uint32_t mipLevel) const;
+
+		/*
+			Returns the dimensions of the mipmap at the specified miplevel.
+			Use miplevel 0 for base dimensions.
+			Returns an empty optional if MipLevel argument is equal or higher than GetMipLevelCount()
+		*/
+		std::optional<Dimensions> GetMipDimensions(uint32_t mipLevel) const;
 
 		/*
 			Returns the length of the mipmap chain of the loaded image.
@@ -74,19 +60,30 @@ namespace DTex
 		*/
 		std::optional<size_t> GetMipLevelSize(uint32_t mipLevel) const;
 
-		uint32_t GetArrayLayerCount() const;
+		/*
+			Returns the pixel format of the loaded image.
+		*/
+		PixelFormat GetPixelFormat() const;
 
 		/*
-			Returns the size of the image at the specified mipLevel.
+			Gets the file format of the file that was loaded.
 		*/
-		std::optional<size_t> GetDataSize(uint32_t mipLevel) const;
+		FileFormat GetSourceFileFormat() const;
 
 		/*
-			Gets a pointer to the imagedata of the specified mipLevel.
+			Returns the texture type of the loaded image.
 		*/
-		std::optional<const uint8_t*> GetData(uint32_t mipLevel) const;
+		TextureType GetTextureType() const;
 
-		uint8_t* GetInternalBufferData() const;
+		/*
+			Returns the total size required for storing all the mips and image array elements.
+		*/
+		size_t GetTotalSizeRequired() const;
+
+		/*
+			Returns true if the PixelFormat of the image is a compressed type.
+		*/
+		bool IsCompressed() const;
 
 	private:
 		MetaData metaData;
@@ -99,45 +96,7 @@ namespace DTex
 	using TexDoc = TextureDocument;
 }
 
-inline DTex::FileFormat DTex::TextureDocument::GetSourceFileFormat() const
+constexpr const DTex::MetaData& DTex::TextureDocument::GetMetaData() const
 {
-	return metaData.srcFileFormat;
-}
-
-inline const DTex::Dimensions& DTex::TextureDocument::GetBaseDimensions() const
-{
-	return metaData.baseDimensions;
-}
-
-inline DTex::PixelFormat DTex::TextureDocument::GetPixelFormat() const
-{
-	return metaData.pixelFormat;
-}
-
-inline bool DTex::TextureDocument::IsCompressed() const
-{
-	return Tools::IsCompressed(metaData.pixelFormat);
-}
-
-inline DTex::ColorSpace DTex::TextureDocument::GetColorSpace() const
-{
-	return metaData.colorSpace;
-}
-
-inline DTex::TextureType DTex::TextureDocument::GetTextureType() const
-{
-	return Tools::ToTextureType(metaData.baseDimensions, metaData.arrayLayerCount);
-}
-
-inline uint32_t DTex::TextureDocument::GetMipLevelCount() const
-{
-	return metaData.mipLevelCount;
-}
-
-inline std::optional<size_t> DTex::TextureDocument::GetDataSize(uint32_t mipLevel) const
-{
-	if (mipLevel >= metaData.mipLevelCount)
-		return {};
-
-	return Tools::CalcImageDataSize_Unsafe(Tools::CalcMipmapDimensions(metaData.baseDimensions, mipLevel), metaData.pixelFormat);
+	return metaData;
 }

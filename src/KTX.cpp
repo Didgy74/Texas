@@ -6,9 +6,12 @@
 #include "DTex/Tools.hpp"
 
 #include <cstring>
+#include <string_view>
 
-bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string& errorMessage)
+bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string_view& errorMessage)
 {
+	using namespace std::literals;
+
 	uint8_t headerBuffer[Header::totalSize];
 	fstream.read(reinterpret_cast<char*>(headerBuffer), sizeof(headerBuffer));
 
@@ -16,7 +19,7 @@ bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (fstream.eof())
 	{
 		resultInfo = ResultInfo::CorruptFileData;
-		errorMessage = "Reached end-of-file while reading file header.";
+		errorMessage = "Reached end-of-file while reading file header."sv;
 		return false;
 	}
 
@@ -27,7 +30,7 @@ bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (std::memcmp(fileIdentifier, Header::correctIdentifier, sizeof(Header::Identifier_T)) != 0)
 	{
 		resultInfo = ResultInfo::CorruptFileData;
-		errorMessage = "File identifier does not match KTX identifier.";
+		errorMessage = "File identifier does not match KTX identifier."sv;
 		return false;
 	}
 
@@ -36,7 +39,7 @@ bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (fileEndian != Header::correctEndian)
 	{
 		resultInfo = ResultInfo::FileNotSupported;
-		errorMessage = "Loader limitation: File endianness does not match system endianness. Loader is not capable of converting.";
+		errorMessage = "File endianness does not match system endianness."sv;
 		return false;
 	}
 
@@ -70,7 +73,7 @@ bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (metaData.pixelFormat == PixelFormat::Invalid || metaData.colorSpace == ColorSpace::Invalid)
 	{
 		resultInfo = ResultInfo::PixelFormatNotSupported;
-		errorMessage = "KTX pixel format not supported.";
+		errorMessage = "KTX pixel format not supported."sv;
 		return false;
 	}
 
@@ -81,7 +84,7 @@ bool DTex::detail::KTX::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	return true;
 }
 
-void DTex::detail::PrivateAccessor::KTX_LoadImageData_CustomBuffer(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
+void DTex::detail::PrivateAccessor::KTX_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
 {
 	for (size_t i = 0; i < metaData.mipLevelCount; i++)
 	{

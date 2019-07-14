@@ -5,7 +5,7 @@
 #include "zlib/zlib.h"
 
 #include <vector>
-
+#include <string_view>
 #include <cstring>
 
 namespace DTex::detail::PNG
@@ -80,8 +80,10 @@ namespace DTex::detail::PNG
 	}
 }
 
-bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string& errorMessage)
+bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string_view& errorMessage)
 {
+	using namespace std::literals;
+
 	uint8_t headerBuffer[Header::totalSize];
 	fstream.read(reinterpret_cast<char*>(headerBuffer), sizeof(headerBuffer));
 
@@ -89,7 +91,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (fstream.eof())
 	{
 		resultInfo = ResultInfo::CorruptFileData;
-		errorMessage = "Reached end-of-file while reading file header.";
+		errorMessage = "Reached end-of-file while reading file header."sv;
 		return false;
 	}
 
@@ -103,7 +105,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
 	{
 		resultInfo = ResultInfo::CorruptFileData;
-		errorMessage = "File-identifier does not match PNG file-identifier.";
+		errorMessage = "File-identifier does not match PNG file-identifier."sv;
 		return false;
 	}
 
@@ -122,7 +124,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (metaData.pixelFormat == PixelFormat::Invalid)
 	{
 		resultInfo = ResultInfo::FileNotSupported;
-		errorMessage = "PNG colortype and bitdepth combination is not supported.";
+		errorMessage = "PNG colortype and bitdepth combination is not supported."sv;
 		return false;
 	}
 
@@ -130,7 +132,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (compressionMethod != 0)
 	{
 		resultInfo = ResultInfo::FileNotSupported;
-		errorMessage = "PNG compression method is not supported.";
+		errorMessage = "PNG compression method is not supported."sv;
 		return false;
 	}
 
@@ -138,7 +140,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (filterMethod != 0)
 	{
 		resultInfo = ResultInfo::FileNotSupported;
-		errorMessage = "PNG filter method is not supported.";
+		errorMessage = "PNG filter method is not supported."sv;
 		return false;
 	}
 
@@ -146,7 +148,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	if (interlaceMethod != 0)
 	{
 		resultInfo = ResultInfo::FileNotSupported;
-		errorMessage = "PNG interlace method is not supported.";
+		errorMessage = "PNG interlace method is not supported."sv;
 		return false;
 	}
 
@@ -182,7 +184,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	return true;
 }
 
-void DTex::detail::PrivateAccessor::PNG_LoadImageData_CustomBuffer(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
+void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
 {
 	// We add metaData.baseDimensions.height because every row starts with 1 byte specifying filter method for the row.
 	std::vector<uint8_t> uncompressedData(metaData.GetTotalSizeRequired() + metaData.baseDimensions.height);
