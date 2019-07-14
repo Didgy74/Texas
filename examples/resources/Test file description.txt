@@ -1,0 +1,3 @@
+01.ktx - Uncompressed 8-bit 2D image, no mips, no layers, no cubemap
+02.ktx - BC7 RGBA compressed 2D image, mips, no layers, no cubemap
+03.png - RGBA uncompressed 2D image 8-bit per channel
