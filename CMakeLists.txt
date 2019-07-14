@@ -26,7 +26,7 @@ file(GLOB_RECURSE SOURCE_FILES
 target_sources(${LIB_NAME} INTERFACE ${SOURCE_FILES})
 
 # Compile example
-set(COMPILE_EXAMPLES 1)
+#set(COMPILE_EXAMPLES 1)
 if (${COMPILE_EXAMPLES})
 	set(EXAMPLE1_NAME "Example")
 	add_executable(${EXAMPLE1_NAME} "examples/example.cpp")

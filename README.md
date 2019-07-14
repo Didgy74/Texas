@@ -1,19 +1,19 @@
 # DTex
 KTX and KTX2 texture-loading project by Nils Petter Skålerud (Didgy)
 
-This library aims to simplify KTX loading for C++ programs. It includes tools to load the texture to OpenGL and Vulkan.
+This library aims to simplify texture loading for C++ programs, with a focus on (but not limited to) 3D applications. It includes tools to load the texture to OpenGL and Vulkan.
 
 **NOTE!** This library is very early in it's development stages, interface breaking changes, bugs, features may be added/removed at any time over the course of the early stages of development. This is the first library I'm building that's meant to be used by others, you are warned.
 
 ## Requirements
-Hopefully the library should work on any C++17 compliant compiler.
+The library should work on any C++17 compliant compiler.
 
-The library has been tested to run on the following
+The library has been tested to run on the following compilers
 #### Windows x64
- - MSVC v14
+ - MSVC v14.21
 
  #### Ubuntu x64
- - GCC 8.2.0
+ - GCC 9.1.0
 
 ## Installation
 You can copy the contents of the `include` and `src` folder directly into your project. Remember to add all source-files in `src` as targets for compilation.
@@ -43,80 +43,35 @@ project(DTex)
 set(COMPILE_EXAMPLES 1)
 ```
 ## Limitations
-The current version of the library should work on KTX files, containing 2D images, compressed or uncompressed with mipmaps. The limitations of the library will change over time, as it is currently under testing.
-Simple 8-bit RGB / RGBA PNGs should work as well.
+The current version is capable of loading KTX and PNG files. It will auto-detect the format based on the path provided.
 
-PNG files are always uncompressed to RGB or RGBA format upon loading.
+PNG files are always decompressed to R, RG, RGB or RGBA upon loading based on the file's pixel format.
+PNG support is currently limited to the following formats
+ - Grayscale 8-bit per channel
+ - RGB 8-bit per channel
+ - RGBA 8-bit per channel
+ - Non-interlaced
 
 1D textures, 3D textures, texture arrays, cubemaps are **not** supported. Support for these will be added over time.
 
-JPEG support is planned to be added eventually, but this library will focus on loading KTX and KTX2 textures first and foremost.
-
 Currently supported pixel-formats:
-
+ - Uncompressed R, unsigned normalized, 8-bit
+ - Uncompressed RG, unsigned normalized, 8-bit
  - Uncompressed RGB, unsigned normalized, 8-bit
  - Uncompressed RGBA unsigned normalized, 8-bit
- - All BCn formats (needs testing to confirm)
- - All DXT formats (needs testing to confirm)
+ - All BCn formats
+ - All DXT formats
 
 ETC and ASTC support is planned.
-## Example usage with OpenGL
-```cpp
-#include "DTex/DTex.hpp"
-#include "DTex/GLFormats.hpp"
-
-auto loadResult = DTex::LoadFromFile("Data/Textures/02.ktx");
-
-if (loadResult.GetResultInfo() != DTex::ResultInfo::Success)
-{
-	std::string detailedErrorMessage = loadResult.GetErrorMessage();
-	// Could not load file. Do error handling.
-	return;
-}
-
-auto& texDoc = loadResult.GetValue();
-
-GLuint textureHandle;
-
-glGenTextures(1, &textureHandle);
-
-GLenum target = DTex::ToGLTarget(texDoc.GetTextureType());
-
-glBindTexture(target, textureHandle);
-
-GLint format = DTex::ToGLFormat(texDoc.GetPixelFormat());
-GLenum type = DTex::ToGLType(texDoc.GetPixelFormat());
-
-for (size_t level = 0; level < texDoc.GetMipLevels(); level++)
-{
-	GLsizei width = texDoc.GetDimensions(level).width;
-	GLsizei height = texDoc.GetDimensions(level).height;
-	auto data = texDoc.GetData(level);
-	GLsizei dataLength = texDoc.GetDataSize(level);
-
-	if (texDoc.IsCompressed())
-		glCompressedTexImage2D(target, level, format, width, height, 0, dataLength, data);
-	else
-		glTexImage2D(target, level, format, width, height, 0, format, type, data);
-}
-
-if (texDoc.GetMipLevels() > 1)
-{
-	glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-	glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, texDoc.GetMipLevels() - 1);
-}
-```
-A Vulkan example will be provided eventually. For now you can use `uint32_t DTex::GetVkFormat()` to get the correct `VkFormat`, and `uint32_t DTex::GetVkImageType()` to get the correct `VkImageType`.  These functions can be found in the `VkFormats.hpp` header file. Although tools for simplifying loading into Vulkan have not been made yet, I am 90% certain you will find all the information necessary to do so in this library.
 
 ### Dependencies
 
  - zLib 1.2.11 - [zLib Home Site](https://www.zlib.net/)
- I have made small changes to the source code to silence some error messages on MSVC compiler.
+ I have made small changes to the source code to silence some error messages on MSVC compiler. These changes should not affect runtime behavior.
 
 ### Contribution and Feedback
 I will very much welcome feedback or any suggestions. Please open issues or pull requests to show me what can be improved.
 
- 
 ### Thank you for using my library
 Sincerely, Nils Petter Skålerud aka "Didgy"
 
