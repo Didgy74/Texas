@@ -15,6 +15,13 @@ namespace DTex::detail::PNG
 
 	struct Header
 	{
+		static constexpr ChunkType_T IHDR_ChunkTypeValue = { 73, 72, 68, 82 };
+		static constexpr ChunkType_T PLTE_ChunkTypeValue = { 80, 76, 84, 69 };
+		static constexpr ChunkType_T IDAT_ChunkTypeValue = { 73, 68, 65, 84 };
+		static constexpr ChunkType_T IEND_ChunkTypeValue = { 73, 69, 78, 68 };
+
+		static constexpr ChunkType_T SRGB_ChunkTypeValue = { 115, 82, 71, 66 };
+
 		static constexpr size_t totalSize = sizeof(uint8_t) * 33;
 
 		static constexpr uint32_t identifierSize = 8;

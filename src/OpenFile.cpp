@@ -58,7 +58,7 @@ DTex::FileFormat DTex::OpenFile::GetSourceFileFormat() const
 
 DTex::TextureType DTex::OpenFile::GetTextureType() const
 {
-	return Tools::ToTextureType(metaData.baseDimensions, metaData.arrayLayerCount);
+	return metaData.textureType;
 }
 
 size_t DTex::OpenFile::GetTotalSizeRequired() const

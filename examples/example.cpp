@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <vector>
-
+ 
 int main()
 {
 	auto path = "resources/02.ktx";
@@ -13,7 +13,7 @@ int main()
 	{
 		std::cout << DTex::ToString(loadInfo.GetResultInfo()) << std::endl;
 		std::cout << loadInfo.GetErrorMessage() << std::endl;
-		std::exit(-1);
+		return 0;
 	}
 
 	DTex::TextureDocument& texDoc = loadInfo.GetValue();

@@ -96,12 +96,13 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	}
 
 	metaData.srcFileFormat = FileFormat::PNG;
+	metaData.textureType = TextureType::Texture2D;
 	metaData.baseDimensions.depth = 1;
 	metaData.arrayLayerCount = 1;
 	metaData.mipLevelCount = 1;
 	metaData.colorSpace = ColorSpace::Linear;
 
-	const Header::Identifier_T& fileIdentifier = *reinterpret_cast<Header::Identifier_T*>(headerBuffer + Header::identifierOffset);
+	const Header::Identifier_T* const fileIdentifier = reinterpret_cast<const Header::Identifier_T*>(headerBuffer + Header::identifierOffset);
 	if (memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
 	{
 		resultInfo = ResultInfo::CorruptFileData;
@@ -155,27 +156,33 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	// Move through chunks looking for more metadata until we find IDAT chunk.
 	while (true)
 	{
-		std::streampos chunkStreamPos = fstream.tellg();
+		const std::streampos chunkStreamPos = fstream.tellg();
 
 		// Load chunk size and chunk type
 		uint8_t chunkSizeAndTypeBuffer[sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T)];
 
 		fstream.read(reinterpret_cast<char*>(chunkSizeAndTypeBuffer), sizeof(chunkSizeAndTypeBuffer));
 
-		uint32_t chunkDataLength = uint32_t(chunkSizeAndTypeBuffer[3]) | (chunkSizeAndTypeBuffer[2] << uint32_t(8)) | (chunkSizeAndTypeBuffer[1] << uint32_t(16)) | (chunkSizeAndTypeBuffer[0] << uint32_t(24));
+		const uint32_t chunkDataLength = uint32_t(chunkSizeAndTypeBuffer[3]) | (chunkSizeAndTypeBuffer[2] << uint32_t(8)) | (chunkSizeAndTypeBuffer[1] << uint32_t(16)) | (chunkSizeAndTypeBuffer[0] << uint32_t(24));
 
-		constexpr uint8_t srgbTypeValue[4] = { 's', 'R', 'G', 'B' };
-		constexpr uint8_t idatTypeValue[4] = { 'I', 'D', 'A', 'T' };
-		if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(srgbTypeValue))
+		// Handle IDAT chunk
+		if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(Header::IDAT_ChunkTypeValue))
+		{
+			fstream.seekg(chunkStreamPos);
+	
+			break;
+		}
+		// Handle sRGB chunk
+		else if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(Header::SRGB_ChunkTypeValue))
 		{
 			// Do stuff with sRGB chunk
 			metaData.colorSpace = ColorSpace::sRGB;
 		}
-		else if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(idatTypeValue))
+		else if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(Header::IEND_ChunkTypeValue))
 		{
-			fstream.seekg(chunkStreamPos);
-
-			break;
+			resultInfo = ResultInfo::CorruptFileData;
+			errorMessage = "PNG IEND chunk appeared before IDATA chunk. File is corrupt."sv;
+			return false;
 		}
 
 		fstream.ignore(chunkDataLength + sizeof(PNG::ChunkCRC_T));
@@ -184,7 +191,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	return true;
 }
 
-void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
+bool DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
 {
 	// We add metaData.baseDimensions.height because every row starts with 1 byte specifying filter method for the row.
 	std::vector<uint8_t> uncompressedData(metaData.GetTotalSizeRequired() + metaData.baseDimensions.height);
@@ -198,7 +205,7 @@ void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, co
 	if (initErr != Z_OK)
 	{
 		inflateEnd(&zLibDecompressJob);
-		return;
+		return false;
 	}
 
 	while (true)
@@ -208,14 +215,21 @@ void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, co
 
 		fstream.read(reinterpret_cast<char*>(chunkSizeAndTypeBuffer), sizeof(chunkSizeAndTypeBuffer));
 
-		uint32_t chunkDataLength = uint32_t(chunkSizeAndTypeBuffer[3]) | (chunkSizeAndTypeBuffer[2] << uint32_t(8)) | (chunkSizeAndTypeBuffer[1] << uint32_t(16)) | (chunkSizeAndTypeBuffer[0] << uint32_t(24));
+		// Stop if we don't find a IDAT chunk.
+		if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkType_T)) != *reinterpret_cast<const uint32_t*>(PNG::Header::IDAT_ChunkTypeValue))
+		{
+			inflateEnd(&zLibDecompressJob);
+			return false;
+		}
+
+		const uint32_t chunkDataLength = uint32_t(chunkSizeAndTypeBuffer[3]) | (chunkSizeAndTypeBuffer[2] << uint32_t(8)) | (chunkSizeAndTypeBuffer[1] << uint32_t(16)) | (chunkSizeAndTypeBuffer[0] << uint32_t(24));
 
 		fstream.read(reinterpret_cast<char*>(dstBuffer), chunkDataLength);
 
 		zLibDecompressJob.next_in = (Bytef*)dstBuffer;
 		zLibDecompressJob.avail_in = (uInt)chunkDataLength;
 
-		auto err = inflate(&zLibDecompressJob, 0);
+		const auto err = inflate(&zLibDecompressJob, 0);
 		if (err == Z_STREAM_END)
 		{
 			// No more IDAT chunks to decompress
@@ -223,7 +237,7 @@ void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, co
 			break;
 		}
 
-		// REMEMBER TO SKIP CRC DATA
+		// We ignore CRC data.
 		fstream.ignore(sizeof(PNG::ChunkCRC_T));
 	}
 
@@ -258,16 +272,16 @@ void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, co
 		{
 			const uint8_t filterX = uncompressedData[1 + widthByte];
 			const uint8_t reconA = dstBuffer[widthByte - pixelWidth];
-			dstBuffer[widthByte] = filterX + uint8_t((uint16_t(reconA)) / float(2));
+			dstBuffer[widthByte] = filterX + uint8_t(reconA / float(2));
 		}
 	}
 	else
-		assert(false);
+		return false;
 
 	// Defilter rest of the rows
-	for (size_t y = 1; y < metaData.baseDimensions.height; y++)
+	for (uint32_t y = 1; y < metaData.baseDimensions.height; y++)
 	{
-		const size_t filterTypeIndex = y * metaData.baseDimensions.width * pixelWidth + y;
+		const size_t filterTypeIndex = size_t(y) * size_t(metaData.baseDimensions.width) * size_t(pixelWidth) + size_t(y);
 		const uint8_t filterType = uncompressedData[filterTypeIndex];
 
 		const size_t uncompRow = filterTypeIndex + 1;
@@ -303,7 +317,7 @@ void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, co
 			{
 				const uint8_t filterX = uncompressedData[uncompRow + widthByte];
 				const uint8_t reconB = dstBuffer[unfiltRow + widthByte - rowWidth];
-				dstBuffer[unfiltRow + widthByte] = filterX + uint8_t((uint16_t(reconB)) / float(2));
+				dstBuffer[unfiltRow + widthByte] = filterX + uint8_t(reconB / float(2));
 			}
 
 			for (size_t widthByte = pixelWidth; widthByte < rowWidth; widthByte++)
@@ -333,8 +347,8 @@ void DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, co
 			}
 		}
 		else
-			assert(false);
+			return false;
 	}
 
-
+	return true;
 }

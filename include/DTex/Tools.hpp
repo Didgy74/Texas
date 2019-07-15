@@ -38,8 +38,6 @@ namespace DTex::Tools
 		Returns true if pixelFormat is a compressed format.
 	*/
 	constexpr bool IsCompressed(PixelFormat pixelFormat);
-
-	constexpr TextureType ToTextureType(const Dimensions& dimensions, uint32_t arrayLayers);
 }
 
 constexpr DTex::BlockInfo DTex::Tools::GetBlockInfo(PixelFormat pixelFormat)
@@ -91,16 +89,3 @@ constexpr bool DTex::Tools::IsCompressed(PixelFormat pixelFormat)
 {
 	return IsBCnCompressed(pixelFormat);
 }
-
-constexpr DTex::TextureType DTex::Tools::ToTextureType(const Dimensions& dimensions, uint32_t arrayLayers)
-{
-	if (dimensions.height == 0 && dimensions.depth == 0)
-		return TextureType::Texture1D;
-	else if (dimensions.depth <= 1)
-		return TextureType::Texture2D;
-	else if (dimensions.depth > 1)
-		return TextureType::Texture3D;
-
-	return TextureType::Invalid;
-}
-

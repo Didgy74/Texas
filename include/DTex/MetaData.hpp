@@ -75,6 +75,7 @@ namespace DTex
 		bool IsCompressed() const;
 
 		FileFormat srcFileFormat = {};
+		TextureType textureType = {};
 		Dimensions baseDimensions = {};
 		PixelFormat pixelFormat = {};
 		ColorSpace colorSpace = {};
@@ -115,5 +116,5 @@ constexpr DTex::FileFormat DTex::MetaData::GetSourceFileFormat() const
 
 constexpr DTex::TextureType DTex::MetaData::GetTextureType() const
 {
-	return Tools::ToTextureType(baseDimensions, arrayLayerCount);
+	return textureType;
 }

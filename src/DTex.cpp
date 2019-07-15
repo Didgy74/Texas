@@ -3,12 +3,11 @@
 #include "KTX.hpp"
 #include "PNG.hpp"
 #include "PrivateAccessor.hpp"
+#include "DTex/TextureDocument.hpp"
 
 #include <fstream>
 #include <filesystem>
 #include <string_view>
-
-#include "DTex/TextureDocument.hpp"
 
 DTex::LoadInfo<DTex::TextureDocument> DTex::LoadFromFile(const std::filesystem::path& path)
 {
@@ -51,25 +50,19 @@ DTex::LoadInfo<DTex::TextureDocument> DTex::detail::PrivateAccessor::LoadFromFil
 
 	texDoc.byteArray.resize(texDoc.metaData.GetTotalSizeRequired());
 
-	switch (texDoc.metaData.srcFileFormat)
-	{
-	case FileFormat::KTX:
-		KTX_LoadImageData(filestream, texDoc.metaData, texDoc.byteArray.data());
-		break;
-	case FileFormat::PNG:
-		PNG_LoadImageData(filestream, texDoc.metaData, texDoc.byteArray.data());
-		break;
-	}
+	bool loadImageDataSuccessful = LoadImageData(texDoc.metaData, filestream, texDoc.byteArray.data());
+	if (loadImageDataSuccessful == false)
+		return LoadInfo<TextureDocument>(ResultInfo::CorruptFileData, "File has corrupted imagedata."sv);
 
 	return LoadInfo<TextureDocument>(std::move(texDoc));
 }
 
 DTex::LoadInfo<DTex::OpenFile> DTex::LoadFromFile_Deferred(const std::filesystem::path& path)
 {
-	return detail::PrivateAccessor::LoadFile_CustomBuffer(path);
+	return detail::PrivateAccessor::LoadFromFile_Deferred(path);
 }
 
-DTex::LoadInfo<DTex::OpenFile> DTex::detail::PrivateAccessor::LoadFile_CustomBuffer(const std::filesystem::path& path)
+DTex::LoadInfo<DTex::OpenFile> DTex::detail::PrivateAccessor::LoadFromFile_Deferred(const std::filesystem::path& path)
 {
 	using namespace std::literals;
 
@@ -108,17 +101,30 @@ DTex::LoadInfo<DTex::OpenFile> DTex::detail::PrivateAccessor::LoadFile_CustomBuf
 
 void DTex::LoadImageData(const OpenFile& file, uint8_t* const dstBuffer)
 {
-	return detail::PrivateAccessor::LoadImageData(file, dstBuffer);
+	detail::PrivateAccessor::LoadImageData(file, dstBuffer);
 }
 
-void DTex::detail::PrivateAccessor::LoadImageData(const OpenFile& file, uint8_t* const dstBuffer)
+bool DTex::detail::PrivateAccessor::LoadImageData(const OpenFile& openFile, uint8_t* const dstBuffer)
 {
-	if (file.metaData.srcFileFormat == FileFormat::KTX)
-		detail::PrivateAccessor::KTX_LoadImageData(file.filestream, file.metaData, dstBuffer);
-	else if (file.metaData.srcFileFormat == FileFormat::PNG)
-		detail::PrivateAccessor::PNG_LoadImageData(file.filestream, file.metaData, dstBuffer);
+	return LoadImageData(openFile.metaData, openFile.filestream, dstBuffer);
+}
 
-	file.filestream.close();
+bool DTex::detail::PrivateAccessor::LoadImageData(const MetaData& metaData, std::ifstream& fstream, uint8_t* const dstBuffer)
+{
+	bool loadImageDataSuccessful = false;
+	switch (metaData.srcFileFormat)
+	{
+	case FileFormat::KTX:
+		loadImageDataSuccessful = detail::PrivateAccessor::KTX_LoadImageData(fstream, metaData, dstBuffer);
+		break;
+	case FileFormat::PNG:
+		loadImageDataSuccessful = detail::PrivateAccessor::PNG_LoadImageData(fstream, metaData, dstBuffer);
+		break;
+	}
+
+	fstream.close();
+
+	return loadImageDataSuccessful;
 }
 
 
