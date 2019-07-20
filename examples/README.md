@@ -66,7 +66,7 @@ This example shows how to load imagedata from file directly onto mapped memory i
 
 std::filesystem::path pathToFile = "test.ktx";
 
-DTex::LoadInfo<DTex::OpenFile> loadInfo = DTex::LoadFromFile(pathToFile);
+DTex::LoadInfo<DTex::OpenFile> loadInfo = DTex::LoadFromFile_Deferred(pathToFile);
 
 if (loadInfo.IsSuccessful() == false)
 {
