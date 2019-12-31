@@ -1,13 +1,13 @@
 #pragma once
 
-#include "DTex/TextureDocument.hpp"
-#include "DTex/ResultInfo.hpp"
+#include "Texas/TextureDocument.hpp"
+#include "Texas/ResultType.hpp"
 
 #include <fstream>
 #include <filesystem>
 #include <string_view>
 
-namespace DTex::detail::PNG
+namespace Texas::detail::PNG
 {
 	using ChunkSize_T = uint32_t;
 	using ChunkType_T = uint8_t[4];
@@ -27,7 +27,7 @@ namespace DTex::detail::PNG
 		static constexpr uint32_t identifierSize = 8;
 		using Identifier_T = uint8_t[identifierSize];
 		static constexpr Identifier_T identifier = { 137, 80, 78, 71, 13, 10, 26, 10 };
-		static constexpr size_t identifierOffset = 0;
+		static constexpr size_t identifier_Offset = 0;
 
 		static constexpr size_t ihdrChunkSizeOffset = identifierSize;
 
@@ -50,5 +50,5 @@ namespace DTex::detail::PNG
 
 	};
 
-	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string_view& errorMessage);
+	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultType& ResultType, std::string_view& errorMessage);
 }

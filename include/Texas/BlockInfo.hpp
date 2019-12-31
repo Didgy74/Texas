@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace DTex
+namespace Texas
 {
 	struct BlockInfo
 	{

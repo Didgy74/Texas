@@ -1,86 +1,62 @@
-#include "DTex/Tools.hpp"
+#include "Texas/Tools.hpp"
 
-#include "DTex/Dimensions.hpp"
+#include "Texas/Dimensions.hpp"
 
-#include <algorithm>
 #include <cmath>
 
-namespace DTex::Tools::detail
+std::uint32_t Texas::Tools::CalcMaxMipLevelCount(Dimensions in)
 {
-	template<bool includeTests>
-	static size_t CalcImageDataSize_Impl(const Dimensions& dimensions, PixelFormat pixelFormat);
+	std::uint32_t max = in.width;
+	if (in.height > max)
+		max = in.height;
+	if (in.depth > max)
+		max = in.depth;
+	return 1 + static_cast<std::uint32_t>(std::floor(std::log(max)));
 }
 
-uint32_t DTex::Tools::CalcMaxMipLevelCount(const Dimensions& in)
-{
-	return static_cast<uint32_t>(1) + static_cast<uint32_t>(std::floor(std::log2(std::max({ in.width, in.height, in.depth }))));
-}
-
-DTex::Dimensions DTex::Tools::CalcMipmapDimensions(const Dimensions& baseDimensions, const uint32_t mipLevel)
+Texas::Dimensions Texas::Tools::CalcMipmapDimensions(const Dimensions baseDimensions, const std::uint32_t mipLevel)
 {
 	if (mipLevel == 0)
 		return baseDimensions;
 	if (mipLevel >= CalcMaxMipLevelCount(baseDimensions))
-		return {};
+		return Texas::Dimensions{};
 
+	const std::uint32_t powerOf2 = 1 << mipLevel;
 	Dimensions returnValue{};
-	const Dimensions::ValueType powerOf2 = uint32_t(1) << mipLevel;
-	for (size_t dim = 0; dim < 3; dim++)
-	{
-		returnValue[dim] = baseDimensions[dim] / powerOf2;
-		if (returnValue[dim] == Dimensions::ValueType(0))
-			returnValue[dim] = Dimensions::ValueType(1);
-	}
+	returnValue.width = baseDimensions.width / powerOf2;
+	if (returnValue.width == 0)
+		returnValue.width = 1;
+	returnValue.height = baseDimensions.height / powerOf2;
+	if (returnValue.height == 0)
+		returnValue.height = 1;
+	returnValue.depth = baseDimensions.depth / powerOf2;
+	if (returnValue.depth == 0)
+		returnValue.depth = 1;
 	return returnValue;
 }
 
-size_t DTex::Tools::CalcImageDataSize(const Dimensions& dimensions, PixelFormat pixelFormat)
-{
-	return detail::CalcImageDataSize_Impl<true>(dimensions, pixelFormat);
-}
-
-size_t DTex::Tools::CalcImageDataSize_Unsafe(const Dimensions& dimensions, PixelFormat pixelFormat)
-{
-	return detail::CalcImageDataSize_Impl<false>(dimensions, pixelFormat);
-}
-
-size_t DTex::Tools::CalcTotalSizeRequired(const Dimensions& baseDimensions, uint32_t mipLevelCount, uint32_t arrayLayerCount, PixelFormat pixelFormat)
+std::size_t Texas::Tools::CalcTotalSizeRequired(Dimensions baseDimensions, std::uint32_t mipLevelCount, std::uint32_t arrayLayerCount, PixelFormat pixelFormat)
 {
 	if (mipLevelCount > CalcMaxMipLevelCount(baseDimensions) || arrayLayerCount == 0)
 		return 0;
 
-	size_t sum = 0;
-	for (uint32_t i = 0; i < mipLevelCount; i++)
+	std::size_t sum = 0;
+	for (std::uint32_t i = 0; i < mipLevelCount; i++)
 		sum += CalcImageDataSize(CalcMipmapDimensions(baseDimensions, i), pixelFormat);
 	return sum * arrayLayerCount;
 }
 
-size_t DTex::Tools::CalcTotalSizeRequired_Unsafe(const Dimensions& baseDimensions, uint32_t mipLevelCount, uint32_t arrayLayerCount, PixelFormat pixelFormat)
+std::size_t Texas::Tools::CalcImageDataSize(const Dimensions dimensions, const PixelFormat pixelFormat)
 {
-	size_t sum = 0;
-	for (uint32_t i = 0; i < mipLevelCount; i++)
-		sum += CalcImageDataSize_Unsafe(CalcMipmapDimensions(baseDimensions, i), pixelFormat);
-	return sum * arrayLayerCount;
-}
-
-template<bool includeTests>
-inline size_t DTex::Tools::detail::CalcImageDataSize_Impl(const Dimensions& dimensions, PixelFormat pixelFormat)
-{
-	if constexpr (includeTests)
-	{
-		if (!IsValid(pixelFormat))
-			return 0;
-	}
-
 	const BlockInfo blockInfo = GetBlockInfo(pixelFormat);
 
 	if (IsBCnCompressed(pixelFormat))
 	{
-		size_t blockCountX = size_t(ceilf(float(dimensions.width) / float(blockInfo.width)));
-		if (blockCountX <= 0)
+		std::size_t blockCountX = static_cast<std::size_t>(ceilf(static_cast<float>(dimensions.width) / static_cast<float>(blockInfo.width)));
+		if (blockCountX == 0)
 			blockCountX = 1;
-		size_t blockCountY = size_t(ceilf(float(dimensions.height) / float(blockInfo.height)));
-		if (blockCountY <= 0)
+		std::size_t blockCountY = static_cast<std::size_t>(ceilf(static_cast<float>(dimensions.height) / static_cast<float>(blockInfo.height)));
+		if (blockCountY == 0)
 			blockCountY = 1;
 
 		return blockCountX * blockCountY * dimensions.depth * blockInfo.size;
@@ -93,8 +69,10 @@ inline size_t DTex::Tools::detail::CalcImageDataSize_Impl(const Dimensions& dime
 	case PixelFormat::RG_8:
 		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 2;
 	case PixelFormat::RGB_8:
+	case PixelFormat::BGR_8:
 		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 3;
 	case PixelFormat::RGBA_8:
+	case PixelFormat::BGRA_8:
 		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 4;
 	default:
 		break;

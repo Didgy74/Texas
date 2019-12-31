@@ -10,7 +10,7 @@ DTex::LoadInfo<DTex::TexDoc> loadInfo = DTex::LoadFromFile(pathToFile);
 
 if (loadInfo.IsSuccessful() == false)
 {
-	DTex::ResultInfo errorCode = loadInfo.GetResultInfo();
+	DTex::ResultType errorCode = loadInfo.GetResultType();
 	std::string_view errorMessage = loadInfo.GetErrorMessage();
 	// Handle error
 }
@@ -70,7 +70,7 @@ DTex::LoadInfo<DTex::OpenFile> loadInfo = DTex::LoadFromFile(pathToFile);
 
 if (loadInfo.IsSuccessful() == false)
 {
-	DTex::ResultInfo errorCode = loadInfo.GetResultInfo();
+	DTex::ResultType errorCode = loadInfo.GetResultType();
 	std::string_view errorMessage = loadInfo.GetErrorMessage();
 	// Handle error
 }

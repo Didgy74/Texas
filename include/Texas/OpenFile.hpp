@@ -1,20 +1,25 @@
 #pragma once
 
-#include "DTex/MetaData.hpp"
+#include "Texas/MetaData.hpp"
+#include "Texas/FileFormat.hpp"
+#include "Texas/Dimensions.hpp"
+#include "Texas/PixelFormat.hpp"
+#include "Texas/Colorspace.hpp"
+#include "Texas/Tools.hpp"
 
-#include <vector>
-#include <optional>
+#include <fstream>
 
-namespace DTex
+namespace Texas
 {
 	namespace detail
 	{
 		class PrivateAccessor;
 	}
 
-	class TextureDocument
+	class OpenFile
 	{
 	public:
+
 		uint32_t GetArrayLayerCount() const;
 
 		/*
@@ -27,14 +32,7 @@ namespace DTex
 		*/
 		ColorSpace GetColorSpace() const;
 
-		const uint8_t* GetInternalBufferData() const;
-
 		constexpr const MetaData& GetMetaData() const;
-
-		/*
-			Gets a pointer to the imagedata of the specified mipLevel.
-		*/
-		std::optional<const uint8_t*> GetMipData(uint32_t mipLevel) const;
 
 		/*
 			Returns the dimensions of the mipmap at the specified miplevel.
@@ -86,17 +84,18 @@ namespace DTex
 		bool IsCompressed() const;
 
 	private:
+		OpenFile() = default;
+
 		MetaData metaData;
 
-		std::vector<uint8_t> byteArray;
+		mutable std::ifstream filestream;
 
 		friend class detail::PrivateAccessor;
 	};
 
-	using TexDoc = TextureDocument;
+	constexpr const MetaData& OpenFile::GetMetaData() const
+	{
+		return metaData;
+	}
 }
 
-constexpr const DTex::MetaData& DTex::TextureDocument::GetMetaData() const
-{
-	return metaData;
-}

@@ -8,7 +8,7 @@
 #include <string_view>
 #include <cstring>
 
-namespace DTex::detail::PNG
+namespace Texas::detail::PNG
 {
 	static constexpr uint8_t GetPixelWidth(PixelFormat pixelFormat)
 	{
@@ -80,7 +80,7 @@ namespace DTex::detail::PNG
 	}
 }
 
-bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string_view& errorMessage)
+bool Texas::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultType& ResultType, std::string_view& errorMessage)
 {
 	using namespace std::literals;
 
@@ -90,7 +90,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	// Check for end of file while reading header
 	if (fstream.eof())
 	{
-		resultInfo = ResultInfo::CorruptFileData;
+		ResultType = ResultType::CorruptFileData;
 		errorMessage = "Reached end-of-file while reading file header."sv;
 		return false;
 	}
@@ -102,10 +102,10 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	metaData.mipLevelCount = 1;
 	metaData.colorSpace = ColorSpace::Linear;
 
-	const Header::Identifier_T* const fileIdentifier = reinterpret_cast<const Header::Identifier_T*>(headerBuffer + Header::identifierOffset);
+	const Header::Identifier_T* const fileIdentifier = reinterpret_cast<const Header::Identifier_T*>(headerBuffer + Header::identifier_Offset);
 	if (memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
 	{
-		resultInfo = ResultInfo::CorruptFileData;
+		ResultType = ResultType::CorruptFileData;
 		errorMessage = "File-identifier does not match PNG file-identifier."sv;
 		return false;
 	}
@@ -124,7 +124,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	metaData.pixelFormat = PNG::ToPixelFormat(colorType, bitDepth);
 	if (metaData.pixelFormat == PixelFormat::Invalid)
 	{
-		resultInfo = ResultInfo::FileNotSupported;
+		ResultType = ResultType::FileNotSupported;
 		errorMessage = "PNG colortype and bitdepth combination is not supported."sv;
 		return false;
 	}
@@ -132,7 +132,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	const uint8_t& compressionMethod = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::compressionMethodOffset);
 	if (compressionMethod != 0)
 	{
-		resultInfo = ResultInfo::FileNotSupported;
+		ResultType = ResultType::FileNotSupported;
 		errorMessage = "PNG compression method is not supported."sv;
 		return false;
 	}
@@ -140,7 +140,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	const uint8_t& filterMethod = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::filterMethodOffset);
 	if (filterMethod != 0)
 	{
-		resultInfo = ResultInfo::FileNotSupported;
+		ResultType = ResultType::FileNotSupported;
 		errorMessage = "PNG filter method is not supported."sv;
 		return false;
 	}
@@ -148,7 +148,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	const uint8_t& interlaceMethod = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::interlaceMethodOffset);
 	if (interlaceMethod != 0)
 	{
-		resultInfo = ResultInfo::FileNotSupported;
+		ResultType = ResultType::FileNotSupported;
 		errorMessage = "PNG interlace method is not supported."sv;
 		return false;
 	}
@@ -180,7 +180,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 		}
 		else if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(Header::IEND_ChunkTypeValue))
 		{
-			resultInfo = ResultInfo::CorruptFileData;
+			ResultType = ResultType::CorruptFileData;
 			errorMessage = "PNG IEND chunk appeared before IDATA chunk. File is corrupt."sv;
 			return false;
 		}
@@ -191,7 +191,7 @@ bool DTex::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fs
 	return true;
 }
 
-bool DTex::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
+bool Texas::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
 {
 	// We add metaData.baseDimensions.height because every row starts with 1 byte specifying filter method for the row.
 	std::vector<uint8_t> uncompressedData(metaData.GetTotalSizeRequired() + metaData.baseDimensions.height);

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <array>
 
-namespace DTex
+namespace Texas
 {
 	namespace detail
 	{

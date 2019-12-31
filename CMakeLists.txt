@@ -1,51 +1,93 @@
 cmake_minimum_required(VERSION 3.12)
-project(DTex)
+project(Texas)
 
-set(CMAKE_CXX_STANDARD 17)
+# --------------------------
+# Create Texas CMake options
+# --------------------------
+# START
 
-set(LIB_NAME ${PROJECT_NAME})
-add_library(${LIB_NAME} INTERFACE)
-add_library(${LIB_NAME}::${LIB_NAME} ALIAS ${LIB_NAME})
+	option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" OFF)
+	option(TEXAS_ENABLE_KTX2_READ "Enables loading KTX2 files" OFF)
+	option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" OFF)
 
-set(INCLUDE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_include_directories(
-    ${LIB_NAME}
-    INTERFACE
-    $<BUILD_INTERFACE:${INCLUDE_FOLDER}>
-    $<INSTALL_INTERFACE:include>
-)
+	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan" OFF)
+#
+# END
+#
 
-file(GLOB_RECURSE SOURCE_FILES 
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-)
 
-target_sources(${LIB_NAME} INTERFACE ${SOURCE_FILES})
 
-# Compile example
-set(COMPILE_EXAMPLES 1)
-if (${COMPILE_EXAMPLES})
-	set(EXAMPLE1_NAME "Example")
-	add_executable(${EXAMPLE1_NAME} "examples/example.cpp")
-	
-	target_link_libraries(${EXAMPLE1_NAME} ${LIB_NAME}::${LIB_NAME})
+# --------------------
+# Create CMake library
+# --------------------
+# START
+	set(LIB_NAME ${PROJECT_NAME})
+	add_library(${LIB_NAME} INTERFACE)
+#
+# END
+#
 
-	# Add custom command to copy example resources directory to build directory
-	# Remove example resources directory in build directory if present
-	add_custom_command(
-		TARGET ${EXAMPLE1_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E remove_directory
-		$<TARGET_FILE_DIR:${EXAMPLE1_NAME}>/resources
-		)
 
-	# Copy directory from source folder to build folder
-	add_custom_command(
-		TARGET ${EXAMPLE1_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory
-		${PROJECT_SOURCE_DIR}/examples/resources
-		$<TARGET_FILE_DIR:${EXAMPLE1_NAME}>/resources
-		)
-endif()
+
+# ----------------------
+# Link include directory
+# ----------------------
+# START
+	set(INCLUDE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	target_include_directories(
+		${LIB_NAME}
+		INTERFACE
+		$<BUILD_INTERFACE:${INCLUDE_FOLDER}>
+		$<INSTALL_INTERFACE:include>
+	)
+#
+# END
+#
+
+
+# ------------------------
+# Link standard .cpp files
+# ------------------------
+# START
+	set(TEXAS_SRC_FILES 
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/MetaData.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/OpenFile.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/OpenBuffer.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/TextureDocument.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp")
+	target_sources(${LIB_NAME} INTERFACE ${TEXAS_SRC_FILES})
+#
+# END
+#
+
+# --------------------------
+# Handle Texas CMake options
+# --------------------------
+# START
+	#message(WARNING "Value is: ${TEXAS_ENABLE_KTX_READ}")
+
+	# Check that atleast one file format has been enabled
+	if(NOT(
+		TEXAS_ENABLE_KTX_READ OR
+		TEXAS_ENABLE_KTX2_READ OR
+		TEXAS_ENABLE_PNG_READ
+	))
+		message(FATAL_ERROR "FATAL ERROR: To use Texas you must enable atleast one file-format.")
+	endif()
+
+	if (TEXAS_ENABLE_KTX_READ)
+		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_KTX_READ)
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.cpp")
+	endif()
+
+	if(TEXAS_ENABLE_VULKAN_TOOLS)
+		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/Vulkan-Tools")
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
+	endif()
+
+#
+# END
+#
+
+

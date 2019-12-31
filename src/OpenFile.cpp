@@ -1,23 +1,23 @@
-#include "DTex/OpenFile.hpp"
+#include "Texas/OpenFile.hpp"
 
-#include "DTex/Tools.hpp"
+#include "Texas/Tools.hpp"
 
-uint32_t DTex::OpenFile::GetArrayLayerCount() const
+uint32_t Texas::OpenFile::GetArrayLayerCount() const
 {
 	return metaData.arrayLayerCount;
 }
 
-const DTex::Dimensions& DTex::OpenFile::GetBaseDimensions() const
+const Texas::Dimensions& Texas::OpenFile::GetBaseDimensions() const
 {
 	return metaData.baseDimensions;
 }
 
-DTex::ColorSpace DTex::OpenFile::GetColorSpace() const
+Texas::ColorSpace Texas::OpenFile::GetColorSpace() const
 {
 	return metaData.colorSpace;
 }
 
-std::optional<DTex::Dimensions> DTex::OpenFile::GetMipDimensions(uint32_t mipLevel) const
+std::optional<Texas::Dimensions> Texas::OpenFile::GetMipDimensions(uint32_t mipLevel) const
 {
 	if (mipLevel >= metaData.mipLevelCount)
 		return {};
@@ -25,12 +25,12 @@ std::optional<DTex::Dimensions> DTex::OpenFile::GetMipDimensions(uint32_t mipLev
 	return Tools::CalcMipmapDimensions(metaData.baseDimensions, mipLevel);
 }
 
-uint32_t DTex::OpenFile::GetMipLevelCount() const
+uint32_t Texas::OpenFile::GetMipLevelCount() const
 {
 	return metaData.mipLevelCount;
 }
 
-std::optional<size_t> DTex::OpenFile::GetMipLevelOffset(uint32_t mipLevel) const
+std::optional<size_t> Texas::OpenFile::GetMipLevelOffset(uint32_t mipLevel) const
 {
 	if (mipLevel >= metaData.mipLevelCount)
 		return {};
@@ -38,7 +38,7 @@ std::optional<size_t> DTex::OpenFile::GetMipLevelOffset(uint32_t mipLevel) const
 	return Tools::CalcTotalSizeRequired(metaData.baseDimensions, mipLevel, metaData.arrayLayerCount, metaData.pixelFormat);
 }
 
-std::optional<size_t> DTex::OpenFile::GetMipLevelSize(uint32_t mipLevel) const
+std::optional<size_t> Texas::OpenFile::GetMipLevelSize(uint32_t mipLevel) const
 {
 	if (mipLevel >= metaData.mipLevelCount)
 		return {};
@@ -46,27 +46,27 @@ std::optional<size_t> DTex::OpenFile::GetMipLevelSize(uint32_t mipLevel) const
 	return Tools::CalcImageDataSize(Tools::CalcMipmapDimensions(metaData.baseDimensions, mipLevel), metaData.pixelFormat);
 }
 
-DTex::PixelFormat DTex::OpenFile::GetPixelFormat() const
+Texas::PixelFormat Texas::OpenFile::GetPixelFormat() const
 {
 	return metaData.pixelFormat;
 }
 
-DTex::FileFormat DTex::OpenFile::GetSourceFileFormat() const
+Texas::FileFormat Texas::OpenFile::GetSourceFileFormat() const
 {
 	return metaData.srcFileFormat;
 }
 
-DTex::TextureType DTex::OpenFile::GetTextureType() const
+Texas::TextureType Texas::OpenFile::GetTextureType() const
 {
 	return metaData.textureType;
 }
 
-size_t DTex::OpenFile::GetTotalSizeRequired() const
+size_t Texas::OpenFile::GetTotalSizeRequired() const
 {
 	return Tools::CalcTotalSizeRequired(metaData.baseDimensions, metaData.mipLevelCount, metaData.arrayLayerCount, metaData.pixelFormat);
 }
 
-bool DTex::OpenFile::IsCompressed() const
+bool Texas::OpenFile::IsCompressed() const
 {
 	return Tools::IsCompressed(metaData.pixelFormat);
 }
