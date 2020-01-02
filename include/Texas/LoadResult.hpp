@@ -92,6 +92,11 @@ namespace Texas
 		return m_errorMessage;
 	}
 
+	/*
+		Returns the loaded struct.
+
+		Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
+	*/
 	template<typename T>
 	T& LoadResult<T>::value()
 	{

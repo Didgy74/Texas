@@ -2,6 +2,7 @@
 
 #include "Texas/LoadResult.hpp"
 #include "Texas/Result.hpp"
+#include "Texas/Span.hpp"
 #include "Texas/TextureDocument.hpp"
 #include "Texas/OpenFile.hpp"
 #include "Texas/OpenBuffer.hpp"
@@ -12,38 +13,39 @@ namespace Texas
 		Loads the metadata from an image buffer.
 
 		The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
-		This can be done with Texas::LoadImageData.
+		This can be done with Texas::loadImageData().
 	*/
-	[[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer_Deferred(const void* fileBuffer, std::size_t bufferLength);
+	[[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(const void* fileBuffer, std::size_t bufferLength);
 
 	/*
-		Loads the imagedata of a file opened with LoadFromFile_Deferred into dstBuffer.
+		Loads the metadata from an image buffer.
+
+		The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
+		This can be done with Texas::loadImageData().
+	*/
+	[[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(ConstByteSpan inputBuffer);
+
+	/*
+		Loads the imagedata of a file opened with LoadFromBuffer into dstBuffer.
 
 		Requirements:
 
-			dstBuffer memory MUST be ATLEAST the size returned by OpenBuffer.memoryRequired().
+			dstBuffer MUST be ATLEAST the size returned by OpenBuffer::memoryRequired().
 
-			workingMemory MUST be ATLEAST the size return by OpenBuffer.workingMemoryRequired().
+			workingMemory MUST be ATLEAST the size return by OpenBuffer::memoryRequired().
+			If the size returned by OpenBuffer::workingMemoryRequired is 0, you can pass a default-constructed ByteSpan, or one that points to nullptr.
 	*/
-	[[nodiscard]] Result LoadImageData(const OpenBuffer& file, std::uint8_t* dstBuffer, std::uint8_t* workingMemory);
+	[[nodiscard]] Result loadImageData(const OpenBuffer& file, ByteSpan dstBuffer, ByteSpan workingMemory);
 
 	/*
-		Loads an entire image file. Both metadata and imagedata is loaded.
+		Loads the imagedata of a file opened with LoadFromBuffer into dstBuffer.
+
+		Requirements:
+
+			dstBuffer MUST be ATLEAST the size returned by OpenBuffer::memoryRequired().
+
+			workingMemory MUST be ATLEAST the size return by OpenBuffer::workingMemoryRequired().
+			If the size returned by OpenBuffer::workingMemoryRequired() is 0, you can pass nullptr and 0
 	*/
-	[[nodiscard]] LoadResult<TexDoc> LoadFromFile(const char* path);
-
-	/*
-		Loads the metadata from an image file.
-
-		The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
-		This can be done with LoadImageData.
-	*/
-	[[nodiscard]] LoadResult<OpenFile> LoadFromFile_Deferred(const char* path);
-
-	/*
-		Loads the imagedata of a file opened with LoadFromFile_Deferred into dstBuffer.
-
-		Note! The size of dstBuffer MUST BE ATLEAST the size returned by OpenFile::GetTotalSizeRequired().
-	*/
-	void LoadImageData(const OpenFile& file, uint8_t* dstBuffer);
+	[[nodiscard]] Result loadImageData(const OpenBuffer& file, void* dstBuffer, std::size_t dstBufferSize, void* workingMemory, std::size_t workingMemorySize);
 }

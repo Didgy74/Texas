@@ -2,38 +2,80 @@
 
 #include "PrivateAccessor.hpp"
 
-#include "zlib/zlib.h"
-
-#include <vector>
-#include <string_view>
-#include <cstring>
-
 namespace Texas::detail::PNG
 {
-	static constexpr uint8_t GetPixelWidth(PixelFormat pixelFormat)
+	// Turns a 32-bit unsigned integer into correct endian, regardless of system endianness.
+	static inline std::uint32_t toCorrectEndian(const std::uint32_t in)
+	{
+		const std::uint8_t* const ptr = reinterpret_cast<const std::uint8_t*>(&in);
+		return static_cast<std::uint32_t>(ptr[3]) | (ptr[2] << static_cast<std::uint32_t>(8)) | ptr[1] << (static_cast<std::uint32_t>(16)) | ptr[0] << (static_cast<std::uint32_t>(24));
+	}
+
+	static inline constexpr bool validateColorTypeAndBitDepth(const PNG::ColorType colorType, const std::uint8_t bitDepth)
+	{
+		switch (colorType)
+		{
+		case ColorType::Greyscale:
+			switch (bitDepth)
+			{
+			case 1:
+			case 2:
+			case 4:
+			case 8:
+			case 16:
+				return true;
+			default:
+				return false;
+			}
+		case ColorType::Truecolour:
+		case ColorType::Greyscale_with_alpha:
+		case ColorType::Truecolour_with_alpha:
+			switch (bitDepth)
+			{
+			case 8:
+			case 16:
+				return true;
+			default:
+				return false;
+			}
+		case ColorType::Indexed_colour:
+			switch (bitDepth)
+			{
+			case 1:
+			case 2:
+			case 4:
+			case 8:
+				return false;
+			}
+		default:
+			return false;
+		}
+	}
+
+	static inline constexpr std::uint8_t getPixelWidth(PixelFormat pixelFormat)
 	{
 		switch (pixelFormat)
 		{
 		case PixelFormat::R_8:
-			return sizeof(uint8_t);
+			return sizeof(std::uint8_t);
 		case PixelFormat::RG_8:
-			return sizeof(uint8_t) * 2;
+			return sizeof(std::uint8_t) * 2;
 		case PixelFormat::RGB_8:
-			return sizeof(uint8_t) * 3;
+			return sizeof(std::uint8_t) * 3;
 		case PixelFormat::RGBA_8:
-			return sizeof(uint8_t) * 4;
+			return sizeof(std::uint8_t) * 4;
 		}
 
 		return 0;
 	}
 
-	static uint8_t PaethPredictor(uint8_t a, uint8_t b, uint8_t c)
+	static inline std::uint8_t paethPredictor(std::uint8_t a, std::uint8_t b, std::uint8_t c)
 	{
-		const int16_t p = a + b - c;
+		const std::int16_t p = a + b - c;
 
-		const int16_t pa = std::abs(p - a);
-		const int16_t pb = std::abs(p - b);
-		const int16_t pc = std::abs(p - c);
+		const std::int16_t pa = std::abs(p - a);
+		const std::int16_t pb = std::abs(p - b);
+		const std::int16_t pc = std::abs(p - c);
 
 		if (pa <= pb && pa <= pc)
 			return a;
@@ -43,17 +85,11 @@ namespace Texas::detail::PNG
 			return c;
 	}
 
-	static constexpr PixelFormat ToPixelFormat(uint8_t colorType, uint8_t bitDepth)
+	static inline constexpr PixelFormat toPixelFormat(PNG::ColorType colorType, std::uint8_t bitDepth)
 	{
-		constexpr auto greyscale = 0;
-		constexpr auto truecolor = 2;
-		constexpr auto indexedColor = 3;
-		constexpr auto greyscaleWithAlpha = 4;
-		constexpr auto trueColorWithAlpha = 6;
-
 		switch (colorType)
 		{
-		case greyscale:
+		case ColorType::Greyscale:
 			switch (bitDepth)
 			{
 			case 1:
@@ -62,13 +98,13 @@ namespace Texas::detail::PNG
 			case 8:
 				return PixelFormat::R_8;
 			}
-		case truecolor:
+		case ColorType::Truecolour:
 			switch (bitDepth)
 			{
 			case 8:
 				return PixelFormat::RGB_8;
 			}
-		case trueColorWithAlpha:
+		case ColorType::Truecolour_with_alpha:
 			switch (bitDepth)
 			{
 			case 8:
@@ -80,20 +116,14 @@ namespace Texas::detail::PNG
 	}
 }
 
-bool Texas::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultType& ResultType, std::string_view& errorMessage)
+Texas::Pair<Texas::ResultType, const char*> Texas::detail::PNG::loadFromBuffer_Step1(
+	const bool fileIdentifierConfirmed,
+	const ConstByteSpan srcBuffer,
+	MetaData& metaData)
 {
-	using namespace std::literals;
-
-	uint8_t headerBuffer[Header::totalSize];
-	fstream.read(reinterpret_cast<char*>(headerBuffer), sizeof(headerBuffer));
-
-	// Check for end of file while reading header
-	if (fstream.eof())
-	{
-		ResultType = ResultType::CorruptFileData;
-		errorMessage = "Reached end-of-file while reading file header."sv;
-		return false;
-	}
+	// Check if srcBuffer is large enough hold the header, and more to fit the rest of the chunks
+	if (srcBuffer.size() <= Header::totalSize)
+		return { ResultType::PrematureEndOfFile, "Source buffer is too small to hold PNG header-data, let alone any image data." };
 
 	metaData.srcFileFormat = FileFormat::PNG;
 	metaData.textureType = TextureType::Texture2D;
@@ -102,95 +132,89 @@ bool Texas::detail::PNG::LoadHeader_Backend(MetaData& metaData, std::ifstream& f
 	metaData.mipLevelCount = 1;
 	metaData.colorSpace = ColorSpace::Linear;
 
-	const Header::Identifier_T* const fileIdentifier = reinterpret_cast<const Header::Identifier_T*>(headerBuffer + Header::identifier_Offset);
-	if (memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
+	if (fileIdentifierConfirmed == false)
 	{
-		ResultType = ResultType::CorruptFileData;
-		errorMessage = "File-identifier does not match PNG file-identifier."sv;
-		return false;
+		const Header::Identifier_T* const fileIdentifier = reinterpret_cast<const Header::Identifier_T*>(srcBuffer.data()) + Header::identifier_Offset;
+		if (std::memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
+			return { ResultType::CorruptFileData, "File-identifier does not match PNG file-identifier." };
 	}
+
+	const std::uint32_t ihdrChunkDataSize = toCorrectEndian(*reinterpret_cast<const std::uint32_t*>((const std::uint8_t*)srcBuffer.data() + Header::ihdrChunkSizeOffset));
+	if (ihdrChunkDataSize != Header::ihdrChunkDataSize)
+		return { ResultType::CorruptFileData, "PNG IHDR chunk data size does not equal 13. PNG specification requires it to be 13." };
+
+	const std::uint8_t* const ihdrChunkType = static_cast<const std::uint8_t*>(srcBuffer.data()) + Header::ihdrChunkTypeOffset;
+	if (std::memcmp(ihdrChunkType, Header::IHDR_ChunkTypeValue, sizeof(Header::IHDR_ChunkTypeValue)) != 0)
+		return { ResultType::CorruptFileData, "PNG first chunk is not of type 'IHDR'. PNG requires the 'IHDR' chunk to appear first." };
 
 	// Dimensions are stored in big endian, we must convert to correct endian.
-	const uint8_t* const widthPtr = reinterpret_cast<const uint8_t * const>(headerBuffer + Header::widthOffset);
-	metaData.baseDimensions.width = uint32_t(widthPtr[3]) | (widthPtr[2] << uint32_t(8)) | (widthPtr[1] << uint32_t(16)) | (widthPtr[0] << uint32_t(24));
+	const std::uint32_t origWidth = toCorrectEndian(*reinterpret_cast<const std::uint32_t*>((const std::uint8_t*)srcBuffer.data() + Header::widthOffset));
+	if (origWidth == 0)
+		return { ResultType::CorruptFileData, "PNG IHDR field 'Width' is equal to 0. PNG specification requires it to be >0." };
+	metaData.baseDimensions.width = origWidth;
 
-	const uint8_t* const heightPtr = reinterpret_cast<const uint8_t * const>(headerBuffer + Header::heightOffset);
-	metaData.baseDimensions.height = uint32_t(heightPtr[3]) | (heightPtr[2] << uint32_t(8)) | (heightPtr[1] << uint32_t(16)) | (heightPtr[0] << uint32_t(24));
+	// Dimensions are stored in big endian, we must convert to correct endian.
+	const std::uint32_t origHeight = toCorrectEndian(*reinterpret_cast<const std::uint32_t*>((const std::uint8_t*)srcBuffer.data() + Header::heightOffset));
+	if (origHeight == 0)
+		return { ResultType::CorruptFileData, "PNG IHDR field 'Height' is equal to 0. PNG specification requires it to be >0." };
+	metaData.baseDimensions.height = origHeight;
 
-	const uint8_t& bitDepth = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::bitDepthOffset);
-
-	const uint8_t& colorType = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::colorTypeOffset);
-
-	metaData.pixelFormat = PNG::ToPixelFormat(colorType, bitDepth);
+	const std::uint8_t bitDepth = *(static_cast<const std::uint8_t*>(srcBuffer.data()) + Header::bitDepthOffset);
+	const PNG::ColorType colorType = (PNG::ColorType)*(static_cast<const std::uint8_t*>(srcBuffer.data()) + Header::colorTypeOffset);
+	if (validateColorTypeAndBitDepth(colorType, bitDepth) == false)
+		return { ResultType::CorruptFileData, "PNG does not allow this combination of values from IHDR field 'Colour type' and 'Bit depth'." };
+	if (bitDepth != 8)
+		return { ResultType::FileNotSupported, "Texas does not support PNG files where bit-depth is not 8." };
+	metaData.pixelFormat = PNG::toPixelFormat(colorType, bitDepth);
 	if (metaData.pixelFormat == PixelFormat::Invalid)
-	{
-		ResultType = ResultType::FileNotSupported;
-		errorMessage = "PNG colortype and bitdepth combination is not supported."sv;
-		return false;
-	}
+		return { ResultType::FileNotSupported, "PNG colortype and bitdepth combination is not supported." };
 
-	const uint8_t& compressionMethod = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::compressionMethodOffset);
+	const std::uint8_t compressionMethod = *(static_cast<const std::uint8_t*>(srcBuffer.data()) + Header::compressionMethodOffset);
 	if (compressionMethod != 0)
-	{
-		ResultType = ResultType::FileNotSupported;
-		errorMessage = "PNG compression method is not supported."sv;
-		return false;
-	}
+		return { ResultType::FileNotSupported, "PNG compression method is not supported." };
 
-	const uint8_t& filterMethod = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::filterMethodOffset);
+	const std::uint8_t filterMethod = *(static_cast<const std::uint8_t*>(srcBuffer.data()) + Header::filterMethodOffset);
 	if (filterMethod != 0)
-	{
-		ResultType = ResultType::FileNotSupported;
-		errorMessage = "PNG filter method is not supported."sv;
-		return false;
-	}
+		return { ResultType::FileNotSupported, "PNG filter method is not supported." };
 
-	const uint8_t& interlaceMethod = *reinterpret_cast<const uint8_t*>(headerBuffer + Header::interlaceMethodOffset);
+	const std::uint8_t interlaceMethod = *(static_cast<const std::uint8_t*>(srcBuffer.data()) + Header::interlaceMethodOffset);
 	if (interlaceMethod != 0)
-	{
-		ResultType = ResultType::FileNotSupported;
-		errorMessage = "PNG interlace method is not supported."sv;
-		return false;
-	}
+		return { ResultType::FileNotSupported, "PNG interlace method is not supported." };
+
 
 	// Move through chunks looking for more metadata until we find IDAT chunk.
-	while (true)
+	std::size_t memOffsetTracker = Header::totalSize;
+	while (memOffsetTracker < srcBuffer.size())
 	{
-		const std::streampos chunkStreamPos = fstream.tellg();
+		const std::uint8_t* const chunkStart = static_cast<const std::uint8_t*>(srcBuffer.data()) + memOffsetTracker;
 
-		// Load chunk size and chunk type
-		uint8_t chunkSizeAndTypeBuffer[sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T)];
-
-		fstream.read(reinterpret_cast<char*>(chunkSizeAndTypeBuffer), sizeof(chunkSizeAndTypeBuffer));
-
-		const uint32_t chunkDataLength = uint32_t(chunkSizeAndTypeBuffer[3]) | (chunkSizeAndTypeBuffer[2] << uint32_t(8)) | (chunkSizeAndTypeBuffer[1] << uint32_t(16)) | (chunkSizeAndTypeBuffer[0] << uint32_t(24));
+		const std::uint32_t chunkDataLength = toCorrectEndian(*reinterpret_cast<const uint32_t*>(chunkStart));
+		const std::uint8_t* const chunkType = chunkStart + sizeof(ChunkType_T);
 
 		// Handle IDAT chunk
-		if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(Header::IDAT_ChunkTypeValue))
+		if (std::memcmp(chunkType, Header::IDAT_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
 		{
-			fstream.seekg(chunkStreamPos);
-	
-			break;
+			if (chunkDataLength == 0)
+				return { ResultType::CorruptFileData, "PNG IDAT chunk's `Length' field is 0. PNG specification requires it to be >0." };
 		}
 		// Handle sRGB chunk
-		else if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(Header::SRGB_ChunkTypeValue))
+		else if (std::memcmp(chunkType, Header::sRGB_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
 		{
 			// Do stuff with sRGB chunk
 			metaData.colorSpace = ColorSpace::sRGB;
 		}
-		else if (*reinterpret_cast<const uint32_t*>(chunkSizeAndTypeBuffer + sizeof(PNG::ChunkSize_T)) == *reinterpret_cast<const uint32_t*>(Header::IEND_ChunkTypeValue))
+		else if (std::memcmp(chunkType, Header::IEND_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
 		{
-			ResultType = ResultType::CorruptFileData;
-			errorMessage = "PNG IEND chunk appeared before IDATA chunk. File is corrupt."sv;
-			return false;
+			return { ResultType::Success, nullptr };
 		}
 
-		fstream.ignore(chunkDataLength + sizeof(PNG::ChunkCRC_T));
+		memOffsetTracker += sizeof(ChunkSize_T) + sizeof(ChunkType_T) + chunkDataLength + sizeof(ChunkCRC_T);
 	}
 
-	return true;
+	return { ResultType::Success, nullptr };
 }
 
+/*
 bool Texas::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer)
 {
 	// We add metaData.baseDimensions.height because every row starts with 1 byte specifying filter method for the row.
@@ -352,3 +376,4 @@ bool Texas::detail::PrivateAccessor::PNG_LoadImageData(std::ifstream& fstream, c
 
 	return true;
 }
+*/

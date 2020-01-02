@@ -33,12 +33,6 @@ namespace Texas::Tools
 	*/
 	constexpr bool IsCompressed(PixelFormat pixelFormat);
 
-
-	//
-	// Definitions
-	//
-
-
 	constexpr BlockInfo GetBlockInfo(PixelFormat pixelFormat)
 	{
 		switch (pixelFormat)
@@ -64,6 +58,8 @@ namespace Texas::Tools
 		{
 		case PixelFormat::BC1_RGB:
 		case PixelFormat::BC1_RGBA:
+		case PixelFormat::BC2_RGBA:
+		case PixelFormat::BC3_RGBA:
 		case PixelFormat::BC4:
 		case PixelFormat::BC5:
 		case PixelFormat::BC6H:

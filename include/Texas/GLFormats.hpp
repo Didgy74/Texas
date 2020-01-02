@@ -354,6 +354,10 @@ namespace Texas::Tools::detail
 		case GLEnum::RGBA32F:
 			return ChannelType::SignedFloat;
 
+		case GLEnum::SRGB8:
+		case GLEnum::SRGB8_ALPHA8:
+			return ChannelType::UnsignedNormalized;
+
 			// BCn
 		case GLEnum::COMPRESSED_RGB_S3TC_DXT1_ANGLE:
 		case GLEnum::COMPRESSED_RGBA_S3TC_DXT1_ANGLE:

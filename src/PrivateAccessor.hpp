@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Texas/Result.hpp"
 #include "Texas/LoadResult.hpp"
 #include "Texas/OpenBuffer.hpp"
+#include "Texas/Span.hpp"
 
 #include <cstddef>
 
@@ -14,9 +16,9 @@ namespace Texas::detail
 		virtual ~PrivateAccessor() = 0;
 
 	public:
-		static LoadResult<OpenBuffer> loadFromBuffer_Deferred(const void* fileBuffer, std::size_t bufferLength);
+		static LoadResult<OpenBuffer> loadFromBuffer(const ConstByteSpan inputBuffer);
 
-		static Result LoadImageData(const OpenBuffer& file, std::uint8_t* dstBuffer, std::uint8_t* workingMemory);
+		static Result loadImageData(const OpenBuffer& file, ByteSpan dstBuffer, ByteSpan workingMemory);
 
 	};
 }

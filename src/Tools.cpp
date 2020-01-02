@@ -11,7 +11,7 @@ std::uint32_t Texas::Tools::CalcMaxMipLevelCount(Dimensions in)
 		max = in.height;
 	if (in.depth > max)
 		max = in.depth;
-	return 1 + static_cast<std::uint32_t>(std::floor(std::log(max)));
+	return static_cast<std::uint32_t>(std::log2(max));
 }
 
 Texas::Dimensions Texas::Tools::CalcMipmapDimensions(const Dimensions baseDimensions, const std::uint32_t mipLevel)
@@ -37,7 +37,7 @@ Texas::Dimensions Texas::Tools::CalcMipmapDimensions(const Dimensions baseDimens
 
 std::size_t Texas::Tools::CalcTotalSizeRequired(Dimensions baseDimensions, std::uint32_t mipLevelCount, std::uint32_t arrayLayerCount, PixelFormat pixelFormat)
 {
-	if (mipLevelCount > CalcMaxMipLevelCount(baseDimensions) || arrayLayerCount == 0)
+	if ((mipLevelCount > 1 &&  mipLevelCount >= CalcMaxMipLevelCount(baseDimensions)) || arrayLayerCount == 0)
 		return 0;
 
 	std::size_t sum = 0;
@@ -65,15 +65,15 @@ std::size_t Texas::Tools::CalcImageDataSize(const Dimensions dimensions, const P
 	switch (pixelFormat)
 	{
 	case PixelFormat::R_8:
-		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t);
+		return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t);
 	case PixelFormat::RG_8:
-		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 2;
+		return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t) * 2;
 	case PixelFormat::RGB_8:
 	case PixelFormat::BGR_8:
-		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 3;
+		return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t) * 3;
 	case PixelFormat::RGBA_8:
 	case PixelFormat::BGRA_8:
-		return size_t(dimensions.width) * dimensions.height * dimensions.depth * sizeof(uint8_t) * 4;
+		return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t) * 4;
 	default:
 		break;
 	}

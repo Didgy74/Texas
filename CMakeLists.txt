@@ -49,6 +49,8 @@ project(Texas)
 # Link standard .cpp files
 # ------------------------
 # START
+
+	# Link .cpp files
 	set(TEXAS_SRC_FILES 
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/MetaData.cpp"
@@ -81,10 +83,17 @@ project(Texas)
 		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.cpp")
 	endif()
 
+	
+	if (TEXAS_ENABLE_PNG_READ)
+		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_PNG_READ)
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG.cpp")
+	endif()
+
 	if(TEXAS_ENABLE_VULKAN_TOOLS)
 		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/Vulkan-Tools")
 		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
 	endif()
+
 
 #
 # END
