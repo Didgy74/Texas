@@ -3,7 +3,7 @@
 #include "Texas/LoadResult.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/MetaData.hpp"
-#include "Texas/Span.hpp"
+#include "Texas/ByteSpan.hpp"
 #include "Texas/OpenBuffer.hpp"
 
 namespace Texas::detail::KTX

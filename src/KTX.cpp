@@ -1,13 +1,12 @@
 #include "KTX.hpp"
 
-#include "Texas/Span.hpp"
+#include "Texas/ByteSpan.hpp"
 #include "PrivateAccessor.hpp"
 
 #include "Texas/GLFormats.hpp"
 
 namespace Texas::detail::KTX
 {
-
 	[[nodiscard]] static inline std::uint32_t toU32(const std::byte* const ptr)
 	{
 		std::uint32_t temp = 0;

@@ -3,7 +3,7 @@
 #include "Texas/ResultType.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/MetaData.hpp"
-#include "Texas/Span.hpp"
+#include "Texas/ByteSpan.hpp"
 #include "Texas/OpenBuffer.hpp"
 
 #include <cstdint>

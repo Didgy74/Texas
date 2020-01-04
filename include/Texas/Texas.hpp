@@ -2,7 +2,7 @@
 
 #include "Texas/LoadResult.hpp"
 #include "Texas/Result.hpp"
-#include "Texas/Span.hpp"
+#include "Texas/ByteSpan.hpp"
 #include "Texas/TextureDocument.hpp"
 #include "Texas/OpenFile.hpp"
 #include "Texas/OpenBuffer.hpp"
