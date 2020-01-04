@@ -14,7 +14,7 @@ The library has been tested to run on the following compilers
  - Not tested yet
 
 ## Installation
-Installation is built around CMake, but it is possible to integrate the library without it. By default, Texas does not enable any functionality. To get it to compile, you need to enable reading for atleast one file-format. The easiest way is to just enable all features. You can do this and add all the correct files to your project by adding the following lines to your CMakeLists.txt
+Installation is built around CMake, but it is possible to integrate the library without it. By default, Texas does not enable any functionality. To get it to compile, you need to enable reading for **atleast** one file-format. The easiest way is to just enable all features. You can do this and add all the correct files to your project by adding the following lines to your CMakeLists.txt
 
 ```cmake
 set(TEXAS_ENABLE_EVERYTHING ON)
