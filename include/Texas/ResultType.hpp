@@ -17,6 +17,7 @@ enum class Texas::ResultType : std::uint8_t
 	InvalidInputParameter,
 	PixelFormatNotSupported,
 	PrematureEndOfFile,
+	NoIdea,
 
 	COUNT
 };

@@ -54,6 +54,7 @@ namespace Texas
 		const char* m_errorMessage = nullptr;
 		union
 		{
+			std::uint8_t m_pad{};
 			T m_value;
 		};
 	};
@@ -61,7 +62,8 @@ namespace Texas
 	template<typename T>
 	LoadResult<T>::LoadResult(ResultType result, const char* errorMessage) :
 		m_resultType(result),
-		m_errorMessage(errorMessage)
+		m_errorMessage(errorMessage),
+		m_pad(std::uint8_t())
 	{
 	}
 

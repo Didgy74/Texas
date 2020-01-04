@@ -100,13 +100,13 @@ namespace Texas::Tools::detail
 		COMPRESSED_SRGB_ALPHA_BPTC_UNORM = 0x8E8D,
 	};
 
-	[[nodiscard]] inline constexpr PixelFormat ToPixelFormat(GLEnum GLInternalFormat, GLEnum GLType);
+	[[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType);
 
-	[[nodiscard]] inline constexpr ColorSpace ToColorSpace(GLEnum GLInternalFormat, GLEnum GLType);
+	[[nodiscard]] inline constexpr ColorSpace toColorSpace(GLEnum GLInternalFormat, GLEnum GLType);
 
-	[[nodiscard]] inline constexpr ChannelType ToChannelType(GLEnum GLInternalFormat, GLEnum GLType);
+	[[nodiscard]] inline constexpr ChannelType toChannelType(GLEnum GLInternalFormat, GLEnum GLType);
 
-	[[nodiscard]] inline constexpr PixelFormat ToPixelFormat(GLEnum GLInternalFormat, GLEnum GLType)
+	[[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType)
 	{
 		switch (GLInternalFormat)
 		{
@@ -208,7 +208,7 @@ namespace Texas::Tools::detail
 		return PixelFormat::Invalid;
 	}
 
-	[[nodiscard]] inline constexpr ColorSpace ToColorSpace(GLEnum GLInternalFormat, GLEnum GLType)
+	[[nodiscard]] inline constexpr ColorSpace toColorSpace(GLEnum GLInternalFormat, GLEnum GLType)
 	{
 		switch (GLInternalFormat)
 		{
@@ -296,7 +296,7 @@ namespace Texas::Tools::detail
 		return ColorSpace::Invalid;
 	}
 
-	[[nodiscard]] inline constexpr ChannelType ToChannelType(GLEnum GLInternalFormat, GLEnum GLType)
+	[[nodiscard]] inline constexpr ChannelType toChannelType(GLEnum GLInternalFormat, GLEnum GLType)
 	{
 		switch (GLInternalFormat)
 		{

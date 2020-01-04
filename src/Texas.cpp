@@ -13,7 +13,7 @@
 
 namespace Texas
 {
-	LoadResult<OpenBuffer> loadFromBuffer(const void* const fileBuffer, const std::size_t bufferLength)
+	LoadResult<OpenBuffer> loadFromBuffer(const std::byte* const fileBuffer, const std::size_t bufferLength)
 	{
 		return detail::PrivateAccessor::loadFromBuffer(ConstByteSpan(fileBuffer, bufferLength));
 	}
@@ -28,7 +28,7 @@ namespace Texas
 		return detail::PrivateAccessor::loadImageData(file, dstBuffer, workingMemory);
 	}
 
-	Result loadImageData(const OpenBuffer& file, void* const dstBuffer, const std::size_t dstBufferSize, void* const workingMemory, const std::size_t workingMemorySize)
+	Result loadImageData(const OpenBuffer& file, std::byte* const dstBuffer, const std::size_t dstBufferSize, std::byte* const workingMemory, const std::size_t workingMemorySize)
 	{
 		return detail::PrivateAccessor::loadImageData(file, ByteSpan(dstBuffer, dstBufferSize), ByteSpan(workingMemory, workingMemorySize));
 	}
@@ -49,22 +49,22 @@ namespace Texas
 		// We test the file's identifier to see if it's KTX
 		if (std::memcmp(inputBuffer.data(), detail::KTX::Header::correctIdentifier, sizeof(detail::KTX::Header::correctIdentifier)) == 0)
 		{
-			Pair<ResultType, const char*> result = detail::KTX::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData, openBuffer.imageDataStart);
-			if (result.a() == ResultType::Success)
+			Result result = detail::KTX::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData, openBuffer.m_backendData.ktx);
+			if (result.resultType() == ResultType::Success)
 				return LoadResult<OpenBuffer>(static_cast<OpenBuffer&&>(openBuffer));
 			else
-				return LoadResult<OpenBuffer>(result.a(), result.b());
+				return LoadResult<OpenBuffer>(result.resultType(), result.errorMessage());
 		}
 #endif
 
 #ifdef TEXAS_ENABLE_PNG_READ
 		if (std::memcmp(inputBuffer.data(), detail::PNG::Header::identifier, sizeof(detail::PNG::Header::identifier)) == 0)
 		{
-			Pair<ResultType, const char*> result = detail::PNG::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData);
-			if (result.a() == ResultType::Success)
+			Result result = detail::PNG::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData, openBuffer.m_backendData.png);
+			if (result.resultType() == ResultType::Success)
 				return LoadResult<OpenBuffer>(static_cast<OpenBuffer&&>(openBuffer));
 			else
-				return LoadResult<OpenBuffer>(result.a(), result.b());
+				return LoadResult<OpenBuffer>(result.resultType(), result.errorMessage());
 		}
 #endif
 
@@ -81,15 +81,21 @@ namespace Texas
 #ifdef TEXAS_ENABLE_KTX_READ
 		if (file.metaData().srcFileFormat == FileFormat::KTX)
 		{
-			return detail::KTX::loadFromBuffer_Step2(file.metaData(), file.imageDataStart, (std::uint8_t*)dstBuffer.data());
+			return detail::KTX::loadFromBuffer_Step2(file.metaData(), file.m_backendData.ktx, dstBuffer, workingMemory);
 		}
 #endif
 
 #ifdef TEXAS_ENABLE_PNG_READ
-		// If workingMemory is nullptr, make error
+		if (file.metaData().srcFileFormat == FileFormat::PNG)
+		{
+			if (workingMemory.size() == 0 || workingMemory.data() == nullptr)
+				return { ResultType::InvalidInputParameter, "Cannot decompress PNG with no working memory." };
+
+			return detail::PNG::loadFromBuffer_Step2(file.metaData(), file.m_backendData.png, dstBuffer, workingMemory);
+		}
 #endif
 
-		return Result(ResultType::Success, nullptr);
+		return Result(ResultType::InvalidInputParameter, nullptr);
 	}
 }
 

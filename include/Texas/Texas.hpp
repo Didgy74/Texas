@@ -15,7 +15,7 @@ namespace Texas
 		The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
 		This can be done with Texas::loadImageData().
 	*/
-	[[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(const void* fileBuffer, std::size_t bufferLength);
+	[[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(const std::byte* fileBuffer, std::size_t bufferLength);
 
 	/*
 		Loads the metadata from an image buffer.
@@ -47,5 +47,5 @@ namespace Texas
 			workingMemory MUST be ATLEAST the size return by OpenBuffer::workingMemoryRequired().
 			If the size returned by OpenBuffer::workingMemoryRequired() is 0, you can pass nullptr and 0
 	*/
-	[[nodiscard]] Result loadImageData(const OpenBuffer& file, void* dstBuffer, std::size_t dstBufferSize, void* workingMemory, std::size_t workingMemorySize);
+	[[nodiscard]] Result loadImageData(const OpenBuffer& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize);
 }

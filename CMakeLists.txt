@@ -6,10 +6,10 @@ project(Texas)
 # --------------------------
 # START
 
+	option(TEXAS_ENABLE_EVERYTHING "Enables all library functionality." OFF)
 	option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" OFF)
 	option(TEXAS_ENABLE_KTX2_READ "Enables loading KTX2 files" OFF)
 	option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" OFF)
-
 	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan" OFF)
 #
 # END
@@ -67,7 +67,12 @@ project(Texas)
 # Handle Texas CMake options
 # --------------------------
 # START
-	#message(WARNING "Value is: ${TEXAS_ENABLE_KTX_READ}")
+	if(TEXAS_ENABLE_EVERYTHING)
+		set(TEXAS_ENABLE_KTX_READ ON)
+		set(TEXAS_ENABLE_KTX2_READ ON)
+		set(TEXAS_ENABLE_PNG_READ ON)
+		set(TEXAS_ENABLE_VULKAN_TOOLS ON)
+	endif()
 
 	# Check that atleast one file format has been enabled
 	if(NOT(
@@ -87,6 +92,7 @@ project(Texas)
 	if (TEXAS_ENABLE_PNG_READ)
 		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_PNG_READ)
 		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG.cpp")
+		set(TEXAS_LINK_ZLIB 1)
 	endif()
 
 	if(TEXAS_ENABLE_VULKAN_TOOLS)
@@ -94,6 +100,24 @@ project(Texas)
 		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
 	endif()
 
+	if(${TEXAS_LINK_ZLIB})
+		set(TEXAS_ZLIB_SRC_FILES 
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/adler32.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/crc32.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/deflate.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzclose.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzlib.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzread.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzwrite.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/infback.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/inffast.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/inflate.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/inftrees.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/trees.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/uncompr.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/zutil.c")
+		target_sources(${LIB_NAME} INTERFACE ${TEXAS_ZLIB_SRC_FILES})
+	endif()
 
 #
 # END

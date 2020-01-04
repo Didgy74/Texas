@@ -48,23 +48,23 @@ namespace Texas
 	class ConstByteSpan
 	{
 	private:
-		const char* m_data = nullptr;
+		const std::byte* m_data = nullptr;
 		std::size_t m_size = 0;
 
 	public:
 		[[nodiscard]] inline constexpr ConstByteSpan() noexcept {}
 
-		[[nodiscard]] inline constexpr ConstByteSpan(const void* data, std::size_t size) noexcept :
-			m_data(static_cast<const char*>(data)),
+		[[nodiscard]] inline constexpr ConstByteSpan(const std::byte* data, std::size_t size) noexcept :
+			m_data(data),
 			m_size(size)
 		{}
 
-		[[nodiscard]] inline constexpr const void* data() const noexcept;
+		[[nodiscard]] inline constexpr const std::byte* data() const noexcept;
 
 		[[nodiscard]] inline constexpr std::size_t size() const noexcept;
 	};
 
-	inline constexpr const void* ConstByteSpan::data() const noexcept
+	inline constexpr const std::byte* ConstByteSpan::data() const noexcept
 	{
 		return m_data;
 	}
@@ -78,14 +78,14 @@ namespace Texas
 	class ByteSpan
 	{
 	private:
-		char* m_data = nullptr;
+		std::byte* m_data = nullptr;
 		std::size_t m_size = 0;
 
 	public:
 		[[nodiscard]] inline constexpr ByteSpan() noexcept {}
 
-		[[nodiscard]] inline constexpr ByteSpan(void* data, std::size_t size) noexcept :
-			m_data(static_cast<char*>(data)),
+		[[nodiscard]] inline constexpr ByteSpan(std::byte* data, std::size_t size) noexcept :
+			m_data(data),
 			m_size(size)
 		{}
 
@@ -93,7 +93,7 @@ namespace Texas
 
 		[[nodiscard]] inline constexpr operator ConstByteSpan() const;
 
-		[[nodiscard]] inline constexpr void* data() const noexcept;
+		[[nodiscard]] inline constexpr std::byte* data() const noexcept;
 
 		[[nodiscard]] inline constexpr std::size_t size() const noexcept;
 	};
@@ -108,7 +108,7 @@ namespace Texas
 		return ConstByteSpan(m_data, m_size);
 	}
 
-	inline constexpr void* ByteSpan::data() const noexcept
+	inline constexpr std::byte* ByteSpan::data() const noexcept
 	{
 		return m_data;
 	}

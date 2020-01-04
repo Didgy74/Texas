@@ -3,14 +3,14 @@
 #include "Texas/LoadResult.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/MetaData.hpp"
-#include "Texas/Pair.hpp"
 #include "Texas/Span.hpp"
+#include "Texas/OpenBuffer.hpp"
 
 namespace Texas::detail::KTX
 {
 	namespace Header
 	{
-		constexpr std::size_t totalSize = 64;
+		constexpr std::size_t totalSize = sizeof(std::uint8_t) * 64;
 
 		constexpr std::size_t identifier_Offset = 0;
 		constexpr std::uint8_t correctIdentifier[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
@@ -43,14 +43,15 @@ namespace Texas::detail::KTX
 		constexpr std::size_t bytesOfKeyValueData_Offset = numberOfMipmapLevels_Offset + sizeof(std::uint32_t);
 	};
 
-	Pair<ResultType, const char*> loadFromBuffer_Step1(
+	Result loadFromBuffer_Step1(
 		const bool fileIdentifierConfirmed,
 		ConstByteSpan srcBuffer,
 		MetaData& metaData,
-		const std::uint8_t*& imageDataStart);
+		OpenBuffer::KTX_BackendData& backendDataBuffer);
 
 	Result loadFromBuffer_Step2(
 		const MetaData& metaData,
-		const std::uint8_t* srcImageDataStart, 
-		std::uint8_t* dstImageBuffer);
+		OpenBuffer::KTX_BackendData& backendDataBuffer,
+		const ByteSpan dstImageBuffer,
+		const ByteSpan workingMemory);
 }
