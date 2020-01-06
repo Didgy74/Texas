@@ -4,30 +4,30 @@
 
 namespace Texas
 {
-	enum class ChannelType : std::uint8_t
-	{
-		Invalid,
+    enum class ChannelType : std::uint8_t
+    {
+        Invalid,
 
-		UnsignedNormalized,
-		SignedNormalized,
+        UnsignedNormalized,
+        SignedNormalized,
 
-		UnsignedScaled,
-		SignedScaled,
+        UnsignedScaled,
+        SignedScaled,
 
-		UnsignedInteger,
-		SignedInteger,
+        UnsignedInteger,
+        SignedInteger,
 
-		UnsignedFloat,
-		SignedFloat,
+        UnsignedFloat,
+        SignedFloat,
 
-		sRGB,
+        sRGB,
 
-		// Holds the amount of enumerations in Texas::ChannelType
-		COUNT
-	};
+        // Holds the amount of enumerations in Texas::ChannelType
+        COUNT
+    };
 
-	constexpr const char* ToString(ChannelType pixelFormat)
-	{
-		return nullptr;
-	}
+    constexpr const char* ToString(ChannelType pixelFormat)
+    {
+        return nullptr;
+    }
 }

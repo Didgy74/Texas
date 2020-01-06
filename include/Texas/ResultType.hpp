@@ -4,20 +4,20 @@
 
 namespace Texas
 {
-	enum class ResultType : std::uint8_t;
+    enum class ResultType : std::uint8_t;
 }
 
 enum class Texas::ResultType : std::uint8_t
 {
-	Success,
+    Success,
 
-	CouldNotOpenFile,
-	CorruptFileData,
-	FileNotSupported,
-	InvalidInputParameter,
-	PixelFormatNotSupported,
-	PrematureEndOfFile,
-	NoIdea,
+    CouldNotOpenFile,
+    CorruptFileData,
+    FileNotSupported,
+    InvalidInputParameter,
+    PixelFormatNotSupported,
+    PrematureEndOfFile,
+    NoIdea,
 
-	COUNT
+    COUNT
 };

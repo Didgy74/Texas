@@ -9,16 +9,16 @@
 
 namespace Texas::detail
 {
-	class PrivateAccessor final
-	{
-	private:
-		PrivateAccessor() = delete;
-		virtual ~PrivateAccessor() = 0;
+    class PrivateAccessor final
+    {
+    private:
+        PrivateAccessor() = delete;
+        virtual ~PrivateAccessor() = 0;
 
-	public:
-		static LoadResult<OpenBuffer> loadFromBuffer(const ConstByteSpan inputBuffer);
+    public:
+        static LoadResult<OpenBuffer> loadFromBuffer(const ConstByteSpan inputBuffer);
 
-		static Result loadImageData(const OpenBuffer& file, ByteSpan dstBuffer, ByteSpan workingMemory);
+        static Result loadImageData(const OpenBuffer& file, ByteSpan dstBuffer, ByteSpan workingMemory);
 
-	};
+    };
 }
