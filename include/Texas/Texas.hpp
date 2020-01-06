@@ -10,7 +10,7 @@
 namespace Texas
 {
 	/*
-		Loads the metadata from an image buffer.
+		Loads the metadata from an image buffer, and stores data in Texas::OpenBuffer to prepare for loading imagedata.
 
 		The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
 		This can be done with Texas::loadImageData().
@@ -18,9 +18,9 @@ namespace Texas
 	[[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(const std::byte* fileBuffer, std::size_t bufferLength);
 
 	/*
-		Loads the metadata from an image buffer.
+		Loads the metadata from an image buffer, and stores data in Texas::OpenBuffer to prepare for loading imagedata.
 
-		The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
+		The returned struct can be used to allocate a buffer large enough to load the imagedata onto, as well as working memory.
 		This can be done with Texas::loadImageData().
 	*/
 	[[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(ConstByteSpan inputBuffer);
@@ -29,7 +29,8 @@ namespace Texas
 		Loads the imagedata of a file opened with LoadFromBuffer into dstBuffer.
 
 		Requirements:
-
+			The file-buffer passed into Texas::loadFromBuffer() must NOT have changed since calling said function.
+			
 			dstBuffer MUST be ATLEAST the size returned by OpenBuffer::memoryRequired().
 
 			workingMemory MUST be ATLEAST the size return by OpenBuffer::memoryRequired().
@@ -41,11 +42,11 @@ namespace Texas
 		Loads the imagedata of a file opened with LoadFromBuffer into dstBuffer.
 
 		Requirements:
+			The file-buffer passed into Texas::loadFromBuffer() must NOT have changed since calling said function.
 
 			dstBuffer MUST be ATLEAST the size returned by OpenBuffer::memoryRequired().
 
-			workingMemory MUST be ATLEAST the size return by OpenBuffer::workingMemoryRequired().
-			If the size returned by OpenBuffer::workingMemoryRequired() is 0, you can pass nullptr and 0
+			workingMemory MUST be ATLEAST the size return by OpenBuffer::memoryRequired().
 	*/
 	[[nodiscard]] Result loadImageData(const OpenBuffer& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize);
 }

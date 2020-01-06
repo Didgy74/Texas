@@ -42,6 +42,7 @@ namespace Texas
 		struct PNG_BackendData
 		{
 			const std::byte* idatChunkStart = nullptr;
+			const std::byte* plteChunkStart = nullptr;
 		};
 #endif
 
