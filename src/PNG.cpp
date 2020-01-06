@@ -6,65 +6,59 @@
 
 namespace Texas::detail::PNG
 {
-    enum class ColorType : std::uint8_t;
-    enum class ChunkType : std::uint8_t;
-
     using ChunkSize_T = std::uint32_t;
     using ChunkType_T = std::uint8_t[4];
     using ChunkCRC_T = std::uint8_t[4];
 
-    constexpr std::uint8_t IHDR_ChunkTypeValue[4] = { 73, 72, 68, 82 };
-    constexpr std::uint8_t PLTE_ChunkTypeValue[4] = { 80, 76, 84, 69 };
-    constexpr std::uint8_t IDAT_ChunkTypeValue[4] = { 73, 68, 65, 84 };
-    constexpr std::uint8_t IEND_ChunkTypeValue[4] = { 73, 69, 78, 68 };
-    constexpr std::uint8_t cHRM_ChunkTypeValue[4] = { 99, 72, 82, 77 };
-    constexpr std::uint8_t gAMA_ChunkTypeValue[4] = { 103, 65, 77, 65, };
-    constexpr std::uint8_t iCCP_ChunkTypeValue[4] = { 105, 67, 67, 80 };
-    constexpr std::uint8_t sBIT_ChunkTypeValue[4] = { 115, 66, 73, 84 };
-    constexpr std::uint8_t sRGB_ChunkTypeValue[4] = { 115, 82, 71, 66 };
-    constexpr std::uint8_t bKGD_ChunkTypeValue[4] = { 98, 75, 71, 68 };
-    constexpr std::uint8_t hIST_ChunkTypeValue[4] = { 104, 73, 83, 84 };
-    constexpr std::uint8_t tRNS_ChunkTypeValue[4] = { 116, 82, 78, 83 };
-    constexpr std::uint8_t pHYs_ChunkTypeValue[4] = { 112, 72, 89, 115 };
-    constexpr std::uint8_t sPLT_ChunkTypeValue[4] = { 115, 80, 76, 84 };
-    constexpr std::uint8_t tIME_ChunkTypeValue[4] = { 116, 73, 77, 69 };
-    constexpr std::uint8_t iTXt_ChunkTypeValue[4] = { 105, 84, 88, 116 };
-    constexpr std::uint8_t tEXt_ChunkTypeValue[4] = { 116, 69, 88, 116 };
-    constexpr std::uint8_t zTXt_ChunkTypeValue[4] = { 122, 84, 88, 116 };
+    [[nodiscard]] static inline constexpr std::uint32_t setupChunkTypeValue(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d)
+    {
+        return a << 24 | b << 16 | c << 8 | d;
+    }
+
+    constexpr std::uint32_t IHDR_ChunkTypeValue = setupChunkTypeValue(73, 72, 68, 82);
+    constexpr std::uint32_t PLTE_ChunkTypeValue = setupChunkTypeValue(80, 76, 84, 69);
+    constexpr std::uint32_t IDAT_ChunkTypeValue = setupChunkTypeValue(73, 68, 65, 84);
+    constexpr std::uint32_t IEND_ChunkTypeValue = setupChunkTypeValue(73, 69, 78, 68);
+    constexpr std::uint32_t cHRM_ChunkTypeValue = setupChunkTypeValue(99, 72, 82, 77);
+    constexpr std::uint32_t gAMA_ChunkTypeValue = setupChunkTypeValue(103, 65, 77, 65);
+    constexpr std::uint32_t iCCP_ChunkTypeValue = setupChunkTypeValue(105, 67, 67, 80);
+    constexpr std::uint32_t sBIT_ChunkTypeValue = setupChunkTypeValue(115, 66, 73, 84);
+    constexpr std::uint32_t sRGB_ChunkTypeValue = setupChunkTypeValue(115, 82, 71, 66);
+    constexpr std::uint32_t bKGD_ChunkTypeValue = setupChunkTypeValue(98, 75, 71, 68);
+    constexpr std::uint32_t hIST_ChunkTypeValue = setupChunkTypeValue(104, 73, 83, 84);
+    constexpr std::uint32_t tRNS_ChunkTypeValue = setupChunkTypeValue(116, 82, 78, 83);
+    constexpr std::uint32_t pHYs_ChunkTypeValue = setupChunkTypeValue(112, 72, 89, 115);
+    constexpr std::uint32_t sPLT_ChunkTypeValue = setupChunkTypeValue(115, 80, 76, 84);
+    constexpr std::uint32_t tIME_ChunkTypeValue = setupChunkTypeValue(116, 73, 77, 69);
+    constexpr std::uint32_t iTXt_ChunkTypeValue = setupChunkTypeValue(105, 84, 88, 116);
+    constexpr std::uint32_t tEXt_ChunkTypeValue = setupChunkTypeValue(116, 69, 88, 116);
+    constexpr std::uint32_t zTXt_ChunkTypeValue = setupChunkTypeValue(122, 84, 88, 116);
 
     namespace Header
     {
-        constexpr std::size_t ihdrChunkSizeOffset = identifierSize;
-        constexpr std::size_t ihdrChunkTypeOffset = ihdrChunkSizeOffset + sizeof(ChunkSize_T);
-        constexpr std::size_t ihdrChunkDataSize = sizeof(std::uint8_t) * 13;
+        constexpr std::size_t ihdrChunkSizeOffset = 8;
+        constexpr std::size_t ihdrChunkTypeOffset = 12;
+        constexpr std::size_t ihdrChunkDataSize = 13;
 
         using Dimension_T = std::uint32_t;
-        constexpr std::size_t widthOffset = ihdrChunkTypeOffset + sizeof(ChunkType_T);
-
-        constexpr std::size_t heightOffset = widthOffset + sizeof(Dimension_T);
-
-        constexpr std::size_t bitDepthOffset = heightOffset + sizeof(Dimension_T);
-
-        constexpr std::size_t colorTypeOffset = bitDepthOffset + sizeof(std::uint8_t);
-
-        constexpr std::size_t compressionMethodOffset = colorTypeOffset + sizeof(std::uint8_t);
-
-        constexpr std::size_t filterMethodOffset = compressionMethodOffset + sizeof(std::uint8_t);
-
-        constexpr std::size_t interlaceMethodOffset = filterMethodOffset + sizeof(std::uint8_t);
-
-        constexpr std::size_t interlaceMethodFieldSize = sizeof(std::uint8_t);
+        constexpr std::size_t widthOffset = 16;
+        constexpr std::size_t heightOffset = 20;
+        constexpr std::size_t bitDepthOffset = 24;
+        constexpr std::size_t colorTypeOffset = 25;
+        constexpr std::size_t compressionMethodOffset = 26;
+        constexpr std::size_t filterMethodOffset = 27;
+        constexpr std::size_t interlaceMethodOffset = 28;
 
         // Total size of all header data.
-        constexpr std::size_t totalSize = interlaceMethodOffset + interlaceMethodFieldSize + sizeof(ChunkCRC_T);
+        constexpr std::size_t totalSize = 33;
     };
 
     enum class ColorType : std::uint8_t;
 
-    enum class ChunkType : std::uint8_t;
+    enum class ChunkType : std::uint32_t;
 
     // Turns a 32-bit unsigned integer into correct endian, regardless of system endianness.
-    [[nodiscard]] static inline std::uint32_t toCorrect32UIntEndian(const std::byte* const ptr);
+    [[nodiscard]] static inline std::uint32_t toCorrectEndian_u32(const std::byte* const ptr);
 
     [[nodiscard]] static inline bool validateColorTypeAndBitDepth(const PNG::ColorType colorType, const std::uint8_t bitDepth);
 
@@ -88,7 +82,9 @@ enum class Texas::detail::PNG::ColorType : std::uint8_t
     Truecolour_with_alpha = 6
 };
 
-enum class Texas::detail::PNG::ChunkType : std::uint8_t
+// Yes, I could make these be the IHDR_ChunkTypeValue stuff right away
+// But I'm using this enum to map into an array when parsing chunks, so fuck you.
+enum class Texas::detail::PNG::ChunkType : std::uint32_t
 {
     Invalid,
 
@@ -99,7 +95,7 @@ enum class Texas::detail::PNG::ChunkType : std::uint8_t
     IDAT,
     IEND,
 
-    // Optional 
+    // Optional
 
     cHRM,
     gAMA,
@@ -119,7 +115,7 @@ enum class Texas::detail::PNG::ChunkType : std::uint8_t
     COUNT
 };
 
-static inline std::uint32_t Texas::detail::PNG::toCorrect32UIntEndian(const std::byte* const ptr)
+static inline std::uint32_t Texas::detail::PNG::toCorrectEndian_u32(const std::byte* const ptr)
 {
     std::uint32_t temp[4] = {
         static_cast<std::uint32_t>(ptr[0]),
@@ -127,7 +123,7 @@ static inline std::uint32_t Texas::detail::PNG::toCorrect32UIntEndian(const std:
         static_cast<std::uint32_t>(ptr[2]),
         static_cast<std::uint32_t>(ptr[3]),
     };
-    return temp[3] | (temp[2] << static_cast<std::uint32_t>(8)) | (temp[1] << static_cast<std::uint32_t>(16)) | (temp[0] << static_cast<std::uint32_t>(24));
+    return temp[3] | (temp[2] << 8) | (temp[1] << 16) | (temp[0] << 24);
 }
 
 static inline bool Texas::detail::PNG::validateColorTypeAndBitDepth(const PNG::ColorType colorType, const std::uint8_t bitDepth)
@@ -169,46 +165,50 @@ static inline bool Texas::detail::PNG::validateColorTypeAndBitDepth(const PNG::C
     return false;
 }
 
-static inline Texas::detail::PNG::ChunkType Texas::detail::PNG::getChunkType(const std::byte* const in)
+static inline Texas::detail::PNG::ChunkType Texas::detail::PNG::getChunkType(const std::byte* in)
 {
-    if (std::memcmp(in, IHDR_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    const std::uint32_t value = PNG::toCorrectEndian_u32(in);
+    switch (value)
+    {
+    case IHDR_ChunkTypeValue:
         return ChunkType::IHDR;
-    else if (std::memcmp(in, PLTE_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case PLTE_ChunkTypeValue:
         return ChunkType::PLTE;
-    else if (std::memcmp(in, IDAT_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case IDAT_ChunkTypeValue:
         return ChunkType::IDAT;
-    else if (std::memcmp(in, IEND_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case IEND_ChunkTypeValue:
         return ChunkType::IEND;
-    else if (std::memcmp(in, cHRM_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case cHRM_ChunkTypeValue:
         return ChunkType::cHRM;
-    else if (std::memcmp(in, gAMA_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case gAMA_ChunkTypeValue:
         return ChunkType::gAMA;
-    else if (std::memcmp(in, iCCP_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case iCCP_ChunkTypeValue:
         return ChunkType::iCCP;
-    else if (std::memcmp(in, sBIT_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case sBIT_ChunkTypeValue:
         return ChunkType::sBIT;
-    else if (std::memcmp(in, sRGB_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case sRGB_ChunkTypeValue:
         return ChunkType::sRGB;
-    else if (std::memcmp(in, bKGD_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case bKGD_ChunkTypeValue:
         return ChunkType::bKGD;
-    else if (std::memcmp(in, hIST_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case hIST_ChunkTypeValue:
         return ChunkType::hIST;
-    else if (std::memcmp(in, tRNS_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case tRNS_ChunkTypeValue:
         return ChunkType::tRNS;
-    else if (std::memcmp(in, pHYs_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case pHYs_ChunkTypeValue:
         return ChunkType::pHYs;
-    else if (std::memcmp(in, sPLT_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case sPLT_ChunkTypeValue:
         return ChunkType::sPLT;
-    else if (std::memcmp(in, tIME_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case tIME_ChunkTypeValue:
         return ChunkType::tIME;
-    else if (std::memcmp(in, iTXt_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case iTXt_ChunkTypeValue:
         return ChunkType::iTXt;
-    else if (std::memcmp(in, tEXt_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case tEXt_ChunkTypeValue:
         return ChunkType::tEXt;
-    else if (std::memcmp(in, zTXt_ChunkTypeValue, sizeof(ChunkType_T)) == 0)
+    case zTXt_ChunkTypeValue:
         return ChunkType::zTXt;
-
-    return ChunkType::Invalid;
+    default:
+        return ChunkType::Invalid;
+    }
 }
 
 static inline Texas::PixelFormat Texas::detail::PNG::toPixelFormat(PNG::ColorType colorType, std::uint8_t bitDepth)
@@ -329,7 +329,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
             return { ResultType::CorruptFileData, "File-identifier does not match PNG file-identifier." };
     }
 
-    const std::uint32_t ihdrChunkDataSize = PNG::toCorrect32UIntEndian(srcBuffer.data() + Header::ihdrChunkSizeOffset);
+    const std::uint32_t ihdrChunkDataSize = PNG::toCorrectEndian_u32(srcBuffer.data() + Header::ihdrChunkSizeOffset);
     if (ihdrChunkDataSize != Header::ihdrChunkDataSize)
         return { ResultType::CorruptFileData, "PNG IHDR chunk data size does not equal 13. PNG specification requires it to be 13." };
 
@@ -338,12 +338,12 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
         return { ResultType::CorruptFileData, "PNG first chunk is not of type 'IHDR'. PNG requires the 'IHDR' chunk to appear first." };
 
     // Dimensions are stored in big endian, we must convert to correct endian.
-    const std::uint32_t origWidth = PNG::toCorrect32UIntEndian(srcBuffer.data() + Header::widthOffset);
+    const std::uint32_t origWidth = PNG::toCorrectEndian_u32(srcBuffer.data() + Header::widthOffset);
     if (origWidth == 0)
         return { ResultType::CorruptFileData, "PNG IHDR field 'Width' is equal to 0. PNG specification requires it to be >0." };
     metaData.baseDimensions.width = origWidth;
     // Dimensions are stored in big endian, we must convert to correct endian.
-    const std::uint32_t origHeight = PNG::toCorrect32UIntEndian(srcBuffer.data() + Header::heightOffset);
+    const std::uint32_t origHeight = PNG::toCorrectEndian_u32(srcBuffer.data() + Header::heightOffset);
     if (origHeight == 0)
         return { ResultType::CorruptFileData, "PNG IHDR field 'Height' is equal to 0. PNG specification requires it to be >0." };
     metaData.baseDimensions.height = origHeight;
@@ -380,7 +380,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
         const std::byte* const chunkStart = srcBuffer.data() + memOffsetTracker;
 
         // Chunk data length is the first entry in the chunk. It's a uint32_t
-        const std::uint32_t chunkDataLength = PNG::toCorrect32UIntEndian(chunkStart);
+        const std::uint32_t chunkDataLength = PNG::toCorrectEndian_u32(chunkStart);
         // Chunk type appears after chunk-data-length, so we offset 4 bytes extra.
         const PNG::ChunkType chunkType = PNG::getChunkType(chunkStart + sizeof(PNG::ChunkSize_T));
         if (chunkType == PNG::ChunkType::Invalid)
@@ -444,7 +444,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
             if (chunkTypeCount[(int)PNG::ChunkType::iCCP] > 0)
                 return { ResultType::CorruptFileData, "PNG sRGB chunk appeared when a iCCP chunk has already been found. "
                                                       "PNG specification requires that only of one either sRGB or iCCP chunks may exist." };
-            if (chunkDataLength != sizeof(std::uint8_t))
+            if (chunkDataLength != 1)
                 return { ResultType::CorruptFileData , "PNG sRGB chunk's data field is not equal to 1. "
                                                        "PNG specification requires sRGB chunk's field 'Data length' to be 1." };
 
@@ -462,7 +462,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
             if (chunkTypeCount[(int)PNG::ChunkType::IDAT] > 0)
                 return { ResultType::CorruptFileData, "PNG gAMA chunk appeared after IDAT chunk(s). "
                                                       "PNG specification requires gAMA chunk to appear before any IDAT chunk." };
-            if (chunkDataLength != sizeof(std::uint8_t) * 4)
+            if (chunkDataLength != 4)
                 return { ResultType::CorruptFileData, "Chunk data length of PNG gAMA chunk is not equal to 4. "
                                                       "PNG specification demands that chunk data length of gAMA chunk is equal to 4." };
 
@@ -517,7 +517,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
             const std::byte* const chunkStart = backendData.idatChunkStart + memOffsetTracker;
 
             // Chunk data length is the first entry in the chunk. It's a uint32_t
-            const std::uint32_t chunkDataLength = PNG::toCorrect32UIntEndian(chunkStart);
+            const std::uint32_t chunkDataLength = PNG::toCorrectEndian_u32(chunkStart);
             // Chunk type appears after chunk-data-length, so we offset 4 bytes extra.
             const PNG::ChunkType chunkType = PNG::getChunkType(chunkStart + sizeof(PNG::ChunkSize_T));
             if (chunkType != PNG::ChunkType::IDAT)
@@ -556,7 +556,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
         const std::byte* const chunkStart = backendData.plteChunkStart;
 
         // Chunk data length is the first entry in the chunk. It's a uint32_t
-        const std::uint32_t chunkDataLength = PNG::toCorrect32UIntEndian(chunkStart);
+        const std::uint32_t chunkDataLength = PNG::toCorrectEndian_u32(chunkStart);
         // Chunk type appears after chunk-data-length, so we offset 4 bytes extra.
         const PNG::ChunkType chunkType = PNG::getChunkType(chunkStart + sizeof(PNG::ChunkSize_T));
         if (chunkType != PNG::ChunkType::PLTE)
