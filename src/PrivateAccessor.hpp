@@ -2,7 +2,7 @@
 
 #include "Texas/Result.hpp"
 #include "Texas/LoadResult.hpp"
-#include "Texas/OpenBuffer.hpp"
+#include "Texas/MemReqs.hpp"
 #include "Texas/ByteSpan.hpp"
 
 #include <cstddef>
@@ -16,9 +16,9 @@ namespace Texas::detail
         virtual ~PrivateAccessor() = 0;
 
     public:
-        static LoadResult<OpenBuffer> loadFromBuffer(const ConstByteSpan inputBuffer);
+        static LoadResult<MemReqs> loadFromBuffer(const ConstByteSpan inputBuffer);
 
-        static Result loadImageData(const OpenBuffer& file, ByteSpan dstBuffer, ByteSpan workingMemory);
+        static Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory);
 
     };
 }

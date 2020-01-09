@@ -13,27 +13,27 @@ namespace Texas::Tools
     /*
         Returns 0 upon failure, such as invalid dimensions for pixelformat
     */
-    std::size_t CalcImageDataSize(Dimensions dimensions, PixelFormat pixelFormat);
+    std::uint64_t calcSingleImageDataSize(Dimensions dimensions, PixelFormat pixelFormat);
 
-    std::uint32_t CalcMaxMipLevelCount(Dimensions in);
+    std::uint64_t calcMaxMipLevelCount(Dimensions in);
 
-    Dimensions CalcMipmapDimensions(Dimensions baseDimensions, std::uint32_t mipLevel);
+    Dimensions calcMipmapDimensions(Dimensions baseDimensions, std::uint64_t mipLevel);
 
-    std::size_t CalcTotalSizeRequired(Dimensions baseDimensions, std::uint32_t mipLevelCount, std::uint32_t arrayLayerCount, PixelFormat pixelFormat);
+    std::uint64_t calcTotalSizeRequired(Dimensions baseDimensions, std::uint64_t mipLevelCount, std::uint64_t arrayLayerCount, PixelFormat pixelFormat);
 
     /*
         Returns the block-info for given pixelFormat.
     */
-    constexpr BlockInfo GetBlockInfo(PixelFormat pixelFormat);
+    constexpr BlockInfo getBlockInfo(PixelFormat pixelFormat);
 
-    constexpr bool IsBCnCompressed(PixelFormat pixelFormat);
+    constexpr bool isBCnCompressed(PixelFormat pixelFormat);
 
     /*
         Returns true if pixelFormat is a compressed format.
     */
-    constexpr bool IsCompressed(PixelFormat pixelFormat);
+    constexpr bool isCompressed(PixelFormat pixelFormat);
 
-    constexpr BlockInfo GetBlockInfo(PixelFormat pixelFormat)
+    constexpr BlockInfo getBlockInfo(PixelFormat pixelFormat)
     {
         switch (pixelFormat)
         {
@@ -54,7 +54,7 @@ namespace Texas::Tools
         return {};
     }
 
-    constexpr bool IsBCnCompressed(PixelFormat pixelFormat)
+    constexpr bool isBCnCompressed(PixelFormat pixelFormat)
     {
         switch (pixelFormat)
         {
@@ -72,9 +72,9 @@ namespace Texas::Tools
         return false;
     }
 
-    constexpr bool Tools::IsCompressed(PixelFormat pixelFormat)
+    constexpr bool isCompressed(PixelFormat pixelFormat)
     {
-        return IsBCnCompressed(pixelFormat);
+        return isBCnCompressed(pixelFormat);
     }
 }
 

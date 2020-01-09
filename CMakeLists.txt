@@ -54,9 +54,7 @@ project(Texas)
 	set(TEXAS_SRC_FILES 
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/MetaData.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/OpenFile.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/OpenBuffer.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/TextureDocument.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/MemReqs.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp")
 	target_sources(${LIB_NAME} INTERFACE ${TEXAS_SRC_FILES})
 #

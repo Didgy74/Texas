@@ -4,24 +4,24 @@
 
 #include <cmath>
 
-std::uint32_t Texas::Tools::CalcMaxMipLevelCount(Dimensions in)
+std::uint64_t Texas::Tools::calcMaxMipLevelCount(Dimensions in)
 {
-    std::uint32_t max = in.width;
+    std::uint64_t max = in.width;
     if (in.height > max)
         max = in.height;
     if (in.depth > max)
         max = in.depth;
-    return static_cast<std::uint32_t>(std::log2(max));
+    return static_cast<std::uint64_t>(std::log2(max));
 }
 
-Texas::Dimensions Texas::Tools::CalcMipmapDimensions(const Dimensions baseDimensions, const std::uint32_t mipLevel)
+Texas::Dimensions Texas::Tools::calcMipmapDimensions(const Dimensions baseDimensions, const std::uint64_t mipLevel)
 {
     if (mipLevel == 0)
         return baseDimensions;
-    if (mipLevel >= CalcMaxMipLevelCount(baseDimensions))
+    if (mipLevel >= calcMaxMipLevelCount(baseDimensions))
         return Texas::Dimensions{};
 
-    const std::uint32_t powerOf2 = 1 << mipLevel;
+    const std::uint64_t powerOf2 = std::uint64_t(1) << mipLevel;
     Dimensions returnValue{};
     returnValue.width = baseDimensions.width / powerOf2;
     if (returnValue.width == 0)
@@ -35,48 +35,73 @@ Texas::Dimensions Texas::Tools::CalcMipmapDimensions(const Dimensions baseDimens
     return returnValue;
 }
 
-std::size_t Texas::Tools::CalcTotalSizeRequired(Dimensions baseDimensions, std::uint32_t mipLevelCount, std::uint32_t arrayLayerCount, PixelFormat pixelFormat)
+std::size_t Texas::Tools::calcTotalSizeRequired(Dimensions baseDimensions, std::uint64_t mipLevelCount, std::uint64_t arrayLayerCount, PixelFormat pixelFormat)
 {
-    if ((mipLevelCount > 1 &&  mipLevelCount >= CalcMaxMipLevelCount(baseDimensions)) || arrayLayerCount == 0)
+    if ((mipLevelCount > 1 &&  mipLevelCount >= calcMaxMipLevelCount(baseDimensions)) || arrayLayerCount == 0)
         return 0;
 
     std::size_t sum = 0;
-    for (std::uint32_t i = 0; i < mipLevelCount; i++)
-        sum += CalcImageDataSize(CalcMipmapDimensions(baseDimensions, i), pixelFormat);
+    for (std::uint64_t i = 0; i < mipLevelCount; i++)
+        sum += calcSingleImageDataSize(calcMipmapDimensions(baseDimensions, i), pixelFormat);
     return sum * arrayLayerCount;
 }
 
-std::size_t Texas::Tools::CalcImageDataSize(const Dimensions dimensions, const PixelFormat pixelFormat)
+namespace Texas::Tools::detail
 {
-    const BlockInfo blockInfo = GetBlockInfo(pixelFormat);
-
-    if (IsBCnCompressed(pixelFormat))
+    [[nodiscard]] static inline constexpr std::uint8_t getPixelWidth_UncompressedOnly(PixelFormat pFormat)
     {
-        std::size_t blockCountX = static_cast<std::size_t>(ceilf(static_cast<float>(dimensions.width) / static_cast<float>(blockInfo.width)));
+        switch (pFormat)
+        {
+        case PixelFormat::R_8:
+            return 1;
+        case PixelFormat::RG_8:
+        case PixelFormat::RA_8:
+        case PixelFormat::R_16:
+            return 2;
+        case PixelFormat::RGB_8:
+        case PixelFormat::BGR_8:
+            return 3;
+        case PixelFormat::RGBA_8:
+        case PixelFormat::BGRA_8:
+        case PixelFormat::RG_16:
+        case PixelFormat::RA_16:
+        case PixelFormat::R_32:
+            return 4;
+        case PixelFormat::RGB_16:
+        case PixelFormat::BGR_16:
+            return 6;
+        case PixelFormat::RGBA_16:
+        case PixelFormat::BGRA_16:
+        case PixelFormat::RG_32:
+        case PixelFormat::RA_32:
+            return 8;
+        case PixelFormat::RGB_32:
+        case PixelFormat::BGR_32:
+            return 12;
+        case PixelFormat::RGBA_32:
+        case PixelFormat::BGRA_32:
+            return 16;
+        default:
+            return 0;
+        }
+    }
+}
+
+std::uint64_t Texas::Tools::calcSingleImageDataSize(const Dimensions dims, const PixelFormat pFormat)
+{
+    const BlockInfo blockInfo = getBlockInfo(pFormat);
+
+    if (isBCnCompressed(pFormat))
+    {
+        std::size_t blockCountX = static_cast<std::size_t>(std::ceilf(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
         if (blockCountX == 0)
             blockCountX = 1;
-        std::size_t blockCountY = static_cast<std::size_t>(ceilf(static_cast<float>(dimensions.height) / static_cast<float>(blockInfo.height)));
+        std::size_t blockCountY = static_cast<std::size_t>(std::ceilf(static_cast<float>(dims.height) / static_cast<float>(blockInfo.height)));
         if (blockCountY == 0)
             blockCountY = 1;
 
-        return blockCountX * blockCountY * dimensions.depth * blockInfo.size;
+        return blockCountX * blockCountY * dims.depth * blockInfo.size;
     }
 
-    switch (pixelFormat)
-    {
-    case PixelFormat::R_8:
-        return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t);
-    case PixelFormat::RG_8:
-        return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t) * 2;
-    case PixelFormat::RGB_8:
-    case PixelFormat::BGR_8:
-        return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t) * 3;
-    case PixelFormat::RGBA_8:
-    case PixelFormat::BGRA_8:
-        return static_cast<std::size_t>(dimensions.width) * dimensions.height * dimensions.depth * sizeof(std::uint8_t) * 4;
-    default:
-        break;
-    }
-
-    return 0;
+    return dims.width * dims.height * dims.depth * detail::getPixelWidth_UncompressedOnly(pFormat);
 }

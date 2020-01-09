@@ -33,6 +33,7 @@ namespace Texas
 
         R_32,
         RG_32,
+        RA_32,
         RGB_32,
         BGR_32,
         RGBA_32,

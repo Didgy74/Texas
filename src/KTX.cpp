@@ -84,13 +84,13 @@ namespace Texas::detail::KTX
         const bool fileIdentifierConfirmed,
         ConstByteSpan srcBuffer,
         MetaData& metaData,
-        OpenBuffer::KTX_BackendData& backendData)
+        detail::MemReqs_KTX_BackendData& backendData)
     {
         // Check if buffer is long enough to hold the KTX header
         if (srcBuffer.size() <= Header::totalSize)
             return { ResultType::PrematureEndOfFile, "KTX-file is not large enough to hold all header-data." };
 
-        backendData = OpenBuffer::KTX_BackendData();
+        backendData = detail::MemReqs_KTX_BackendData();
 
         metaData.srcFileFormat = FileFormat::KTX;
 
@@ -182,14 +182,14 @@ namespace Texas::detail::KTX
             keyValueDataCounter += keyValuePairSize + (3 - ((keyValuePairSize + 3) % 4));
         }
 
-        backendData.srcImageDataStart = srcBuffer.data() + Header::totalSize + totalKeyValueDataSize;
+        backendData.srcImageDataStart = reinterpret_cast<const unsigned char*>(srcBuffer.data() + Header::totalSize + totalKeyValueDataSize);
 
         return { ResultType::Success, nullptr };
     }
 
     Result loadFromBuffer_Step2(
         const MetaData& metaData,
-        OpenBuffer::KTX_BackendData& backendData,
+        detail::MemReqs_KTX_BackendData& backendData,
         const ByteSpan dstImageBuffer,
         const ByteSpan workingMemory)
     {
@@ -205,7 +205,7 @@ namespace Texas::detail::KTX
             for (std::uint32_t mipIndex = 0; mipIndex < metaData.mipLevelCount; mipIndex++)
             {
                 // Contains the amount of data from all array images of this mip level
-                const std::uint32_t mipDataSize = KTX::toU32(backendData.srcImageDataStart + srcMemOffset);
+                const std::uint32_t mipDataSize = KTX::toU32(reinterpret_cast<const std::byte*>(backendData.srcImageDataStart + srcMemOffset));
                 
                 std::memcpy(dstImageBuffer.data() + dstMemOffset, backendData.srcImageDataStart + srcMemOffset + sizeof(std::uint32_t), mipDataSize);
                 const std::uint8_t padding = (3 - ((mipDataSize + 3) % 4));

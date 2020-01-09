@@ -6,9 +6,9 @@ namespace Texas
 {
     struct Dimensions
     {
-        std::uint32_t width;
-        std::uint32_t height;
-        std::uint32_t depth;
+        std::uint64_t width;
+        std::uint64_t height;
+        std::uint64_t depth;
     };
 }
 

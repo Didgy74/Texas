@@ -13,22 +13,27 @@
 
 namespace Texas
 {
-    LoadResult<OpenBuffer> loadFromBuffer(const std::byte* const fileBuffer, const std::size_t bufferLength)
+    LoadResult<MemReqs> loadFromBuffer(const std::byte* const fileBuffer, const std::size_t bufferLength)
     {
         return detail::PrivateAccessor::loadFromBuffer(ConstByteSpan(fileBuffer, bufferLength));
     }
 
-    LoadResult<OpenBuffer> loadFromBuffer(const ConstByteSpan inputBuffer)
+    LoadResult<MemReqs> loadFromBuffer(const ConstByteSpan inputBuffer)
     {
         return detail::PrivateAccessor::loadFromBuffer(inputBuffer);
     }
 
-    Result loadImageData(const OpenBuffer& file, const ByteSpan dstBuffer, const ByteSpan workingMemory)
+    LoadResult<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
+    {
+        return LoadResult<MetaData>{ ResultType::Success, nullptr };
+    }
+
+    Result loadImageData(const MemReqs& file, const ByteSpan dstBuffer, const ByteSpan workingMemory)
     {
         return detail::PrivateAccessor::loadImageData(file, dstBuffer, workingMemory);
     }
 
-    Result loadImageData(const OpenBuffer& file, std::byte* const dstBuffer, const std::size_t dstBufferSize, std::byte* const workingMemory, const std::size_t workingMemorySize)
+    Result loadImageData(const MemReqs& file, std::byte* const dstBuffer, const std::size_t dstBufferSize, std::byte* const workingMemory, const std::size_t workingMemorySize)
     {
         return detail::PrivateAccessor::loadImageData(file, ByteSpan(dstBuffer, dstBufferSize), ByteSpan(workingMemory, workingMemorySize));
     }
@@ -36,14 +41,14 @@ namespace Texas
 
 namespace Texas
 {
-    LoadResult<OpenBuffer> detail::PrivateAccessor::loadFromBuffer(const ConstByteSpan inputBuffer)
+    LoadResult<MemReqs> detail::PrivateAccessor::loadFromBuffer(const ConstByteSpan inputBuffer)
     {
         // Check if input buffer is larger than 0.
         // 12 bytes is the largest file identifier... So far.
         if (inputBuffer.size() < 12)
-            return LoadResult<OpenBuffer>(ResultType::InvalidInputParameter, "Buffer provided cannot have length 0.");
+            return LoadResult<MemReqs>(ResultType::InvalidInputParameter, "Buffer provided cannot have length 0.");
 
-        OpenBuffer openBuffer{};
+        MemReqs openBuffer{};
 
 #ifdef TEXAS_ENABLE_KTX_READ
         // We test the file's identifier to see if it's KTX
@@ -51,9 +56,9 @@ namespace Texas
         {
             Result result = detail::KTX::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData, openBuffer.m_backendData.ktx);
             if (result.resultType() == ResultType::Success)
-                return LoadResult<OpenBuffer>(static_cast<OpenBuffer&&>(openBuffer));
+                return LoadResult<MemReqs>(static_cast<MemReqs&&>(openBuffer));
             else
-                return LoadResult<OpenBuffer>(result.resultType(), result.errorMessage());
+                return LoadResult<MemReqs>(result.resultType(), result.errorMessage());
         }
 #endif
 
@@ -62,19 +67,19 @@ namespace Texas
         {
             Result result = detail::PNG::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData, openBuffer.m_backendData.png);
             if (result.resultType() == ResultType::Success)
-                return LoadResult<OpenBuffer>(static_cast<OpenBuffer&&>(openBuffer));
+                return LoadResult<MemReqs>(static_cast<MemReqs&&>(openBuffer));
             else
-                return LoadResult<OpenBuffer>(result.resultType(), result.errorMessage());
+                return LoadResult<MemReqs>(result.resultType(), result.errorMessage());
         }
 #endif
 
-        return LoadResult<OpenBuffer>(ResultType::FileNotSupported, "Could not identify file-format of input, or file-format is not supported.");
+        return LoadResult<MemReqs>(ResultType::FileNotSupported, "Could not identify file-format of input, or file-format is not supported.");
     }
 
-    Result detail::PrivateAccessor::loadImageData(const OpenBuffer& file, const ByteSpan dstBuffer, const ByteSpan workingMemory)
+    Result detail::PrivateAccessor::loadImageData(const MemReqs& file, const ByteSpan dstBuffer, const ByteSpan workingMemory)
     {
         if (dstBuffer.size() < file.memoryRequired())
-            return Result(ResultType::InvalidInputParameter, "Destination buffer is not equal or higher than Texas::OpenBuffer::memoryRequired(). Cannot fit image data in this buffer.");
+            return Result(ResultType::InvalidInputParameter, "Destination buffer is not equal or higher than Texas::MemoryRequirements::memoryRequired(). Cannot fit image data in this buffer.");
         if (workingMemory.data() != nullptr && workingMemory.size() < file.workingMemoryRequired())
             return Result(ResultType::InvalidInputParameter, "Working memory provided is not large enough for Texas to unpack the image data.");
 

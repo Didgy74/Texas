@@ -3,9 +3,8 @@
 #include "Texas/LoadResult.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/ByteSpan.hpp"
-#include "Texas/TextureDocument.hpp"
-#include "Texas/OpenFile.hpp"
-#include "Texas/OpenBuffer.hpp"
+#include "Texas/MemReqs.hpp"
+#include "Texas/MetaData.hpp"
 
 namespace Texas
 {
@@ -15,7 +14,7 @@ namespace Texas
         The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
         This can be done with Texas::loadImageData().
     */
-    [[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(const std::byte* fileBuffer, std::size_t bufferLength);
+    [[nodiscard]] LoadResult<MemReqs> loadFromBuffer(const std::byte* fileBuffer, std::size_t bufferLength);
 
     /*
         Loads the metadata from an image buffer, and stores data in Texas::OpenBuffer to prepare for loading imagedata.
@@ -23,7 +22,9 @@ namespace Texas
         The returned struct can be used to allocate a buffer large enough to load the imagedata onto, as well as working memory.
         This can be done with Texas::loadImageData().
     */
-    [[nodiscard]] LoadResult<OpenBuffer> loadFromBuffer(ConstByteSpan inputBuffer);
+    [[nodiscard]] LoadResult<MemReqs> loadFromBuffer(ConstByteSpan inputBuffer);
+
+    [[nodiscard]] LoadResult<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
 
     /*
         Loads the imagedata of a file opened with LoadFromBuffer into dstBuffer.
@@ -36,7 +37,7 @@ namespace Texas
             workingMemory MUST be ATLEAST the size return by OpenBuffer::memoryRequired().
             If the size returned by OpenBuffer::workingMemoryRequired is 0, you can pass a default-constructed ByteSpan, or one that points to nullptr.
     */
-    [[nodiscard]] Result loadImageData(const OpenBuffer& file, ByteSpan dstBuffer, ByteSpan workingMemory);
+    [[nodiscard]] Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory);
 
     /*
         Loads the imagedata of a file opened with LoadFromBuffer into dstBuffer.
@@ -48,5 +49,5 @@ namespace Texas
 
             workingMemory MUST be ATLEAST the size return by OpenBuffer::memoryRequired().
     */
-    [[nodiscard]] Result loadImageData(const OpenBuffer& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize);
+    [[nodiscard]] Result loadImageData(const MemReqs& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize);
 }

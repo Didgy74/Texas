@@ -4,7 +4,7 @@
 #include "Texas/Result.hpp"
 #include "Texas/MetaData.hpp"
 #include "Texas/ByteSpan.hpp"
-#include "Texas/OpenBuffer.hpp"
+#include "Texas/MemReqs.hpp"
 
 namespace Texas::detail::KTX
 {
@@ -17,11 +17,11 @@ namespace Texas::detail::KTX
         const bool fileIdentifierConfirmed,
         ConstByteSpan srcBuffer,
         MetaData& metaData,
-        OpenBuffer::KTX_BackendData& backendDataBuffer);
+        detail::MemReqs_KTX_BackendData& backendDataBuffer);
 
     Result loadFromBuffer_Step2(
         const MetaData& metaData,
-        OpenBuffer::KTX_BackendData& backendDataBuffer,
+        detail::MemReqs_KTX_BackendData& backendDataBuffer,
         const ByteSpan dstImageBuffer,
         const ByteSpan workingMemory);
 }

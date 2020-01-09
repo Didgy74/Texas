@@ -4,7 +4,7 @@
 #include "Texas/Result.hpp"
 #include "Texas/MetaData.hpp"
 #include "Texas/ByteSpan.hpp"
-#include "Texas/OpenBuffer.hpp"
+#include "Texas/MemReqs.hpp"
 
 #include <cstdint>
 
@@ -22,11 +22,11 @@ namespace Texas::detail::PNG
         const bool fileIdentifierConfirmed, 
         ConstByteSpan srcBuffer,
         MetaData& metaData,
-        OpenBuffer::PNG_BackendData& backendDataBuffer);
+        detail::MemReqs_PNG_BackendData& backendDataBuffer);
 
     Result loadFromBuffer_Step2(
         const MetaData& metaData,
-        OpenBuffer::PNG_BackendData& backendDataBuffer,
+        detail::MemReqs_PNG_BackendData& backendDataBuffer,
         const ByteSpan dstImageBuffer,
         const ByteSpan workingMemory);
 }
