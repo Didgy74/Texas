@@ -66,6 +66,11 @@ namespace Texas::detail::PNG
 
     [[nodiscard]] static inline PixelFormat toPixelFormat(PNG::ColorType colorType, std::uint8_t bitDepth);
 
+    [[nodiscard]] static inline std::uint64_t calcWorkingMemRequired(
+        Dimensions baseDims,
+        PixelFormat pFormat,
+        bool isIndexed) noexcept;
+
     [[nodiscard]] static inline std::uint8_t getPixelWidth(PixelFormat pixelFormat);
 
     [[nodiscard]] static inline std::uint8_t paethPredictor(std::uint8_t a, std::uint8_t b, std::uint8_t c);
@@ -81,10 +86,11 @@ namespace Texas::detail::PNG
     [[nodiscard]] static inline Result loadFromBuffer_Step2_DefilterInPlace(const Dimensions& baseDims, const ByteSpan uncompressedData);
 
     [[nodiscard]] static inline Result loadFromBuffer_Step2_Deindex(
-        MemReqs_PNG_BackendData& backendData,
-        Dimensions baseDims,
-        ByteSpan dstImageBuffer,
-        ByteSpan workingMem);
+        const Dimensions baseDims,
+        const std::byte* const plteChunkStart,
+        const std::uint32_t previous_plteChunkDataLength,
+        const ByteSpan dstImageBuffer,
+        const ByteSpan workingMem);
 }
 
 enum class Texas::detail::PNG::ColorType : std::uint8_t
@@ -292,18 +298,39 @@ static inline Texas::PixelFormat Texas::detail::PNG::toPixelFormat(PNG::ColorTyp
     return PixelFormat::Invalid;
 }
 
+std::uint64_t Texas::detail::PNG::calcWorkingMemRequired(
+    Dimensions baseDims,
+    PixelFormat pFormat,
+    bool isIndexed) noexcept
+{
+    if (isIndexed)
+    {
+        // For indexed, we inflate all rows including the 1 byte for filter-type at the start of each row.
+        // And then we defilter in place, and de-index directly onto destination image-buffer.
+        // Each pixel here is 1 byte. Each row is +1 byte for the filtertype.
+        return baseDims.width * baseDims.height + baseDims.height;
+    }
+    else
+    {
+        // For indexed, we inflate all rows including the 1 byte for filter-type at the start of each row.
+        // And then we defilter directly onto dstImgBuffer.
+        // Each row is +1 byte for the filtertype.
+        return baseDims.width * baseDims.height * getPixelWidth(pFormat);
+    }
+}
+
 static inline std::uint8_t Texas::detail::PNG::getPixelWidth(PixelFormat pixelFormat)
 {
     switch (pixelFormat)
     {
     case PixelFormat::R_8:
-        return sizeof(std::uint8_t);
+        return 1;
     case PixelFormat::RG_8:
-        return sizeof(std::uint8_t) * 2;
+        return 2;
     case PixelFormat::RGB_8:
-        return sizeof(std::uint8_t) * 3;
+        return 3;
     case PixelFormat::RGBA_8:
-        return sizeof(std::uint8_t) * 4;
+        return 4;
     }
 
     return 0;
@@ -326,9 +353,10 @@ static inline std::uint8_t Texas::detail::PNG::paethPredictor(std::uint8_t a, st
 }
 
 Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
-    const bool fileIdentifierConfirmed,
-    const ConstByteSpan srcBuffer,
+    const bool identifierConfirmed,
+    ConstByteSpan srcBuffer,
     MetaData& metaData,
+    std::uint64_t& workingMemRequired,
     detail::MemReqs_PNG_BackendData& backendData)
 {
     backendData = detail::MemReqs_PNG_BackendData();
@@ -345,10 +373,11 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     metaData.colorSpace = ColorSpace::Linear;
     metaData.channelType = ChannelType::UnsignedNormalized;
 
-    if (fileIdentifierConfirmed == false)
+    if (identifierConfirmed == false)
     {
-        const std::byte* const fileIdentifier = srcBuffer.data() + Header::identifier_Offset;
-        if (std::memcmp(fileIdentifier, Header::identifier, sizeof(fileIdentifier)) != 0)
+        // The identifier is the first thing that appears in the file
+        const std::byte* const fileIdentifier = srcBuffer.data();
+        if (std::memcmp(fileIdentifier, identifier, sizeof(fileIdentifier)) != 0)
             return { ResultType::CorruptFileData, "File-identifier does not match PNG file-identifier." };
     }
 
@@ -510,26 +539,29 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
         return { ResultType::CorruptFileData, "Found no PLTE chunk in PNG file with color-type 'Indexed colour'. "
                                               "PNG specification requires a PLTE chunk to exist when color-type is 'Indexed colour'" };
 
+    const bool isIndexedColor = colorType == ColorType::Indexed_colour;
+    workingMemRequired = calcWorkingMemRequired(metaData.baseDimensions, metaData.pixelFormat, isIndexedColor);
+
     return { ResultType::Success, nullptr };
 }
 
 Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
-    MemReqs_PNG_BackendData& backendData,
-    Dimensions baseDims,
-    ByteSpan dstImageBuffer,
-    ByteSpan workingMem)
+    const Dimensions baseDims,
+    const std::byte* const plteChunkStart,
+    const std::uint32_t previous_plteChunkDataLength, 
+    const ByteSpan dstImageBuffer,
+    const ByteSpan workingMem)
 {
     // Unindex the data
-    const std::byte* const plteChunkStart = reinterpret_cast<const std::byte*>(backendData.plteChunkStart);
     const std::uint32_t plteChunkDataLength = PNG::toCorrectEndian_u32(plteChunkStart);
     // Chunk type appears after chunk-data-length, so we offset 4 bytes extra.
     const PNG::ChunkType chunkType = PNG::getChunkType(plteChunkStart + sizeof(PNG::ChunkSize_T));
     if (chunkType != PNG::ChunkType::PLTE)
         return { ResultType::CorruptFileData, "Found no PLTE chunk when deindexing PNG file. "
-                                              "The file has changed since Texas::loadFromBuffer() was called." };
-    if (plteChunkDataLength != backendData.plteChunkDataLength)
+                                              "The file has changed since Texas::getMemReqs() was called." };
+    if (plteChunkDataLength != previous_plteChunkDataLength)
         return { ResultType::CorruptFileData, "PLTE chunk data length is not the same as it was when parsing the PNG file. "
-                                              "The file has changed since Texas::loadFromBuffer() was called." };
+                                              "The file has changed since Texas::getMemReqs() was called." };
 
     const std::byte* const paletteColors = plteChunkStart + sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T);
     const std::size_t paletteColorCount = plteChunkDataLength / 3;
@@ -588,7 +620,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
             const PNG::ChunkType chunkType = PNG::getChunkType(chunkStart + sizeof(PNG::ChunkSize_T));
             if (chunkType != PNG::ChunkType::IDAT)
                 return { ResultType::CorruptFileData, "Found no IDAT chunk when decompressing PNG file. "
-                                                      "The file has changed since Texas::loadFromBuffer() was called." };
+                                                      "The file has changed since Texas::getMemReqs() was called." };
             // TODO: Validate chunk type.
 
             const std::byte* const chunkData = chunkStart + sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T);
@@ -621,7 +653,12 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
         if (!result.isSuccessful())
             return result;
 
-        result = loadFromBuffer_Step2_Deindex(backendData, metaData.baseDimensions, dstImageBuffer, workingMem);
+        result = loadFromBuffer_Step2_Deindex(
+            metaData.baseDimensions,
+            reinterpret_cast<const std::byte*>(backendData.plteChunkStart),
+            backendData.plteChunkDataLength,
+            dstImageBuffer, 
+            workingMem);
         if (!result.isSuccessful())
             return result;
     }

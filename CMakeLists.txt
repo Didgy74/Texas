@@ -5,12 +5,12 @@ project(Texas)
 # Create Texas CMake options
 # --------------------------
 # START
-
 	option(TEXAS_ENABLE_EVERYTHING "Enables all library functionality." OFF)
 	option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" OFF)
 	option(TEXAS_ENABLE_KTX2_READ "Enables loading KTX2 files" OFF)
 	option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" OFF)
 	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan" OFF)
+	option(TEXAS_ENABLE_ASSERTIONS "Enables assertions inside the codebase. This can be helpful to catch invalid usage of the interface." OFF)
 #
 # END
 #
@@ -69,7 +69,7 @@ project(Texas)
 		set(TEXAS_ENABLE_KTX_READ ON)
 		set(TEXAS_ENABLE_KTX2_READ ON)
 		set(TEXAS_ENABLE_PNG_READ ON)
-		set(TEXAS_ENABLE_VULKAN_TOOLS ON)
+		set(TEXAS_ENABLE_ASSERTIONS ON)
 	endif()
 
 	# Check that atleast one file format has been enabled
@@ -83,13 +83,12 @@ project(Texas)
 
 	if (TEXAS_ENABLE_KTX_READ)
 		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_KTX_READ)
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.cpp")
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Read.cpp")
 	endif()
 
-	
 	if (TEXAS_ENABLE_PNG_READ)
 		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_PNG_READ)
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG.cpp")
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_read.cpp")
 		set(TEXAS_LINK_ZLIB 1)
 	endif()
 
@@ -117,6 +116,10 @@ project(Texas)
 		target_sources(${LIB_NAME} INTERFACE ${TEXAS_ZLIB_SRC_FILES})
 	endif()
 
+	if(TEXAS_ENABLE_ASSERTIONS)
+		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_ASSERT)
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/Assert.cpp")
+	endif()
 #
 # END
 #

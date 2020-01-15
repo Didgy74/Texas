@@ -2,7 +2,7 @@
 
 namespace Texas::detail
 {
-    detail::VkImageType ToVkImageType(TextureType type) noexcept
+    detail::VkImageType toVkImageType(TextureType type) noexcept
     {
         switch (type)
         {
@@ -22,7 +22,7 @@ namespace Texas::detail
         return VkImageType::VK_IMAGE_TYPE_MAX_ENUM;
     }
 
-    detail::VkImageViewType ToVkImageViewType(TextureType type) noexcept
+    detail::VkImageViewType toVkImageViewType(TextureType type) noexcept
     {
         switch (type)
         {
@@ -128,7 +128,7 @@ namespace Texas::detail
 
 namespace Texas::detail
 {
-    detail::VkFormat ToVkFormat(const PixelFormat pFormat, const ColorSpace cSpace, const ChannelType chType) noexcept
+    detail::VkFormat toVkFormat(const PixelFormat pFormat, const ColorSpace cSpace, const ChannelType chType) noexcept
     {
         switch (pFormat)
         {

@@ -1,4 +1,5 @@
 #include "Texas/Tools.hpp"
+#include "Texas/detail/Tools.hpp"
 
 #include "Texas/Dimensions.hpp"
 
@@ -35,7 +36,7 @@ Texas::Dimensions Texas::Tools::calcMipmapDimensions(const Dimensions baseDimens
     return returnValue;
 }
 
-std::size_t Texas::Tools::calcTotalSizeRequired(Dimensions baseDimensions, std::uint64_t mipLevelCount, std::uint64_t arrayLayerCount, PixelFormat pixelFormat)
+std::size_t Texas::Tools::calcTotalSizeRequired(Dimensions baseDimensions, std::uint64_t arrayLayerCount, std::uint64_t mipLevelCount,  PixelFormat pixelFormat)
 {
     if ((mipLevelCount > 1 &&  mipLevelCount >= calcMaxMipLevelCount(baseDimensions)) || arrayLayerCount == 0)
         return 0;
@@ -46,7 +47,31 @@ std::size_t Texas::Tools::calcTotalSizeRequired(Dimensions baseDimensions, std::
     return sum * arrayLayerCount;
 }
 
-namespace Texas::Tools::detail
+std::uint64_t Texas::Tools::calcTotalSizeRequired(const MetaData& metaData)
+{
+    return calcTotalSizeRequired(metaData.baseDimensions, metaData.arrayLayerCount, metaData.mipLevelCount, metaData.pixelFormat);
+}
+
+Texas::Optional<std::size_t> Texas::Tools::calcMipOffset(
+    Dimensions baseDims, 
+    PixelFormat pFormat, 
+    std::uint64_t arrayLayerCount,
+    std::uint64_t mipLevelCount,
+    std::uint64_t mipLevelIndex) noexcept
+{
+    if (mipLevelIndex == 0)
+        return { 0 };
+    if (mipLevelIndex >= mipLevelCount)
+        return {};
+    return { calcTotalSizeRequired(baseDims, arrayLayerCount, mipLevelIndex, pFormat) };
+}
+
+Texas::Optional<std::size_t> Texas::Tools::calcMipOffset(const MetaData& metaData, std::uint64_t mipLevelIndex) noexcept
+{
+    return calcMipOffset(metaData.baseDimensions, metaData.pixelFormat, metaData.arrayLayerCount, metaData.mipLevelCount, mipLevelIndex);
+}
+
+namespace Texas::detail
 {
     [[nodiscard]] static inline constexpr std::uint8_t getPixelWidth_UncompressedOnly(PixelFormat pFormat)
     {
@@ -87,11 +112,11 @@ namespace Texas::Tools::detail
     }
 }
 
-std::uint64_t Texas::Tools::calcSingleImageDataSize(const Dimensions dims, const PixelFormat pFormat)
+std::uint64_t Texas::Tools::calcSingleImageDataSize(const Dimensions dims, const PixelFormat pFormat) noexcept
 {
-    const BlockInfo blockInfo = getBlockInfo(pFormat);
+    const detail::BlockInfo blockInfo = detail::getBlockInfo(pFormat);
 
-    if (isBCnCompressed(pFormat))
+    if (detail::isBCnCompressed(pFormat))
     {
         std::size_t blockCountX = static_cast<std::size_t>(std::ceilf(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
         if (blockCountX == 0)

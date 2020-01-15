@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Texas/ResultType.hpp"
+
 namespace Texas
 {
     class Result

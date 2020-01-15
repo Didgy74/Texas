@@ -1,26 +1,22 @@
 #include "Texas/Texas.hpp"
 #include "PrivateAccessor.hpp"
+#include "Texas/Tools.hpp"
 
 #include <cstring>
 
-#ifdef TEXAS_ENABLE_KTX_READ
-#	include "KTX.hpp"
-#endif
-
-#ifdef TEXAS_ENABLE_PNG_READ
-#	include "PNG.hpp"
-#endif
+#include "KTX.hpp"
+#include "PNG.hpp"
 
 namespace Texas
 {
-    LoadResult<MemReqs> loadFromBuffer(const std::byte* const fileBuffer, const std::size_t bufferLength)
+    LoadResult<MemReqs> getMemReqs(const std::byte* const fileBuffer, const std::size_t bufferLength)
     {
-        return detail::PrivateAccessor::loadFromBuffer(ConstByteSpan(fileBuffer, bufferLength));
+        return detail::PrivateAccessor::getMemReqs(ConstByteSpan(fileBuffer, bufferLength));
     }
 
-    LoadResult<MemReqs> loadFromBuffer(const ConstByteSpan inputBuffer)
+    LoadResult<MemReqs> getMemReqs(const ConstByteSpan inputBuffer)
     {
-        return detail::PrivateAccessor::loadFromBuffer(inputBuffer);
+        return detail::PrivateAccessor::getMemReqs(inputBuffer);
     }
 
     LoadResult<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
@@ -39,68 +35,106 @@ namespace Texas
     }
 }
 
-namespace Texas
+namespace Texas::detail
 {
-    LoadResult<MemReqs> detail::PrivateAccessor::loadFromBuffer(const ConstByteSpan inputBuffer)
+    LoadResult<MemReqs> PrivateAccessor::getMemReqs(const ConstByteSpan inputBuffer)
     {
         // Check if input buffer is larger than 0.
-        // 12 bytes is the largest file identifier... So far.
-        if (inputBuffer.size() < 12)
-            return LoadResult<MemReqs>(ResultType::InvalidInputParameter, "Buffer provided cannot have length 0.");
+        // 12 bytes is the largest file identifier we know of... So far.
+        // TODO: Find out how small a file could possibly be and test if it's atleast that size.
+        if (inputBuffer.size() < 60)
+            return { ResultType::InvalidInputParameter, "Buffer provided cannot be smaller than 60. "
+                "No file supported by Texas can be smaller than 60(?) bytes and still be valid." };
 
-        MemReqs openBuffer{};
+        MemReqs memReqs{};
 
-#ifdef TEXAS_ENABLE_KTX_READ
         // We test the file's identifier to see if it's KTX
-        if (std::memcmp(inputBuffer.data(), detail::KTX::Header::correctIdentifier, sizeof(detail::KTX::Header::correctIdentifier)) == 0)
+        if (std::memcmp(inputBuffer.data(), KTX::identifier, sizeof(KTX::identifier)) == 0)
         {
-            Result result = detail::KTX::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData, openBuffer.m_backendData.ktx);
-            if (result.resultType() == ResultType::Success)
-                return LoadResult<MemReqs>(static_cast<MemReqs&&>(openBuffer));
+#ifdef TEXAS_ENABLE_KTX_READ
+            Result result = KTX::loadFromBuffer_Step1(true, inputBuffer, memReqs.m_metaData, memReqs.m_backendData.ktx);
+            if (result.isSuccessful())
+            {
+                memReqs.m_memoryRequired = Tools::calcTotalSizeRequired(memReqs.metaData());
+                return LoadResult<MemReqs>(static_cast<MemReqs&&>(memReqs));
+            }
             else
-                return LoadResult<MemReqs>(result.resultType(), result.errorMessage());
-        }
+                return { result.resultType(), result.errorMessage() };
+#else
+            return { ResultType::FileNotSupported, "Encountered a KTX-file. KTX support has not been enabled in this configuration." };
 #endif
+        }
 
+        // Test if it's a PNG file
+        if (std::memcmp(inputBuffer.data(), PNG::identifier, sizeof(PNG::identifier)) == 0)
+        {
 #ifdef TEXAS_ENABLE_PNG_READ
-        if (std::memcmp(inputBuffer.data(), detail::PNG::Header::identifier, sizeof(detail::PNG::Header::identifier)) == 0)
-        {
-            Result result = detail::PNG::loadFromBuffer_Step1(true, inputBuffer, openBuffer.m_metaData, openBuffer.m_backendData.png);
-            if (result.resultType() == ResultType::Success)
-                return LoadResult<MemReqs>(static_cast<MemReqs&&>(openBuffer));
+            Result result = PNG::loadFromBuffer_Step1(true, inputBuffer, memReqs.m_metaData, memReqs.m_workingMemoryRequired, memReqs.m_backendData.png);
+            if (result.isSuccessful())
+            {
+                memReqs.m_memoryRequired = Tools::calcTotalSizeRequired(memReqs.metaData());
+                return LoadResult<MemReqs>(static_cast<MemReqs&&>(memReqs));
+            }
             else
-                return LoadResult<MemReqs>(result.resultType(), result.errorMessage());
-        }
+                return { result.resultType(), result.errorMessage() };
+#else
+            return { ResultType::FileNotSupported, "Encountered a PNG-file. PNG support has not been enabled in this configuration." };
 #endif
+        }
 
-        return LoadResult<MemReqs>(ResultType::FileNotSupported, "Could not identify file-format of input, or file-format is not supported.");
+
+        return LoadResult<MemReqs>(ResultType::FileNotSupported, "Could not identify file-format of input, "
+                                                                 "or file-format is not supported.");
     }
 
-    Result detail::PrivateAccessor::loadImageData(const MemReqs& file, const ByteSpan dstBuffer, const ByteSpan workingMemory)
+    Result PrivateAccessor::loadImageData(const MemReqs& file, const ByteSpan dstBuffer, const ByteSpan workingMem)
     {
+        if (dstBuffer.data() == nullptr)
+            return { ResultType::InvalidInputParameter, "You need to send in a destination buffer." };
         if (dstBuffer.size() < file.memoryRequired())
-            return Result(ResultType::InvalidInputParameter, "Destination buffer is not equal or higher than Texas::MemoryRequirements::memoryRequired(). Cannot fit image data in this buffer.");
-        if (workingMemory.data() != nullptr && workingMemory.size() < file.workingMemoryRequired())
-            return Result(ResultType::InvalidInputParameter, "Working memory provided is not large enough for Texas to unpack the image data.");
+            return { ResultType::InvalidInputParameter, "Destination buffer is not equal or higher than Texas::MemoryRequirements::memoryRequired(). "
+                "Cannot fit image data in this buffer." };
+        if (file.workingMemoryRequired() > 0 && (workingMem.size() == 0 || workingMem.data() == nullptr))
+            return { ResultType::InvalidInputParameter, "Cannot decompress this file with no working memory." };
 
 #ifdef TEXAS_ENABLE_KTX_READ
         if (file.metaData().srcFileFormat == FileFormat::KTX)
         {
-            return detail::KTX::loadFromBuffer_Step2(file.metaData(), file.m_backendData.ktx, dstBuffer, workingMemory);
+            return detail::KTX::loadFromBuffer_Step2(file.metaData(), file.m_backendData.ktx, dstBuffer, workingMem);
         }
 #endif
 
 #ifdef TEXAS_ENABLE_PNG_READ
         if (file.metaData().srcFileFormat == FileFormat::PNG)
         {
-            if (workingMemory.size() == 0 || workingMemory.data() == nullptr)
-                return { ResultType::InvalidInputParameter, "Cannot decompress PNG with no working memory." };
-
-            return detail::PNG::loadFromBuffer_Step2(file.metaData(), file.m_backendData.png, dstBuffer, workingMemory);
+            return detail::PNG::loadFromBuffer_Step2(file.metaData(), file.m_backendData.png, dstBuffer, workingMem);
         }
 #endif
 
-        return Result(ResultType::InvalidInputParameter, nullptr);
+        return { ResultType::InvalidInputParameter, nullptr };
+    }
+
+    LoadResult<MetaData> PrivateAccessor::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMem)
+    {
+        if (dstBuffer.data() == nullptr || dstBuffer.size() == 0)
+            return { ResultType::InvalidInputParameter, "No dstBuffer." };
+
+        LoadResult<MemReqs> parseResult = getMemReqs(inputBuffer);
+        if (!parseResult.isSuccessful())
+            return { parseResult.resultType(), parseResult.errorMessage() };
+
+        MemReqs memReqs = parseResult.value();
+        if (dstBuffer.size() < memReqs.memoryRequired())
+            return { ResultType::InvalidInputParameter, "Destination buffer not large enough for imagedata." };
+        if (memReqs.workingMemoryRequired() > 0 && (workingMem.data() == nullptr || workingMem.size() < memReqs.workingMemoryRequired()))
+            return { ResultType::InvalidInputParameter, "Not enough working memory." };
+
+        Result loadResult = loadImageData(memReqs, dstBuffer, workingMem);
+        if (!loadResult.isSuccessful())
+            return { loadResult.resultType(), loadResult.errorMessage() };
+
+        return LoadResult<MetaData>(ResultType::FileNotSupported, "Could not identify file-format of input, "
+            "or file-format is not supported.");
     }
 }
 

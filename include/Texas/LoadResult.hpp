@@ -16,38 +16,38 @@ namespace Texas
     {
     public:
         LoadResult() = delete;
-        explicit LoadResult(ResultType result, const char* errorMessage);
+        LoadResult(ResultType result, const char* errorMessage) noexcept;
         LoadResult(const T&) = delete;
-        explicit LoadResult(T&& data);
+        LoadResult(T&& data) noexcept;
 
-        ~LoadResult();
+        ~LoadResult() noexcept;
 
-        ResultType resultType() const;
-        const char* errorMessage() const;
-
-        /*
-            Returns the loaded struct.
-
-            Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
-        */
-        T& value();
+        ResultType resultType() const noexcept;
+        const char* errorMessage() const noexcept;
 
         /*
             Returns the loaded struct.
 
             Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
         */
-        const T& value() const;
+        T& value() noexcept;
+
+        /*
+            Returns the loaded struct.
+
+            Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
+        */
+        const T& value() const noexcept;
 
         /*
             Returns true if ResultType() returns ResultType::Success.
         */
-        bool isSuccessful() const;
+        bool isSuccessful() const noexcept;
 
         /*
             Does the same as isSuccessful().
         */
-        operator bool() const;
+        operator bool() const noexcept;
 
     private:
         ResultType m_resultType = ResultType::Success;
@@ -60,7 +60,7 @@ namespace Texas
     };
 
     template<typename T>
-    LoadResult<T>::LoadResult(ResultType result, const char* errorMessage) :
+    LoadResult<T>::LoadResult(ResultType result, const char* errorMessage) noexcept :
         m_resultType(result),
         m_errorMessage(errorMessage),
         m_pad(std::uint8_t())
@@ -68,7 +68,7 @@ namespace Texas
     }
 
     template<typename T>
-    LoadResult<T>::LoadResult(T&& in) :
+    LoadResult<T>::LoadResult(T&& in) noexcept :
         m_resultType(ResultType::Success),
         m_errorMessage(nullptr),
         m_value(static_cast<T&&>(in))
@@ -76,20 +76,20 @@ namespace Texas
     }
 
     template<typename T>
-    LoadResult<T>::~LoadResult()
+    LoadResult<T>::~LoadResult() noexcept
     {
         if (m_resultType == ResultType::Success)
             m_value.~T();
     }
 
     template<typename T>
-    ResultType LoadResult<T>::resultType() const
+    ResultType LoadResult<T>::resultType() const noexcept
     {
         return m_resultType;
     }
 
     template<typename T>
-    const char* LoadResult<T>::errorMessage() const
+    const char* LoadResult<T>::errorMessage() const noexcept
     {
         return m_errorMessage;
     }
@@ -100,25 +100,25 @@ namespace Texas
         Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
     */
     template<typename T>
-    T& LoadResult<T>::value()
+    T& LoadResult<T>::value() noexcept
     {
         return m_value;
     }
 
     template<typename T>
-    const T& LoadResult<T>::value() const
+    const T& LoadResult<T>::value() const noexcept
     {
         return m_value;
     }
 
     template<typename T>
-    bool LoadResult<T>::isSuccessful() const
+    bool LoadResult<T>::isSuccessful() const noexcept
     {
         return m_resultType == ResultType::Success;
     }
 
     template<typename T>
-    LoadResult<T>::operator bool() const
+    LoadResult<T>::operator bool() const noexcept
     {
         return m_resultType == ResultType::Success;
     }

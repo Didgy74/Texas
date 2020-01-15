@@ -96,7 +96,7 @@ namespace Texas::detail::KTX
 
 
         // Check that the file-identifier is correct.
-        if (!fileIdentifierConfirmed && std::memcmp(srcBuffer.data(), Header::correctIdentifier, sizeof(Header::correctIdentifier) != 0))
+        if (!fileIdentifierConfirmed && std::memcmp(srcBuffer.data(), identifier, sizeof(identifier) != 0))
             return { ResultType::CorruptFileData, "KTX-file's identifier is not correct." };
 
 
@@ -191,7 +191,7 @@ namespace Texas::detail::KTX
         const MetaData& metaData,
         detail::MemReqs_KTX_BackendData& backendData,
         const ByteSpan dstImageBuffer,
-        const ByteSpan workingMemory)
+        const ByteSpan workingMem)
     {
         std::size_t srcMemOffset = 0;
         std::size_t dstMemOffset = 0;

@@ -10,23 +10,18 @@
 
 namespace Texas::detail::PNG
 {
-    namespace Header
-    {
-        constexpr std::uint32_t identifierSize = 8;
-        using Identifier_T = std::uint8_t[identifierSize];
-        constexpr Identifier_T identifier = { 137, 80, 78, 71, 13, 10, 26, 10 };
-        constexpr std::size_t identifier_Offset = 0;
-    }
+    constexpr std::uint8_t identifier[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
     Result loadFromBuffer_Step1(
-        const bool fileIdentifierConfirmed, 
+        const bool identifierConfirmed,
         ConstByteSpan srcBuffer,
         MetaData& metaData,
-        detail::MemReqs_PNG_BackendData& backendDataBuffer);
+        std::uint64_t& workingMemRequired,
+        detail::MemReqs_PNG_BackendData& backendData);
 
     Result loadFromBuffer_Step2(
         const MetaData& metaData,
-        detail::MemReqs_PNG_BackendData& backendDataBuffer,
+        detail::MemReqs_PNG_BackendData& backendData,
         const ByteSpan dstImageBuffer,
         const ByteSpan workingMemory);
 }

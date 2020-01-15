@@ -27,11 +27,11 @@ namespace Texas
 
         [[nodiscard]] inline constexpr Dimensions baseDimensions() const noexcept;
 
-        [[nodiscard]] std::uint64_t memoryRequired() const noexcept;
+        [[nodiscard]] inline constexpr std::uint64_t memoryRequired() const noexcept;
 
-        [[nodiscard]] std::uint64_t workingMemoryRequired() const noexcept;
+        [[nodiscard]] inline constexpr std::uint64_t workingMemoryRequired() const noexcept;
 
-        [[nodiscard]] std::uint64_t mipOffset(std::uint64_t mipIndex) const noexcept;
+        //[[nodiscard]] std::uint64_t mipOffset(std::uint64_t mipIndex) const noexcept;
 
     private:
         MemReqs() = default;

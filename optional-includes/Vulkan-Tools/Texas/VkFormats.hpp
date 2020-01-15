@@ -6,6 +6,9 @@
 #include "Texas/Colorspace.hpp"
 #include "Texas/TextureType.hpp"
 #include "Texas/ChannelType.hpp"
+#include "Texas/MetaData.hpp"
+
+#include "vulkan/vulkan.h"
 
 namespace Texas::detail
 {
@@ -146,9 +149,41 @@ namespace Texas::detail
         VK_FORMAT_MAX_ENUM = 0x7FFFFFFF
     };
 
-    [[nodiscard]] detail::VkImageType ToVkImageType(TextureType type) noexcept;
+    [[nodiscard]] detail::VkImageType toVkImageType(TextureType type) noexcept;
 
-    [[nodiscard]] detail::VkImageViewType ToVkImageViewType(TextureType type) noexcept;
+    [[nodiscard]] detail::VkImageViewType toVkImageViewType(TextureType type) noexcept;
 
-    [[nodiscard]] detail::VkFormat ToVkFormat(PixelFormat format, ColorSpace cSpace, ChannelType chType) noexcept;
+    [[nodiscard]] detail::VkFormat toVkFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept;
+}
+
+namespace Texas
+{
+    [[nodiscard]] inline std::uint32_t toVkImageType(TextureType type) noexcept
+    {
+        return static_cast<std::uint32_t>(detail::toVkImageType(type));
+    }
+
+    [[nodiscard]] inline std::uint32_t toVkImageViewType(TextureType type) noexcept
+    {
+        return static_cast<std::uint32_t>(detail::toVkImageViewType(type));
+    }
+
+    [[nodiscard]] inline std::uint32_t toVkFormat(PixelFormat pixelFormat, ColorSpace colorSpace, ChannelType channelType) noexcept
+    {
+        return static_cast<std::uint32_t>(detail::toVkFormat(pixelFormat, colorSpace, channelType));
+    }
+
+    [[nodiscard]] inline std::uint32_t toVkFormat(const MetaData& metaData) noexcept
+    {
+        return static_cast<std::uint32_t>(toVkFormat(metaData.pixelFormat, metaData.colorSpace, metaData.channelType));
+    }
+
+    [[nodiscard]] inline VkExtent3D toVkExtent3D(Dimensions dimensions) noexcept
+    {
+        VkExtent3D temp{};
+        temp.width = static_cast<uint32_t>(dimensions.width);
+        temp.height = static_cast<uint32_t>(dimensions.height);
+        temp.depth = static_cast<uint32_t>(dimensions.depth);
+        return temp;
+    }
 }

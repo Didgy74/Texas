@@ -12,7 +12,8 @@
 [x] - Figure out what validation should be required, which should be optional etc.
 	File validation is required. Interface usage validation may not be in the future.
 [-] - Add field to deferred loading "Required working memory", make sure you can determine this ahead of time.
-[ ] - Try to remove all exceptions (should be possible)
+[x] - Try to remove all exceptions (should be possible)
+	I am 98% sure they are all gone.
 [x] - Remove STL dependencies
 	This one should be more or less entirely done.
 [ ] - Re-think the interface (stuff like if returning optional is the best choice)
@@ -55,7 +56,15 @@
 	Changed this to use std::byte
 [ ] - Get the interface back to a working state. Stuff like grabbing data offsets into a texture etc.
 [ ] - Remove Pair<T, U> class. I doubt I will ever need it again.
-
+[x] - Move the OpenBuffer implementation details into it's own header.
+[ ] - Investigate how I can implement the OpenBuffer backend data without including any of the backend data headers.
+[ ] - Rename OpenBuffer to maybe MemoryRequirements?
+[ ] - Fix so that texture loader can recognize all file-formats, not only enabled ones.
+[ ] - Find out how small a file could possibly be and still be valid.
+[ ] - Maybe remove Tools namespace?
+[ ] - Add opt-in assertions
+[ ] - Investigate if there is any point to somehow undef'ing the assert in public headers
+[ ] - When the implementation is in the header, like templated types, maybe move implementation into it's own header under detail?
 
 Test that basic stuff works correctly:
 	Mip levels

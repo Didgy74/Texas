@@ -16,9 +16,11 @@ namespace Texas::detail
         virtual ~PrivateAccessor() = 0;
 
     public:
-        static LoadResult<MemReqs> loadFromBuffer(const ConstByteSpan inputBuffer);
+        static LoadResult<MemReqs> getMemReqs(ConstByteSpan inputBuffer);
 
         static Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory);
+
+        static LoadResult<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory);
 
     };
 }
