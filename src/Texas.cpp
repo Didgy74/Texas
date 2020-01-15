@@ -1,5 +1,6 @@
 #include "Texas/Texas.hpp"
 #include "PrivateAccessor.hpp"
+#include "Texas/detail/Assert.hpp"
 #include "Texas/Tools.hpp"
 
 #include <cstring>
@@ -56,6 +57,7 @@ namespace Texas::detail
             if (result.isSuccessful())
             {
                 memReqs.m_memoryRequired = Tools::calcTotalSizeRequired(memReqs.metaData());
+                TEXAS_DETAIL_ASSERT_MSG(memReqs.m_memoryRequired != 0, "Texas author error. A successfully loaded texture cannot have memoryRequired == 0.");
                 return LoadResult<MemReqs>(static_cast<MemReqs&&>(memReqs));
             }
             else
@@ -73,6 +75,7 @@ namespace Texas::detail
             if (result.isSuccessful())
             {
                 memReqs.m_memoryRequired = Tools::calcTotalSizeRequired(memReqs.metaData());
+                TEXAS_DETAIL_ASSERT_MSG(memReqs.m_memoryRequired != 0, "Texas author error. A successfully loaded texture cannot have memoryRequired == 0.");
                 return LoadResult<MemReqs>(static_cast<MemReqs&&>(memReqs));
             }
             else
@@ -92,10 +95,17 @@ namespace Texas::detail
         if (dstBuffer.data() == nullptr)
             return { ResultType::InvalidInputParameter, "You need to send in a destination buffer." };
         if (dstBuffer.size() < file.memoryRequired())
-            return { ResultType::InvalidInputParameter, "Destination buffer is not equal or higher than Texas::MemoryRequirements::memoryRequired(). "
+            return { ResultType::InvalidInputParameter, "Destination buffer is not equal to or higher than Texas::MemReqs::memoryRequired(). "
                 "Cannot fit image data in this buffer." };
-        if (file.workingMemoryRequired() > 0 && (workingMem.size() == 0 || workingMem.data() == nullptr))
-            return { ResultType::InvalidInputParameter, "Cannot decompress this file with no working memory." };
+        if (file.workingMemoryRequired() > 0)
+        {
+            if (workingMem.data() == nullptr)
+                return { ResultType::InvalidInputParameter, "Cannot pass nullptr for working-memory when loading image-data requires working-memory." };
+            else if (workingMem.size() == 0)
+                return { ResultType::InvalidInputParameter, "Cannot pass working-memory with size 0 when loading image-data requires working-memory." };
+            else if (workingMem.size() < file.workingMemoryRequired())
+                return { ResultType::InvalidInputParameter, "Working-memory passed in is not large enough to load the image-data." };
+        }   
 
 #ifdef TEXAS_ENABLE_KTX_READ
         if (file.metaData().srcFileFormat == FileFormat::KTX)

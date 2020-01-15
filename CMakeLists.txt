@@ -9,7 +9,7 @@ project(Texas)
 	option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" OFF)
 	option(TEXAS_ENABLE_KTX2_READ "Enables loading KTX2 files" OFF)
 	option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" OFF)
-	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan" OFF)
+	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan. Note! Requires Vulkan to be linked!" OFF)
 	option(TEXAS_ENABLE_ASSERTIONS "Enables assertions inside the codebase. This can be helpful to catch invalid usage of the interface." OFF)
 #
 # END

@@ -5,6 +5,8 @@
 /cmake-build-debug
 /.vscode
 
+/out
+
 # Prerequisites
 *.d
 

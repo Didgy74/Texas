@@ -315,7 +315,7 @@ std::uint64_t Texas::detail::PNG::calcWorkingMemRequired(
         // For indexed, we inflate all rows including the 1 byte for filter-type at the start of each row.
         // And then we defilter directly onto dstImgBuffer.
         // Each row is +1 byte for the filtertype.
-        return baseDims.width * baseDims.height * getPixelWidth(pFormat);
+        return baseDims.width * baseDims.height * getPixelWidth(pFormat) + baseDims.height;
     }
 }
 
@@ -360,6 +360,8 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     detail::MemReqs_PNG_BackendData& backendData)
 {
     backendData = detail::MemReqs_PNG_BackendData();
+    backendData.srcFileBufferStart = reinterpret_cast<const unsigned char*>(srcBuffer.data());
+    backendData.srcFileBufferLength = srcBuffer.size();
 
     // Check if srcBuffer is large enough hold the header, and more to fit the rest of the chunks
     if (srcBuffer.size() <= Header::totalSize)
@@ -424,7 +426,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
         return { ResultType::FileNotSupported, "PNG interlace method is not supported." };
 
     // Move through chunks looking for more metadata until we find IDAT chunk.
-    std::size_t memOffsetTracker = Header::totalSize;
+    std::uint64_t memOffsetTracker = Header::totalSize;
     std::uint8_t chunkTypeCount[(int)PNG::ChunkType::COUNT] = {};
     PNG::ChunkType previousChunkType = PNG::ChunkType::Invalid;
     while (memOffsetTracker < srcBuffer.size() && chunkTypeCount[(int)PNG::ChunkType::IEND] == 0)
@@ -539,6 +541,8 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
         return { ResultType::CorruptFileData, "Found no PLTE chunk in PNG file with color-type 'Indexed colour'. "
                                               "PNG specification requires a PLTE chunk to exist when color-type is 'Indexed colour'" };
 
+    backendData.idatChunkCount = chunkTypeCount[(int)PNG::ChunkType::IDAT];
+
     const bool isIndexedColor = colorType == ColorType::Indexed_colour;
     workingMemRequired = calcWorkingMemRequired(metaData.baseDimensions, metaData.pixelFormat, isIndexedColor);
 
@@ -564,11 +568,11 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
                                               "The file has changed since Texas::getMemReqs() was called." };
 
     const std::byte* const paletteColors = plteChunkStart + sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T);
-    const std::size_t paletteColorCount = plteChunkDataLength / 3;
+    const std::uint64_t paletteColorCount = plteChunkDataLength / 3;
 
     for (std::uint64_t y = 0; y < baseDims.height; y++)
     {
-        const std::size_t rowIndicesOffset = 1 + (y * (baseDims.height + 1));
+        const std::uint64_t rowIndicesOffset = 1 + (y * (baseDims.height + 1));
         // Pointer to the row of indices, does not include the filter-type byte.
         const std::byte* const rowIndices = workingMem.data() + rowIndicesOffset;
 
@@ -579,7 +583,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
                 return { ResultType::CorruptFileData, "Encountered an out-of-bounds index while de-indexing PNG file." };
             const std::byte* colorPalettePtr = paletteColors + (std::size_t(paletteIndex) * 3);
 
-            const std::size_t dstBufferOffset = (y * baseDims.height + x) * 3;
+            const std::uint64_t dstBufferOffset = (y * baseDims.height + x) * 3;
             std::memcpy(dstImageBuffer.data() + dstBufferOffset, colorPalettePtr, 3);
         }
     }
@@ -593,12 +597,10 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
     const ByteSpan dstImageBuffer,
     const ByteSpan workingMem)
 {
-    // TODO: Add length validation to the decompression stuff
-
     z_stream zLibDecompressJob{};
 
-    zLibDecompressJob.next_out = (Bytef*)workingMem.data();
-    zLibDecompressJob.avail_out = (uInt)workingMem.size();
+    zLibDecompressJob.next_out = reinterpret_cast<Bytef*>(workingMem.data());
+    zLibDecompressJob.avail_out = static_cast<uInt>(workingMem.size());
 
     const int initErr = inflateInit(&zLibDecompressJob);
     if (initErr != Z_OK)
@@ -607,9 +609,9 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
         return { ResultType::NoIdea, "During PNG decompression, zLib failed to initialize the decompression job. I don't know why." };
     }
 
-    // For every IDAT chunk
+    // Decompress every IDAT chunk
     {
-        std::size_t memOffsetTracker = 0;
+        std::uint64_t memOffsetTracker = 0;
         while (true)
         {
             const std::byte* const chunkStart = reinterpret_cast<const std::byte*>(backendData.idatChunkStart + memOffsetTracker);
@@ -633,6 +635,10 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
                 // No more IDAT chunks to decompress
                 inflateEnd(&zLibDecompressJob);
                 break;
+            }
+            if (err == Z_OK)
+            {
+                // more IDAT chunks to decompress
             }
 
             memOffsetTracker += sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T) + chunkDataLength + sizeof(PNG::ChunkCRC_T);
@@ -675,10 +681,10 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     const std::uint8_t pixelWidth = PNG::getPixelWidth(metaData.pixelFormat);
     // Size is in bytes
     // Does not include the byte for filter-type.
-    const std::size_t rowWidth = pixelWidth * metaData.baseDimensions.width;
+    const std::uint64_t rowWidth = pixelWidth * metaData.baseDimensions.width;
     // Size is in bytes
     // Includes the byte for filter-type.
-    const std::size_t totalRowWidth = rowWidth + 1;
+    const std::uint64_t totalRowWidth = rowWidth + 1;
 
     // Unfilter first row
     {
@@ -827,10 +833,10 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
 
     // Size in bytes
     // This does not include the byte for holding filter-type
-    const std::size_t rowWidth = baseDims.width;
+    const std::uint64_t rowWidth = baseDims.width;
     // Size in bytes
     // This includes the byte for holding filter-type
-    const std::size_t totalRowWidth = std::size_t(baseDims.width) + 1;
+    const std::uint64_t totalRowWidth = baseDims.width + 1;
 
     // Unfilter first row
     {

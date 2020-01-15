@@ -1,17 +1,24 @@
 #pragma once
 
+#include <cstdint>
+
 namespace Texas::detail
 {
     struct MemReqs_KTX_BackendData
     {
+        const unsigned char* srcFileBufferStart = nullptr;
+        std::uint64_t srcFileBufferLength = 0;
         const unsigned char* srcImageDataStart = nullptr;
     };
 
 	struct MemReqs_PNG_BackendData
     {
+        const unsigned char* srcFileBufferStart = nullptr;
+        std::uint64_t srcFileBufferLength = 0;
         const unsigned char* idatChunkStart = nullptr;
+        std::uint32_t idatChunkCount = 0;
         const unsigned char* plteChunkStart = nullptr;
-        unsigned long plteChunkDataLength = 0;
+        std::uint64_t plteChunkDataLength = 0;
     };
 
     struct MemReqs_BackendData

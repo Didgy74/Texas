@@ -55,12 +55,12 @@ namespace Texas
         return m_metaData.baseDimensions;
     }
 
-    inline constexpr std::size_t MemReqs::memoryRequired() const noexcept
+    inline constexpr std::uint64_t MemReqs::memoryRequired() const noexcept
     {
         return m_memoryRequired;
     }
 
-    inline constexpr std::size_t MemReqs::workingMemoryRequired() const noexcept
+    inline constexpr std::uint64_t MemReqs::workingMemoryRequired() const noexcept
     {
         return m_workingMemoryRequired;
     }

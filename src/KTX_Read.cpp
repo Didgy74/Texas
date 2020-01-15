@@ -5,6 +5,8 @@
 
 #include "Texas/GLFormats.hpp"
 
+#include "Texas/Tools.hpp"
+
 namespace Texas::detail::KTX
 {
     namespace Header
@@ -204,6 +206,8 @@ namespace Texas::detail::KTX
         {
             for (std::uint32_t mipIndex = 0; mipIndex < metaData.mipLevelCount; mipIndex++)
             {
+                const auto test = Texas::Tools::calcSingleImageDataSize(metaData) * metaData.arrayLayerCount;
+
                 // Contains the amount of data from all array images of this mip level
                 const std::uint32_t mipDataSize = KTX::toU32(reinterpret_cast<const std::byte*>(backendData.srcImageDataStart + srcMemOffset));
                 

@@ -65,6 +65,7 @@
 [ ] - Add opt-in assertions
 [ ] - Investigate if there is any point to somehow undef'ing the assert in public headers
 [ ] - When the implementation is in the header, like templated types, maybe move implementation into it's own header under detail?
+[ ] - Make the PNG image-loading implementation more robust.
 
 Test that basic stuff works correctly:
 	Mip levels
