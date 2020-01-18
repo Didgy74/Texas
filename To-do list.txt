@@ -75,7 +75,6 @@
 [ ] - Make the PNG image-loading implementation more robust.
 [ ] - Make the KTX image-loading implementation more robust.
 
-
 Test that basic stuff works correctly:
 	Mip levels
 	Array layers - Seems to work fine for KTX images so far
