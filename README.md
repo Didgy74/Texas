@@ -5,7 +5,7 @@ Texas is a library that aims to simplify texture loading for C++17 programs, wit
 
 Texas also includes opt-in tools to load the texture onto OpenGL and Vulkan renderers.
 
-**NOTE!** This library is very early in it's development stages, interface breaking changes, bugs, features may appear/disappear at any time over the course of the early stages of development. This is the first library I'm building that's meant to be used by others, you are warned. I currently do not recommend using Texas in it's current state if need stability, but I'm very happy if you would use it and give me feedback and bug reports.
+**NOTE!** This library is very early in it's development stages, interface breaking changes, bugs, features may appear/disappear at any time over the course of the early stages of development. This is the first library I'm building that's meant to be used by others, you are warned. I currently do not recommend using Texas in it's current state if you need stability, but I'm very happy if you would use it and give me feedback and bug reports.
 
 ## Requirements
 The library has been tested to run on the following compilers
