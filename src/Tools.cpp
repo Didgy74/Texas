@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-std::uint64_t Texas::Tools::calcMaxMipLevelCount(Dimensions baseDims) noexcept
+std::uint64_t Texas::calcMaxMipLevelCount(Dimensions baseDims) noexcept
 {
     if (baseDims.width == 0 || baseDims.height == 0 || baseDims.depth == 0)
         return 0;
@@ -18,14 +18,14 @@ std::uint64_t Texas::Tools::calcMaxMipLevelCount(Dimensions baseDims) noexcept
     return static_cast<std::uint64_t>(std::log2(max)) + 1;
 }
 
-Texas::Dimensions Texas::Tools::calcMipmapDimensions(const Dimensions baseDims, const std::uint64_t mipIndex) noexcept
+Texas::Dimensions Texas::calcMipmapDimensions(const Dimensions baseDims, const std::uint64_t mipIndex) noexcept
 {
     if (baseDims.width == 0 || baseDims.height == 0 || baseDims.depth == 0)
         return {};
     if (mipIndex == 0)
         return baseDims;
     if (mipIndex >= calcMaxMipLevelCount(baseDims))
-        return Texas::Dimensions{};
+        return {};
 
     const std::uint64_t powerOf2 = std::uint64_t(1) << mipIndex;
     Dimensions returnValue{};
@@ -41,7 +41,7 @@ Texas::Dimensions Texas::Tools::calcMipmapDimensions(const Dimensions baseDims, 
     return returnValue;
 }
 
-std::uint64_t Texas::Tools::calcTotalSizeRequired(Dimensions baseDims, PixelFormat pFormat, std::uint64_t mipCount, std::uint64_t arrayCount) noexcept
+std::uint64_t Texas::calcTotalSizeRequired(Dimensions baseDims, PixelFormat pFormat, std::uint64_t mipCount, std::uint64_t arrayCount) noexcept
 {
     if (baseDims.width == 0 || baseDims.height == 0 || baseDims.depth == 0)
         return 0;
@@ -54,12 +54,12 @@ std::uint64_t Texas::Tools::calcTotalSizeRequired(Dimensions baseDims, PixelForm
     return sum * arrayCount;
 }
 
-std::uint64_t Texas::Tools::calcTotalSizeRequired(const MetaData& meta) noexcept
+std::uint64_t Texas::calcTotalSizeRequired(const MetaData& meta) noexcept
 {
     return calcTotalSizeRequired(meta.baseDimensions, meta.pixelFormat, meta.mipLevelCount, meta.arrayLayerCount);
 }
 
-Texas::Optional<std::uint64_t> Texas::Tools::calcMipOffset(
+Texas::Optional<std::uint64_t> Texas::calcMipOffset(
     Dimensions baseDims, 
     PixelFormat pFormat, 
     std::uint64_t arrayCount,
@@ -73,12 +73,12 @@ Texas::Optional<std::uint64_t> Texas::Tools::calcMipOffset(
     return { calcTotalSizeRequired(baseDims, pFormat, mipIndex, arrayCount) };
 }
 
-Texas::Optional<std::uint64_t> Texas::Tools::calcMipOffset(const MetaData& meta, std::uint64_t mipLevelIndex) noexcept
+Texas::Optional<std::uint64_t> Texas::calcMipOffset(const MetaData& meta, std::uint64_t mipLevelIndex) noexcept
 {
     return calcMipOffset(meta.baseDimensions, meta.pixelFormat, meta.arrayLayerCount, meta.mipLevelCount, mipLevelIndex);
 }
 
-Texas::Optional<std::uint64_t> Texas::Tools::calcArrayLayerOffset(
+Texas::Optional<std::uint64_t> Texas::calcArrayLayerOffset(
     Dimensions baseDims,
     PixelFormat pFormat,
     std::uint64_t mipCount,
@@ -100,7 +100,7 @@ Texas::Optional<std::uint64_t> Texas::Tools::calcArrayLayerOffset(
     return sum;
 }
 
-Texas::Optional<std::uint64_t> Texas::Tools::calcArrayLayerOffset(
+Texas::Optional<std::uint64_t> Texas::calcArrayLayerOffset(
     const MetaData& meta,
     std::uint64_t mipLevelIndex,
     std::uint64_t arrayLayerIndex) noexcept
@@ -151,11 +151,11 @@ namespace Texas::detail
     }
 }
 
-std::uint64_t Texas::Tools::calcSingleImageDataSize(const Dimensions dims, const PixelFormat pFormat) noexcept
+std::uint64_t Texas::calcSingleImageDataSize(const Dimensions dims, const PixelFormat pFormat) noexcept
 {
     const detail::BlockInfo blockInfo = detail::getBlockInfo(pFormat);
 
-    if (detail::isBCnCompressed(pFormat))
+    if (isBCnCompressed(pFormat))
     {
         std::size_t blockCountX = static_cast<std::size_t>(std::ceilf(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
         if (blockCountX == 0)
@@ -168,9 +168,4 @@ std::uint64_t Texas::Tools::calcSingleImageDataSize(const Dimensions dims, const
     }
 
     return dims.width * dims.height * dims.depth * detail::getPixelWidth_UncompressedOnly(pFormat);
-}
-
-std::uint64_t Texas::Tools::calcSingleImageDataSize(const MetaData& meta) noexcept
-{
-    return calcSingleImageDataSize(meta.baseDimensions, meta.pixelFormat);
 }

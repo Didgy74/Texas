@@ -21,13 +21,5 @@ namespace Texas
         SignedFloat,
 
         sRGB,
-
-        // Holds the amount of enumerations in Texas::ChannelType
-        COUNT
     };
-
-    constexpr const char* ToString(ChannelType pixelFormat)
-    {
-        return nullptr;
-    }
 }

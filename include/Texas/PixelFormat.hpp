@@ -30,7 +30,6 @@ namespace Texas
         RGBA_16,
         BGRA_16,
 
-
         R_32,
         RG_32,
         RA_32,
@@ -47,8 +46,38 @@ namespace Texas
         BC5,
         BC6H,
         BC7_RGBA,
-
-        // Holds the amount of enumerations in Texas::PixelFormat
-        COUNT
     };
+
+    [[nodiscard]] constexpr bool isBCnCompressed(PixelFormat pixelFormat) noexcept;
+
+    /*
+        Returns true if pixelFormat is a compressed format.
+    */
+    [[nodiscard]] constexpr bool isCompressed(PixelFormat pixelFormat) noexcept;
+}
+
+constexpr bool Texas::isBCnCompressed(PixelFormat pFormat) noexcept
+{
+    switch (pFormat)
+    {
+    case PixelFormat::BC1_RGB:
+    case PixelFormat::BC1_RGBA:
+    case PixelFormat::BC2_RGBA:
+    case PixelFormat::BC3_RGBA:
+    case PixelFormat::BC4:
+    case PixelFormat::BC5:
+    case PixelFormat::BC6H:
+    case PixelFormat::BC7_RGBA:
+        return true;
+
+    default:
+        return false;
+    }
+
+    return false;
+}
+
+constexpr bool Texas::isCompressed(PixelFormat pFormat) noexcept
+{
+    return isBCnCompressed(pFormat);
 }

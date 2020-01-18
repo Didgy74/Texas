@@ -1,53 +1,107 @@
 #pragma once
 
-#include "Texas/LoadResult.hpp"
+#include "Texas/ResultValue.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/ByteSpan.hpp"
 #include "Texas/MemReqs.hpp"
 #include "Texas/MetaData.hpp"
+#include "Texas/Texture.hpp"
+#include "Texas/LoadSettings.hpp"
+#include "Texas/Allocator.hpp"
+
+#include <cstddef>
+#include <cstdint>
 
 namespace Texas
 {
     /*
-        Loads the metadata from an image buffer, and stores data in Texas::MemReqs to prepare for loading imagedata.
+        Parses a buffer containing file-data without loading imagedata. 
 
-        The returned struct can be used to allocate a buffer large enough to load the imagedata onto.
-        This can be done with Texas::loadImageData().
+        If successful, the returned struct holds MetaData along with the memory requirements for loading imagedata from this buffer.
     */
-    [[nodiscard]] LoadResult<MemReqs> getMemReqs(const std::byte* fileBuffer, std::size_t bufferLength);
+    [[nodiscard]] ResultValue<MemReqs> getMemReqs(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
 
     /*
-        Loads the metadata from an image buffer, and stores data in Texas::MemReqs to prepare for loading imagedata.
+        Parses a buffer containing file-data without loading imagedata.
 
-        The returned struct can be used to allocate a buffer large enough to load the imagedata onto, as well as working memory.
-        This can be done with Texas::loadImageData().
+        If successful, the returned struct holds MetaData along with the memory requirements for loading imagedata from this buffer.
     */
-    [[nodiscard]] LoadResult<MemReqs> getMemReqs(ConstByteSpan inputBuffer);
-
-    [[nodiscard]] LoadResult<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
+    [[nodiscard]] ResultValue<MemReqs> getMemReqs(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
 
     /*
-        Loads the imagedata of a file opened with getMemReqs() into dstBuffer.
+        Parses a buffer containing file-data without loading imagedata.
+
+        If successful, the returned struct holds MetaData along with the memory requirements for loading imagedata from this buffer.
+    */
+    [[nodiscard]] ResultValue<MemReqs> getMemReqs(ConstByteSpan inputBuffer) noexcept;
+
+    /*
+        Parses a buffer containing file-data without loading imagedata.
+
+        If successful, the returned struct holds MetaData along with the memory requirements for loading imagedata from this buffer.
+    */
+    [[nodiscard]] ResultValue<MemReqs> getMemReqs(ConstByteSpan inputBuffer) noexcept;
+
+    /*
+        Loads the image-data into dstBuffer after parsing inputBuffer.
+
+        This is useful for the scenario when the inputBuffer has moved/changed since calling Texas::getMemReqs(),
+        or when you already know your buffers are large enough to parse and load the file.
+    */
+    [[nodiscard]] ResultValue<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
+
+    /*
+        Loads only the image-data into dstBuffer after parsing inputBuffer.
+
+        This is useful for the scenario when the inputBuffer has moved/changed since calling Texas::getMemReqs(),
+        or when you already know your buffers are large enough to parse and load the file.
+    */
+    [[nodiscard]] ResultValue<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
+
+    /*
+        Loads only the imagedata of a file opened with getMemReqs() into dstBuffer.
 
         Requirements:
             The file-buffer passed into Texas::getMemReqs() must NOT have changed since calling said function.
             
             dstBuffer MUST be ATLEAST the size returned by OpenBuffer::memoryRequired().
 
-            workingMemory MUST be ATLEAST the size return by MemReqs::memoryRequired().
+            workingMemory MUST be ATLEAST the size return by MemReqs::workingMemoryRequired().
             If the size returned by OpenBuffer::workingMemoryRequired is 0, you can pass a default-constructed ByteSpan, or one that points to nullptr.
     */
-    [[nodiscard]] Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory);
+    [[nodiscard]] Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
 
     /*
-        Loads the imagedata of a file parsed with getMemReqs() into dstBuffer.
+        Loads only the imagedata of a file parsed with getMemReqs() into dstBuffer.
 
         Requirements:
             The file-buffer passed into Texas::getMemReqs() must NOT have changed since calling said function.
 
-            dstBuffer MUST be ATLEAST the size returned by getMemReqs::memoryRequired().
+            dstBuffer MUST be ATLEAST the size returned by MemReqs::memoryRequired().
 
-            workingMemory MUST be ATLEAST the size return by getMemReqs::memoryRequired().
+            workingMemory MUST be ATLEAST the size return by MemReqs::workingMemoryRequired().
     */
-    [[nodiscard]] Result loadImageData(const MemReqs& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize);
+    [[nodiscard]] Result loadImageData(const MemReqs& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize) noexcept;
+
+    [[nodiscard]] ResultValue<Texture> loadFromBuffer(const std::byte* inputBuffer, std::size_t inputBufferSize, Allocator& allocator) noexcept;
+    [[nodiscard]] ResultValue<Texture> loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator) noexcept;
 }
+
+#ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
+namespace Texas
+{
+    /*
+        Loads a texture in its entirety from a buffer containing file-data.
+
+        Note: This loading path will make dynamic allocations under the hood.
+    */
+    [[nodiscard]] ResultValue<Texture> loadFromBuffer(const std::byte* inputBuffer, std::size_t bufferLength);
+
+    /*
+        Loads a texture in its entirety from a buffer containing file-data.
+
+        Note: This loading path will make dynamic allocations under the hood.
+    */
+    [[nodiscard]] ResultValue<Texture> loadFromBuffer(ConstByteSpan inputBuffer);
+}
+#endif

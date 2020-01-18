@@ -4,6 +4,9 @@
 
 namespace Texas
 {
+    /*
+        Small struct that contains a ResultType and an error message.
+    */
     class Result
     {
     public:

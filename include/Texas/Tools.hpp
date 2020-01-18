@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <cstddef>
 
-namespace Texas::Tools
+namespace Texas
 {
     [[nodiscard]] std::uint64_t calcMaxMipLevelCount(Dimensions baseDimensions) noexcept;
 
@@ -19,7 +19,6 @@ namespace Texas::Tools
         Returns 0 upon failure
     */
     [[nodiscard]] std::uint64_t calcSingleImageDataSize(Dimensions dimensions, PixelFormat pixelFormat) noexcept;
-    [[nodiscard]] std::uint64_t calcSingleImageDataSize(const MetaData& metaData) noexcept;
 
     [[nodiscard]] std::uint64_t calcTotalSizeRequired(
         Dimensions baseDimensions, 
@@ -49,5 +48,3 @@ namespace Texas::Tools
         std::uint64_t mipLevelIndex,
         std::uint64_t arrayLayerIndex) noexcept;
 }
-
-

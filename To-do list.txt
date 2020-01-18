@@ -7,30 +7,32 @@
 [x] - Add "Load from buffer" option
 [ ] - Add "Load from buffer with allocation callbacks" option.
 [-] - Fix GL enums -> Texas enums conversions
-[ } - Make custom allocator interface class
+[x} - Make custom allocator interface class
 [ ] - Make "LoadFromFile" use custom allocator
 [x] - Figure out what validation should be required, which should be optional etc.
 	File validation is required. Interface usage validation may not be in the future.
 [-] - Add field to deferred loading "Required working memory", make sure you can determine this ahead of time.
 [x] - Try to remove all exceptions (should be possible)
-	I am 98% sure they are all gone.
+	I am 99% sure they are all gone.
 [x] - Remove STL dependencies
-	This one should be more or less entirely done.
-[ ] - Re-think the interface (stuff like if returning optional is the best choice)
+	This one should be entirely done.
+[x] - Re-think the interface (stuff like if returning optional is the best choice)
+	For now I've landed on using Optional<T> whenever a 0, or default, value is a valid return value.
 [-] - Add support for reading PNG
-	Almost done. Needs to test a few formats, and add support interlaced images and indexed color images.
+	Almost done. Needs to test a few formats, and add support interlaced images.
 [ ] - Add support for KTX2, BMP, DDS, JPEG
 [ ] - Add support for file-writing
-[ ] - Check if DTex::BlockInfo should be in internal:: namespace
-[ ] - Figure out if writing and reading an image format should be separate CMake options
-[ ] - Rename detail:: namespace to internal::     maybe?
-[-] - Maybe rename DTex::Dimensions to ... DTex::Extents3D maybe?
+[x] - Check if DTex::BlockInfo should be in internal:: namespace
+	Moved it to the detail namespace for now.
+[x] - Figure out if writing and reading an image format should be separate CMake options
+	They definitely should.
+[ ] - Rename detail:: namespace to internal::     ...maybe?
+[-] - Maybe rename Texas::Dimensions to ... DTex::Extents3D maybe?
 	Decided on not doing this. Maybe shorten to Dim instead.
-[x] - Rename DTex::LoadInfo<T> to DTex::LoadResult<T>
-[ ] - Find better name for DTex::OpenFile, maybe UnclosedFile? Maybe something with the word "Temp"?
-[ ] - Make allowing dynamic allocations inside loading a CMake option!
+[ ] - Find better name for Texas::OpenFile, maybe UnclosedFile? Maybe something with the word "Temp"?
+[x] - Make allowing dynamic allocations inside loading a CMake option!
 [ ] - Maybe start using the term "Image" instead of "Texture", or atleast stick to one. Texture is more closely related to "Texas"
-[x] - Better name for DTex::ResultInfo enumerator? ResultType?
+[x] - Better name for Texas::ResultInfo enumerator? ResultType?
 	Renamed to ResultType.
 [ ] - Make "Load from stream" option, make an interface class for the stream. Add also one that uses std::ifstream.
 [x] - Stop using std::filesystem::path, just use const char*.
@@ -54,18 +56,25 @@
 	Do NOT do this. You can maybe disable validation on interface usage, but not file validation.
 [x] - Stop using char in ByteSpan.
 	Changed this to use std::byte
-[ ] - Get the interface back to a working state. Stuff like grabbing data offsets into a texture etc.
-[ ] - Remove Pair<T, U> class. I doubt I will ever need it again.
-[x] - Move the OpenBuffer implementation details into it's own header.
-[ ] - Investigate how I can implement the OpenBuffer backend data without including any of the backend data headers.
-[ ] - Rename OpenBuffer to maybe MemoryRequirements?
-[ ] - Fix so that texture loader can recognize all file-formats, not only enabled ones.
+[-] - Get the interface back to a working state. Stuff like grabbing data offsets into a texture etc.
+	The interface for the MemReqs loading path could use some work in terms of grabbing offsets
+[x] - Remove Pair<T, U> class. I doubt I will ever need it again.
+	Removed.
+[x] - Move the MemReqs implementation details into it's own header.
+[ ] - Investigate how I can implement the MemReqs backend data without including any of the backend data headers.
+[x] - Rename OpenBuffer to maybe MemoryRequirements?
+	This has been renamed to MemReqs.
+[x] - Fix so that texture loader can recognize all file-formats, not only enabled ones.
 [ ] - Find out how small a file could possibly be and still be valid.
-[ ] - Maybe remove Tools namespace?
-[ ] - Add opt-in assertions
+[x] - Maybe remove Tools namespace?
+	Removed it. But it might reappear as an inline namespace in the future.
+[-] - Add opt-in assertions
+	The implementation and option has been added. Only need to populate the codebase with it.
 [ ] - Investigate if there is any point to somehow undef'ing the assert in public headers
 [ ] - When the implementation is in the header, like templated types, maybe move implementation into it's own header under detail?
 [ ] - Make the PNG image-loading implementation more robust.
+[ ] - Make the KTX image-loading implementation more robust.
+
 
 Test that basic stuff works correctly:
 	Mip levels

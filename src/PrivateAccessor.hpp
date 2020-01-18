@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Texas/Result.hpp"
-#include "Texas/LoadResult.hpp"
+#include "Texas/ResultValue.hpp"
 #include "Texas/MemReqs.hpp"
 #include "Texas/ByteSpan.hpp"
+#include "Texas/Texture.hpp"
 
 #include <cstddef>
 
@@ -16,11 +17,13 @@ namespace Texas::detail
         virtual ~PrivateAccessor() = 0;
 
     public:
-        static LoadResult<MemReqs> getMemReqs(ConstByteSpan inputBuffer);
+        [[nodiscard]] static ResultValue<MemReqs> getMemReqs(ConstByteSpan inputBuffer) noexcept;
 
-        static Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory);
+        [[nodiscard]] static Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
 
-        static LoadResult<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory);
+        [[nodiscard]] static ResultValue<MetaData> loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
 
+        // Allows nullptr for allocator if the macro TEXAS_ENABLE_DYNAMIC_ALLOCATIONS is defined.
+        [[nodiscard]] static ResultValue<Texture> loadFromBuffer(ConstByteSpan inputBuffer, Allocator* allocator) noexcept;
     };
 }

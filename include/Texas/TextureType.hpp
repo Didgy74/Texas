@@ -18,8 +18,5 @@ namespace Texas
 
         Cubemap,
         ArrayCubemap,
-
-        // Holds the amount of enumerated values in Texas::TextureType
-        COUNT
     };
 }

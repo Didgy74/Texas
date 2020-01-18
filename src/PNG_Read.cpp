@@ -4,6 +4,9 @@
 
 #include "zlib/zlib.h"
 
+// For std::memcpy and std::memcmp
+#include <cstring>
+
 namespace Texas::detail::PNG
 {
     using ChunkSize_T = std::uint32_t;
@@ -340,9 +343,15 @@ static inline std::uint8_t Texas::detail::PNG::paethPredictor(std::uint8_t a, st
 {
     const int p = int(a) + b - c;
 
-    const int pa = std::abs(p - a);
-    const int pb = std::abs(p - b);
-    const int pc = std::abs(p - c);
+    int pa = p - a;
+    if (pa < 0)
+        pa = -pa;
+    int pb = p - b;
+    if (pb < 0)
+        pb = -pb;
+    int pc = p - c;
+    if (pc < 0)
+        pc = -pc;
 
     if (pa <= pb && pa <= pc)
         return a;
@@ -606,7 +615,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
     if (initErr != Z_OK)
     {
         inflateEnd(&zLibDecompressJob);
-        return { ResultType::NoIdea, "During PNG decompression, zLib failed to initialize the decompression job. I don't know why." };
+        return { ResultType::CorruptFileData, "During PNG decompression, zLib failed to initialize the decompression job." };
     }
 
     // Decompress every IDAT chunk

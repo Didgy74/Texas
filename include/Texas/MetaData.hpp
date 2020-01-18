@@ -7,10 +7,11 @@
 #include "Texas/ChannelType.hpp"
 #include "Texas/Colorspace.hpp"
 
-#include <optional>
-
 namespace Texas
 {
+    /*
+        Holds information about a texture.
+    */
     struct MetaData
     {
         FileFormat srcFileFormat = {};

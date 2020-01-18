@@ -18,7 +18,7 @@ namespace Texas::detail
         const unsigned char* idatChunkStart = nullptr;
         std::uint32_t idatChunkCount = 0;
         const unsigned char* plteChunkStart = nullptr;
-        std::uint64_t plteChunkDataLength = 0;
+        std::uint32_t plteChunkDataLength = 0;
     };
 
     struct MemReqs_BackendData

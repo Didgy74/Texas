@@ -49,7 +49,7 @@ namespace Texas
             m_size(size)
         {}
 
-        [[nodiscard]] inline constexpr ConstByteSpan toConst() const;
+        [[nodiscard]] inline constexpr ConstByteSpan toConstSpan() const;
 
         [[nodiscard]] inline constexpr operator ConstByteSpan() const;
 
@@ -58,7 +58,7 @@ namespace Texas
         [[nodiscard]] inline constexpr std::size_t size() const noexcept;
     };
 
-    inline constexpr ConstByteSpan ByteSpan::toConst() const
+    inline constexpr ConstByteSpan ByteSpan::toConstSpan() const
     {
         return ConstByteSpan(m_data, m_size);
     }

@@ -10,13 +10,6 @@ namespace Texas::detail
     */
     constexpr BlockInfo getBlockInfo(PixelFormat pixelFormat) noexcept;
 
-    constexpr bool isBCnCompressed(PixelFormat pixelFormat) noexcept;
-
-    /*
-        Returns true if pixelFormat is a compressed format.
-    */
-    constexpr bool isCompressed(PixelFormat pixelFormat) noexcept;
-
     constexpr BlockInfo getBlockInfo(PixelFormat pixelFormat) noexcept
     {
         switch (pixelFormat)
@@ -36,28 +29,5 @@ namespace Texas::detail
         }
 
         return {};
-    }
-
-    constexpr bool isBCnCompressed(PixelFormat pixelFormat) noexcept
-    {
-        switch (pixelFormat)
-        {
-        case PixelFormat::BC1_RGB:
-        case PixelFormat::BC1_RGBA:
-        case PixelFormat::BC2_RGBA:
-        case PixelFormat::BC3_RGBA:
-        case PixelFormat::BC4:
-        case PixelFormat::BC5:
-        case PixelFormat::BC6H:
-        case PixelFormat::BC7_RGBA:
-            return true;
-        }
-
-        return false;
-    }
-
-    constexpr bool isCompressed(PixelFormat pixelFormat) noexcept
-    {
-        return isBCnCompressed(pixelFormat);
     }
 }

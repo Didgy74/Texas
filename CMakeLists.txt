@@ -7,10 +7,10 @@ project(Texas)
 # START
 	option(TEXAS_ENABLE_EVERYTHING "Enables all library functionality." OFF)
 	option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" OFF)
-	option(TEXAS_ENABLE_KTX2_READ "Enables loading KTX2 files" OFF)
 	option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" OFF)
 	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan. Note! Requires Vulkan to be linked!" OFF)
 	option(TEXAS_ENABLE_ASSERTIONS "Enables assertions inside the codebase. This can be helpful to catch invalid usage of the interface." OFF)
+	option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables the parts of the library that allows the implementation to do dynamic allocations using operator new." OFF)
 #
 # END
 #
@@ -55,7 +55,8 @@ project(Texas)
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/MetaData.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/MemReqs.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp")
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp")
 	target_sources(${LIB_NAME} INTERFACE ${TEXAS_SRC_FILES})
 #
 # END
@@ -67,15 +68,14 @@ project(Texas)
 # START
 	if(TEXAS_ENABLE_EVERYTHING)
 		set(TEXAS_ENABLE_KTX_READ ON)
-		set(TEXAS_ENABLE_KTX2_READ ON)
 		set(TEXAS_ENABLE_PNG_READ ON)
 		set(TEXAS_ENABLE_ASSERTIONS ON)
+		set(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS ON)
 	endif()
 
 	# Check that atleast one file format has been enabled
 	if(NOT(
 		TEXAS_ENABLE_KTX_READ OR
-		TEXAS_ENABLE_KTX2_READ OR
 		TEXAS_ENABLE_PNG_READ
 	))
 		message(FATAL_ERROR "FATAL ERROR: To use Texas you must enable atleast one file-format.")
@@ -90,11 +90,6 @@ project(Texas)
 		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_PNG_READ)
 		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_read.cpp")
 		set(TEXAS_LINK_ZLIB 1)
-	endif()
-
-	if(TEXAS_ENABLE_VULKAN_TOOLS)
-		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/Vulkan-Tools")
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
 	endif()
 
 	if(${TEXAS_LINK_ZLIB})
@@ -119,6 +114,15 @@ project(Texas)
 	if(TEXAS_ENABLE_ASSERTIONS)
 		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_ASSERT)
 		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/Assert.cpp")
+	endif()
+
+	if(TEXAS_ENABLE_VULKAN_TOOLS)
+		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/Vulkan-Tools")
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
+	endif()
+
+	if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
+		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 	endif()
 #
 # END
