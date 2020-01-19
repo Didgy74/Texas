@@ -84,39 +84,41 @@ If this function is successful, you will find all the image-data in `dstBuffer` 
 
 Code example:
 ```cpp
-    unsigned int bufferForFileDataSize = // Size of your loaded buffer
-    const std::byte* bufferForFileData = // Load your buffer filled with file data
+#include "Texas/Texas.hpp"
 
-    Texas::ConstByteSpan fileBufferSpan = { bufferForFileData, bufferForFileDataSize };
+unsigned int bufferForFileDataSize = // Size of your loaded buffer
+const std::byte* bufferForFileData = // Load your buffer filled with file data
 
-    Texas::ResultValue<Texas::MemReqs> parseFileResult = Texas::getMemReqs(fileBufferSpan);
-    if (!parseFileResult.isSuccessful())
-    {
-        Texas::ResultType errorCode = parseFileResult.resultType();
-        const char* errorMessage = parseFileResult.errorMessage();
-        // Handle error
-    }
+Texas::ConstByteSpan fileBufferSpan = { bufferForFileData, bufferForFileDataSize };
 
-    Texas::MemReqs memoryRequirements = parseFileResult.value();
+Texas::ResultValue<Texas::MemReqs> parseFileResult = Texas::getMemReqs(fileBufferSpan);
+if (!parseFileResult.isSuccessful())
+{
+    Texas::ResultType errorCode = parseFileResult.resultType();
+    const char* errorMessage = parseFileResult.errorMessage();
+    // Handle error
+}
 
-    unsigned int dstBufferSize = memoryRequirements.memoryRequired();
-    std::byte* dstBuffer = // Allocate your destination buffer
-    Texas::ByteSpan dstBufferSpan = { dstBuffer, dstBufferSize };
+Texas::MemReqs memoryRequirements = parseFileResult.value();
 
-    unsigned int workingMemSize = 0;
-    std::byte* workingMem = nullptr;
-    if (memoryRequirements.workingMemoryRequired() > 0)
-    {
-        workingMemSize = memoryRequirements.workingMemoryRequired();
-        workingMem = Allocate the working memory.
-    }
-    Texas::ByteSpan workingMemSpan = { workingMem, workingMemSize };
+unsigned int dstBufferSize = memoryRequirements.memoryRequired();
+std::byte* dstBuffer = // Allocate your destination buffer
+Texas::ByteSpan dstBufferSpan = { dstBuffer, dstBufferSize };
 
-    Texas::Result loadImageDataResult = Texas::loadImageData(memoryRequirements, dstBufferSpan, workingMemSpan);
-    if (!loadImageDataResult.isSuccessful())
-    {
-        Texas::ResultType errorCode = loadImageDataResult.resultType();
-        const char* errorMessage = loadImageDataResult.errorMessage();
-        // Handle error
-    }
+unsigned int workingMemSize = 0;
+std::byte* workingMem = nullptr;
+if (memoryRequirements.workingMemoryRequired() > 0)
+{
+    workingMemSize = memoryRequirements.workingMemoryRequired();
+    workingMem = Allocate the working memory.
+}
+Texas::ByteSpan workingMemSpan = { workingMem, workingMemSize };
+
+Texas::Result loadImageDataResult = Texas::loadImageData(memoryRequirements, dstBufferSpan, workingMemSpan);
+if (!loadImageDataResult.isSuccessful())
+{
+    Texas::ResultType errorCode = loadImageDataResult.resultType();
+    const char* errorMessage = loadImageDataResult.errorMessage();
+    // Handle error
+}
 ```
