@@ -20,8 +20,12 @@ namespace Texas
     class Texture
     {
     public:
+        Texture() = default;
         Texture(const Texture&) = delete;
         Texture(Texture&&) noexcept;
+
+        Texture& operator=(const Texture&) = delete;
+        Texture& operator=(Texture&&) noexcept;
 
         ~Texture();
 
@@ -140,8 +144,6 @@ namespace Texas
         bool isValid() const noexcept;
 
     private:
-        Texture() = default;
-
         MetaData m_metaData{};
         ByteSpan m_buffer = {};
         Allocator* m_allocator = nullptr;

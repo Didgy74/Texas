@@ -32,6 +32,24 @@ Texas::Texture::~Texture()
 	}
 }
 
+Texas::Texture& Texas::Texture::operator=(Texture&& other) noexcept
+{
+	if (this == &other)
+		return *this;
+
+	this->~Texture();
+
+	m_metaData = other.m_metaData;
+	m_allocator = other.m_allocator;
+	m_buffer = other.m_buffer;
+
+	other.m_metaData = MetaData();
+	other.m_allocator = nullptr;
+	other.m_buffer = ByteSpan(nullptr, 0);
+
+	return *this;
+}
+
 const Texas::MetaData& Texas::Texture::metaData() const noexcept
 {
 	return m_metaData;
