@@ -14,9 +14,8 @@ namespace Texas
 {
     /*
         Contains info on an image parsed from a buffer.
-
-        This includes metadata and some fileformat-specific data for loading
-        imagedata from said fileformat.
+        This includes metadata and some fileformat-specific data for 
+        loading imagedata from said fileformat.
     */
     class MemReqs
     {

@@ -48,15 +48,15 @@ namespace Texas
 
     [[nodiscard]] constexpr bool isBCnCompressed(PixelFormat pixelFormat) noexcept;
 
-    /*
-        Returns true if pixelFormat is a compressed format.
-    */
     [[nodiscard]] constexpr bool isCompressed(PixelFormat pixelFormat) noexcept;
 }
 
-constexpr bool Texas::isBCnCompressed(PixelFormat pFormat) noexcept
+/*
+    Returns true if pixelFormat is in the BCn compression family.
+*/
+constexpr bool Texas::isBCnCompressed(PixelFormat pixelFormat) noexcept
 {
-    switch (pFormat)
+    switch (pixelFormat)
     {
     case PixelFormat::BC1_RGB:
     case PixelFormat::BC1_RGBA:
@@ -75,7 +75,10 @@ constexpr bool Texas::isBCnCompressed(PixelFormat pFormat) noexcept
     return false;
 }
 
-constexpr bool Texas::isCompressed(PixelFormat pFormat) noexcept
+/*
+    Returns true if pixelFormat is a compressed format type.
+*/
+constexpr bool Texas::isCompressed(PixelFormat pixelFormat) noexcept
 {
-    return isBCnCompressed(pFormat);
+    return isBCnCompressed(pixelFormat);
 }

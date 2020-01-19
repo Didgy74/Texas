@@ -83,7 +83,14 @@ namespace Texas
     */
     [[nodiscard]] Result loadImageData(const MemReqs& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize) noexcept;
 
+    /*
+        Loads a texture in its entirety from a buffer containing file-data, by allocating with a custom allocator.
+    */
     [[nodiscard]] ResultValue<Texture> loadFromBuffer(const std::byte* inputBuffer, std::size_t inputBufferSize, Allocator& allocator) noexcept;
+
+    /*
+        Loads a texture in its entirety from a buffer containing file-data, by allocating with a custom allocator.
+    */
     [[nodiscard]] ResultValue<Texture> loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator) noexcept;
 }
 
