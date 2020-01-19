@@ -328,7 +328,7 @@ static inline std::uint8_t Texas::detail::PNG::getPixelWidth(PixelFormat pixelFo
     {
     case PixelFormat::R_8:
         return 1;
-    case PixelFormat::RG_8:
+    case PixelFormat::RA_8:
         return 2;
     case PixelFormat::RGB_8:
         return 3;

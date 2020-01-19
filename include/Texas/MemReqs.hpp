@@ -2,18 +2,16 @@
 
 #include "Texas/MetaData.hpp"
 #include "Texas/Dimensions.hpp"
+
+// Include detail headers
 #include "Texas/detail/MemReqs_BackendData.hpp"
+#include "Texas/detail/PrivateAccessor_Declaration.hpp"
 
 #include <cstdint>
 #include <cstddef>
 
 namespace Texas
 {
-    namespace detail
-    {
-        class PrivateAccessor;
-    }
-
     /*
         Contains info on an image parsed from a buffer.
 

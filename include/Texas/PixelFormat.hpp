@@ -5,10 +5,8 @@
 namespace Texas
 {
     /*
-        R = Red
-        G = Green
-        B = Blue
-        A = Alpha
+        Describes a pixel's layout of channels,
+        and the bit-depth of each channel
     */
     enum class PixelFormat : uint8_t
     {
