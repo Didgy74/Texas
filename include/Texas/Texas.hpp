@@ -26,20 +26,6 @@ namespace Texas
 
         If successful, the returned struct holds MetaData along with the memory requirements for loading imagedata from this buffer.
     */
-    [[nodiscard]] ResultValue<MemReqs> getMemReqs(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
-
-    /*
-        Parses a buffer containing file-data without loading imagedata.
-
-        If successful, the returned struct holds MetaData along with the memory requirements for loading imagedata from this buffer.
-    */
-    [[nodiscard]] ResultValue<MemReqs> getMemReqs(ConstByteSpan inputBuffer) noexcept;
-
-    /*
-        Parses a buffer containing file-data without loading imagedata.
-
-        If successful, the returned struct holds MetaData along with the memory requirements for loading imagedata from this buffer.
-    */
     [[nodiscard]] ResultValue<MemReqs> getMemReqs(ConstByteSpan inputBuffer) noexcept;
 
     /*

@@ -74,6 +74,8 @@
 [ ] - When the implementation is in the header, like templated types, maybe move implementation into it's own header under detail?
 [ ] - Make the PNG image-loading implementation more robust.
 [ ] - Make the KTX image-loading implementation more robust.
+[ ] - Investigate whether the library should have a TextureLoader struct
+[x] - Implement "using methods on a moved-from Texture object is UB"
 
 Test that basic stuff works correctly:
 	Mip levels
