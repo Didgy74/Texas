@@ -51,4 +51,4 @@ unsigned int size = baseMipLevelImageData.size();
 // - If the texture-object has become invalid (usually as a result of being moved from) 
 Texas::ConstByteSpan wantedArrayLayer = loadTexture.arrayLevelSpan(2, 1).value();
 ```
-
+The list of Texture's methods can be found in the [Texture.hpp](https://github.com/Didgy74/Texas/blob/development/include/Texas/Texture.hpp) header file.
