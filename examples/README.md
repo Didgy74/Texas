@@ -2,9 +2,11 @@
 ## The easiest way
 Currently, the easiest way to load a texture is from a buffer and into the `Texas::Texture` abstraction class. This class represents the entirety of the loaded image, which includes image-data and metadata. The functions for this loading path have the following signatures
 ```cpp
-Texas::ResultValue<Texas::Texture> loadFrombuffer(const std::byte* buffer, std::uint64_t bufferSize);
-Texas::ResultValue<Texas::Texture> loadFrombuffer(Texas::ConstByteSpan fileBuffer);
+ResultValue<Texture> loadFrombuffer(const std::byte* buffer, std::uint64_t bufferSize);
+ResultValue<Texture> loadFrombuffer(ConstByteSpan fileBuffer);
 ```
+The struct `ReturnValue<T>` is a combination of the `Result` struct and an optional value of type `T`. In case of an error, you can query it for the error code and error message. If successful, it will contain a valid value of `T`.
+
 These functions are made available only when the CMake option `TEXAS_ENABLE_DYNAMIC_ALLOCATIONS` is enabled.
 ```cpp
 #include "Texas/Texas.hpp"
@@ -52,3 +54,69 @@ unsigned int size = baseMipLevelImageData.size();
 Texas::ConstByteSpan wantedArrayLayer = loadTexture.arrayLevelSpan(2, 1).value();
 ```
 The list of Texture's methods can be found in the [Texture.hpp](https://github.com/Didgy74/Texas/blob/development/include/Texas/Texture.hpp) header file.
+
+## Loading into your buffer
+The process of loading image-data onto your own pre-allocated buffer is usually three steps:
+ 1. Parse file and get memory requirements
+ 2. Allocate memory for the image-data
+	 - If the loader requires some working-memory in order to unpack the image-data, you will also need to allocate this memory additionally.
+3. Load image-data onto the allocated memory
+
+In terms of code, you will be using one of the following functions
+```cpp
+ResultValue<MemReqs> getMemReqs(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
+ResultValue<MemReqs> getMemReqs(ConstByteSpan inputBuffer) noexcept;
+```
+If successful, the function returns a struct `MemReqs` which contains the amount of image-memory required, amount of working-memory required and the metadata of the file. It also contains some hidden data used for speeding up loading image-data from the input-buffer later.
+
+After allocating the data needed, you will want to use one of the following functions
+```cpp
+Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
+Result loadImageData(const MemReqs& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize) noexcept;
+```
+If `MemReqs::workingMemoryRequired()` returns 0, you can pass in `nullptr` and 0 for the working memory parameters.
+
+The struct `Result` contains a field for an error code of type `ResultType`, and also a `const char*` for an error message.
+
+The function requires that there has been no changes to the `inputBuffer`  passed into `getMemReqs` in between these function calls. Any changes will make the function return an error-code.
+
+If this function is successful, you will find all the image-data in `dstBuffer` and can refer to the `MemReqs` struct for querying offset for mip-levels, array-layers.
+
+Code example:
+```cpp
+    unsigned int bufferForFileDataSize = // Size of your loaded buffer
+    const std::byte* bufferForFileData = // Load your buffer filled with file data
+
+    Texas::ConstByteSpan fileBufferSpan = { bufferForFileData, bufferForFileDataSize };
+
+    Texas::ResultValue<Texas::MemReqs> parseFileResult = Texas::getMemReqs(fileBufferSpan);
+    if (!parseFileResult.isSuccessful())
+    {
+        Texas::ResultType errorCode = parseFileResult.resultType();
+        const char* errorMessage = parseFileResult.errorMessage();
+        // Handle error
+    }
+
+    Texas::MemReqs memoryRequirements = parseFileResult.value();
+
+    unsigned int dstBufferSize = memoryRequirements.memoryRequired();
+    std::byte* dstBuffer = // Allocate your destination buffer
+    Texas::ByteSpan dstBufferSpan = { dstBuffer, dstBufferSize };
+
+    unsigned int workingMemSize = 0;
+    std::byte* workingMem = nullptr;
+    if (memoryRequirements.workingMemoryRequired() > 0)
+    {
+        workingMemSize = memoryRequirements.workingMemoryRequired();
+        workingMem = Allocate the working memory.
+    }
+    Texas::ByteSpan workingMemSpan = { workingMem, workingMemSize };
+
+    Texas::Result loadImageDataResult = Texas::loadImageData(memoryRequirements, dstBufferSpan, workingMemSpan);
+    if (!loadImageDataResult.isSuccessful())
+    {
+        Texas::ResultType errorCode = loadImageDataResult.resultType();
+        const char* errorMessage = loadImageDataResult.errorMessage();
+        // Handle error
+    }
+```
