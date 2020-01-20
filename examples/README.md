@@ -78,9 +78,9 @@ If `ParsedFileInfo::workingMemoryRequired()` returns 0, you can pass in `nullptr
 
 The struct `Result` contains a field for an error code of type `ResultType`, and also a `const char*` for an error message.
 
-The function requires that there has been no changes to the `inputBuffer`  passed into `getMemReqs` in between these function calls. Any changes will make the function return an error-code.
+The function requires that there has been no changes to the `inputBuffer`  passed into `parseBuffer` in between these function calls. Any changes to the input file-buffer will make calling loadImageData undefined behavior, it might return an error-code if it can catch the error.
 
-If this function is successful, you will find all the image-data in `dstBuffer` and can refer to the `MemReqs` struct for querying offset for mip-levels, array-layers.
+If this function is successful, you will find all the image-data in `dstBuffer` and can refer to the `parseBuffer` struct for querying offset for mip-levels, array-layers.
 
 Code example:
 ```cpp
