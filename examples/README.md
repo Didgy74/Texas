@@ -64,17 +64,17 @@ The process of loading image-data onto your own pre-allocated buffer is usually 
 
 In terms of code, you will be using one of the following functions
 ```cpp
-ResultValue<MemReqs> getMemReqs(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
-ResultValue<MemReqs> getMemReqs(ConstByteSpan inputBuffer) noexcept;
+ResultValue<ParsedFileInfo> parseBuffer(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
+ResultValue<ParsedFileInfo> parseBuffer(ConstByteSpan inputBuffer) noexcept;
 ```
-If successful, the function returns a struct `MemReqs` which contains the amount of image-memory required, amount of working-memory required and the metadata of the file. It also contains some hidden data used for speeding up loading image-data from the input-buffer later.
+If successful, the function returns a struct `ParsedFileInfo` which contains the amount of image-memory required, amount of working-memory required and the texture-info of the file. It also contains some hidden data used for speeding up loading image-data from the input-buffer later.
 
 After allocating the data needed, you will want to use one of the following functions
 ```cpp
-Result loadImageData(const MemReqs& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
-Result loadImageData(const MemReqs& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize) noexcept;
+Result loadImageData(const ParsedFileInfo& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
+Result loadImageData(const ParsedFileInfo& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize) noexcept;
 ```
-If `MemReqs::workingMemoryRequired()` returns 0, you can pass in `nullptr` and 0 for the working memory parameters.
+If `ParsedFileInfo::workingMemoryRequired()` returns 0, you can pass in `nullptr` and 0 for the working memory parameters.
 
 The struct `Result` contains a field for an error code of type `ResultType`, and also a `const char*` for an error message.
 
@@ -91,7 +91,7 @@ const std::byte* bufferForFileData = // Load your buffer filled with file data
 
 Texas::ConstByteSpan fileBufferSpan = { bufferForFileData, bufferForFileDataSize };
 
-Texas::ResultValue<Texas::MemReqs> parseFileResult = Texas::getMemReqs(fileBufferSpan);
+Texas::ResultValue<Texas::ParsedFileInfo> parseFileResult = Texas::parseBuffer(fileBufferSpan);
 if (!parseFileResult.isSuccessful())
 {
     Texas::ResultType errorCode = parseFileResult.resultType();
@@ -99,15 +99,15 @@ if (!parseFileResult.isSuccessful())
     // Handle error
 }
 
-Texas::MemReqs memoryRequirements = parseFileResult.value();
+Texas::TextureInfo textureInfo = parseFileResult.value();
 
-unsigned int dstBufferSize = memoryRequirements.memoryRequired();
+unsigned int dstBufferSize = textureInfo.memoryRequired();
 std::byte* dstBuffer = // Allocate your destination buffer
 Texas::ByteSpan dstBufferSpan = { dstBuffer, dstBufferSize };
 
 unsigned int workingMemSize = 0;
 std::byte* workingMem = nullptr;
-if (memoryRequirements.workingMemoryRequired() > 0)
+if (textureInfo.workingMemoryRequired() > 0)
 {
     workingMemSize = memoryRequirements.workingMemoryRequired();
     workingMem = Allocate the working memory.
