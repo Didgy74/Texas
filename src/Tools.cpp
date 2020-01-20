@@ -18,12 +18,15 @@ std::uint64_t Texas::calcMaxMipLevelCount(Dimensions baseDims) noexcept
     return static_cast<std::uint64_t>(std::log2(max)) + 1;
 }
 
-Texas::Dimensions Texas::calcMipmapDimensions(const Dimensions baseDims, const std::uint64_t mipIndex) noexcept
+Texas::Optional<Texas::Dimensions> Texas::calcMipmapDimensions(Dimensions baseDims, const std::uint64_t mipIndex) noexcept
 {
     if (baseDims.width == 0 || baseDims.height == 0 || baseDims.depth == 0)
         return {};
     if (mipIndex == 0)
-        return baseDims;
+        // Optional<T> copy-constructor is deleted
+        // So we use move-constructor since it does the same as copy-constructor
+        // for Dimensions anyways.
+        return { static_cast<Texas::Dimensions&&>(baseDims) };
     if (mipIndex >= calcMaxMipLevelCount(baseDims))
         return {};
 
@@ -50,11 +53,11 @@ std::uint64_t Texas::calcTotalSizeRequired(Dimensions baseDims, PixelFormat pFor
 
     std::uint64_t sum = 0;
     for (std::uint64_t i = 0; i < mipCount; i++)
-        sum += calcSingleImageDataSize(calcMipmapDimensions(baseDims, i), pFormat);
+        sum += calcArrayLayerSize(calcMipmapDimensions(baseDims, i).value(), pFormat);
     return sum * arrayCount;
 }
 
-std::uint64_t Texas::calcTotalSizeRequired(const MetaData& meta) noexcept
+std::uint64_t Texas::calcTotalSizeRequired(const TextureInfo& meta) noexcept
 {
     return calcTotalSizeRequired(meta.baseDimensions, meta.pixelFormat, meta.mipLevelCount, meta.arrayLayerCount);
 }
@@ -73,7 +76,7 @@ Texas::Optional<std::uint64_t> Texas::calcMipOffset(
     return { calcTotalSizeRequired(baseDims, pFormat, mipIndex, arrayCount) };
 }
 
-Texas::Optional<std::uint64_t> Texas::calcMipOffset(const MetaData& meta, std::uint64_t mipLevelIndex) noexcept
+Texas::Optional<std::uint64_t> Texas::calcMipOffset(const TextureInfo& meta, std::uint64_t mipLevelIndex) noexcept
 {
     return calcMipOffset(meta.baseDimensions, meta.pixelFormat, meta.arrayLayerCount, meta.mipLevelCount, mipLevelIndex);
 }
@@ -96,12 +99,12 @@ Texas::Optional<std::uint64_t> Texas::calcArrayLayerOffset(
     // Calculates size of all mip except the one we want to index into
     std::uint64_t sum = calcTotalSizeRequired(baseDims, pFormat, mipIndex, arrayCount);
     // Then calculates the size of every individiual array-layer up until our wanted index.
-    sum += calcSingleImageDataSize(calcMipmapDimensions(baseDims, mipIndex), pFormat) * arrayIndex;
+    sum += calcArrayLayerSize(calcMipmapDimensions(baseDims, mipIndex).value(), pFormat) * arrayIndex;
     return sum;
 }
 
 Texas::Optional<std::uint64_t> Texas::calcArrayLayerOffset(
-    const MetaData& meta,
+    const TextureInfo& meta,
     std::uint64_t mipLevelIndex,
     std::uint64_t arrayLayerIndex) noexcept
 {
@@ -151,16 +154,16 @@ namespace Texas::detail
     }
 }
 
-std::uint64_t Texas::calcSingleImageDataSize(const Dimensions dims, const PixelFormat pFormat) noexcept
+std::uint64_t Texas::calcArrayLayerSize(const Dimensions dims, const PixelFormat pFormat) noexcept
 {
     const detail::BlockInfo blockInfo = detail::getBlockInfo(pFormat);
 
     if (isBCnCompressed(pFormat))
     {
-        std::size_t blockCountX = static_cast<std::size_t>(std::ceilf(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
+        std::uint_least32_t blockCountX = static_cast<uint_least32_t>(std::ceilf(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
         if (blockCountX == 0)
             blockCountX = 1;
-        std::size_t blockCountY = static_cast<std::size_t>(std::ceilf(static_cast<float>(dims.height) / static_cast<float>(blockInfo.height)));
+        uint_least32_t blockCountY = static_cast<uint_least32_t>(std::ceilf(static_cast<float>(dims.height) / static_cast<float>(blockInfo.height)));
         if (blockCountY == 0)
             blockCountY = 1;
 

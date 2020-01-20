@@ -81,7 +81,7 @@ namespace Texas::detail::PNG
     /*
         Defilters uncompressed data and immediately copies the result over to dstMem. Should only be used when colour-type != indexed colour.
     */
-    [[nodiscard]] static inline Result loadFromBuffer_Step2_DefilterIntoDstBuffer(const MetaData& metaData, const ByteSpan dstMem, const ByteSpan uncompressedData);
+    [[nodiscard]] static inline Result loadFromBuffer_Step2_DefilterIntoDstBuffer(const TextureInfo& textureInfo, const ByteSpan dstMem, const ByteSpan uncompressedData);
 
     /*
         Defilters uncompressed data in place. Only handles when each pixel (index) is 1 byte wide.
@@ -91,7 +91,7 @@ namespace Texas::detail::PNG
     [[nodiscard]] static inline Result loadFromBuffer_Step2_Deindex(
         const Dimensions baseDims,
         const std::byte* const plteChunkStart,
-        const std::uint32_t previous_plteChunkDataLength,
+        const unsigned int previous_plteChunkDataLength,
         const ByteSpan dstImageBuffer,
         const ByteSpan workingMem);
 }
@@ -362,13 +362,12 @@ static inline std::uint8_t Texas::detail::PNG::paethPredictor(std::uint8_t a, st
 }
 
 Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
-    const bool identifierConfirmed,
     ConstByteSpan srcBuffer,
-    MetaData& metaData,
+    TextureInfo& textureInfo,
     std::uint64_t& workingMemRequired,
-    detail::MemReqs_PNG_BackendData& backendData)
+    detail::ParsedFileInfo_PNG_BackendData& backendData)
 {
-    backendData = detail::MemReqs_PNG_BackendData();
+    backendData = detail::ParsedFileInfo_PNG_BackendData();
     backendData.srcFileBufferStart = reinterpret_cast<const unsigned char*>(srcBuffer.data());
     backendData.srcFileBufferLength = srcBuffer.size();
 
@@ -376,21 +375,13 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     if (srcBuffer.size() <= Header::totalSize)
         return { ResultType::PrematureEndOfFile, "Source buffer is too small to hold PNG header-data, let alone any image data." };
 
-    metaData.srcFileFormat = FileFormat::PNG;
-    metaData.textureType = TextureType::Texture2D;
-    metaData.baseDimensions.depth = 1;
-    metaData.arrayLayerCount = 1;
-    metaData.mipLevelCount = 1;
-    metaData.colorSpace = ColorSpace::Linear;
-    metaData.channelType = ChannelType::UnsignedNormalized;
-
-    if (identifierConfirmed == false)
-    {
-        // The identifier is the first thing that appears in the file
-        const std::byte* const fileIdentifier = srcBuffer.data();
-        if (std::memcmp(fileIdentifier, identifier, sizeof(fileIdentifier)) != 0)
-            return { ResultType::CorruptFileData, "File-identifier does not match PNG file-identifier." };
-    }
+    textureInfo.fileFormat = FileFormat::PNG;
+    textureInfo.textureType = TextureType::Texture2D;
+    textureInfo.baseDimensions.depth = 1;
+    textureInfo.arrayLayerCount = 1;
+    textureInfo.mipLevelCount = 1;
+    textureInfo.colorSpace = ColorSpace::Linear;
+    textureInfo.channelType = ChannelType::UnsignedNormalized;
 
     const std::uint32_t ihdrChunkDataSize = PNG::toCorrectEndian_u32(srcBuffer.data() + Header::ihdrChunkSizeOffset);
     if (ihdrChunkDataSize != Header::ihdrChunkDataSize)
@@ -404,12 +395,12 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     const std::uint32_t origWidth = PNG::toCorrectEndian_u32(srcBuffer.data() + Header::widthOffset);
     if (origWidth == 0)
         return { ResultType::CorruptFileData, "PNG IHDR field 'Width' is equal to 0. PNG specification requires it to be >0." };
-    metaData.baseDimensions.width = origWidth;
+    textureInfo.baseDimensions.width = origWidth;
     // Dimensions are stored in big endian, we must convert to correct endian.
     const std::uint32_t origHeight = PNG::toCorrectEndian_u32(srcBuffer.data() + Header::heightOffset);
     if (origHeight == 0)
         return { ResultType::CorruptFileData, "PNG IHDR field 'Height' is equal to 0. PNG specification requires it to be >0." };
-    metaData.baseDimensions.height = origHeight;
+    textureInfo.baseDimensions.height = origHeight;
 
     const std::uint8_t bitDepth = static_cast<std::uint8_t>(srcBuffer.data()[Header::bitDepthOffset]);
     const PNG::ColorType colorType = static_cast<PNG::ColorType>(srcBuffer.data()[Header::colorTypeOffset]);
@@ -418,8 +409,8 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
                                               "IHDR fields 'Colour type' and 'Bit depth'." };
     if (bitDepth != 8)
         return { ResultType::FileNotSupported, "Texas does not support PNG files where bit-depth is not 8." };
-    metaData.pixelFormat = PNG::toPixelFormat(colorType, bitDepth);
-    if (metaData.pixelFormat == PixelFormat::Invalid)
+    textureInfo.pixelFormat = PNG::toPixelFormat(colorType, bitDepth);
+    if (textureInfo.pixelFormat == PixelFormat::Invalid)
         return { ResultType::FileNotSupported, "PNG colortype and bitdepth combination is not supported." };
 
     const std::uint8_t compressionMethod = static_cast<std::uint8_t>(srcBuffer.data()[Header::compressionMethodOffset]);
@@ -440,6 +431,10 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     PNG::ChunkType previousChunkType = PNG::ChunkType::Invalid;
     while (memOffsetTracker < srcBuffer.size() && chunkTypeCount[(int)PNG::ChunkType::IEND] == 0)
     {
+        // 12 bytes is the smallest a chunk can be
+        if (memOffsetTracker + 12 >= srcBuffer.size())
+            return { ResultType::CorruptFileData, "Encountered unexpected end of file while parsing PNG chunks." };
+
         const std::byte* const chunkStart = srcBuffer.data() + memOffsetTracker;
 
         // Chunk data length is the first entry in the chunk. It's a uint32_t
@@ -459,7 +454,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
             if (chunkDataLength == 0)
                 return { ResultType::CorruptFileData, "PNG IDAT chunk's `Length' field is 0. PNG specification requires it to be >0." };
 
-            backendData.idatChunkStart = reinterpret_cast<const unsigned char*>(chunkStart);
+            backendData.idatChunkOffset = memOffsetTracker;
         }
             break;
         case ChunkType::IEND:
@@ -490,7 +485,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
                 return { ResultType::CorruptFileData , "PNG PLTE chunk field 'Data length' value not divisible by 3. "
                                                        "PNG specification requires PLTE data length be divisible by 3." };
 
-            backendData.plteChunkStart = reinterpret_cast<const unsigned char*>(chunkStart);
+            backendData.plteChunkOffset = memOffsetTracker;
             backendData.plteChunkDataLength = chunkDataLength;
         }
             break;
@@ -512,7 +507,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
                 return { ResultType::CorruptFileData , "PNG sRGB chunk's data field is not equal to 1. "
                                                        "PNG specification requires sRGB chunk's field 'Data length' to be 1." };
 
-            metaData.colorSpace = ColorSpace::sRGB;
+            textureInfo.colorSpace = ColorSpace::sRGB;
         }
             break;
         case ChunkType::gAMA:
@@ -530,7 +525,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
                 return { ResultType::CorruptFileData, "Chunk data length of PNG gAMA chunk is not equal to 4. "
                                                       "PNG specification demands that chunk data length of gAMA chunk is equal to 4." };
 
-            // TODO: At some point, MetaData might contain gamma. Catch it here
+            // TODO: At some point, TextureInfo might contain gamma. Catch it here
 
             
         }
@@ -553,7 +548,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     backendData.idatChunkCount = chunkTypeCount[(int)PNG::ChunkType::IDAT];
 
     const bool isIndexedColor = colorType == ColorType::Indexed_colour;
-    workingMemRequired = calcWorkingMemRequired(metaData.baseDimensions, metaData.pixelFormat, isIndexedColor);
+    workingMemRequired = calcWorkingMemRequired(textureInfo.baseDimensions, textureInfo.pixelFormat, isIndexedColor);
 
     return { ResultType::Success, nullptr };
 }
@@ -561,7 +556,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
 Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
     const Dimensions baseDims,
     const std::byte* const plteChunkStart,
-    const std::uint32_t previous_plteChunkDataLength, 
+    const unsigned int previous_plteChunkDataLength, 
     const ByteSpan dstImageBuffer,
     const ByteSpan workingMem)
 {
@@ -571,28 +566,28 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
     const PNG::ChunkType chunkType = PNG::getChunkType(plteChunkStart + sizeof(PNG::ChunkSize_T));
     if (chunkType != PNG::ChunkType::PLTE)
         return { ResultType::CorruptFileData, "Found no PLTE chunk when deindexing PNG file. "
-                                              "The file has changed since Texas::getMemReqs() was called." };
+                                              "The file has changed since Texas::parseBuffer() was called." };
     if (plteChunkDataLength != previous_plteChunkDataLength)
         return { ResultType::CorruptFileData, "PLTE chunk data length is not the same as it was when parsing the PNG file. "
-                                              "The file has changed since Texas::getMemReqs() was called." };
+                                              "The file has changed since Texas::parseBuffer() was called." };
 
     const std::byte* const paletteColors = plteChunkStart + sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T);
-    const std::uint64_t paletteColorCount = plteChunkDataLength / 3;
+    const unsigned int paletteColorCount = plteChunkDataLength / 3;
 
-    for (std::uint64_t y = 0; y < baseDims.height; y++)
+    for (std::uint_least32_t y = 0; y < static_cast<std::uint_least32_t>(baseDims.height); y++)
     {
         const std::uint64_t rowIndicesOffset = 1 + (y * (baseDims.height + 1));
         // Pointer to the row of indices, does not include the filter-type byte.
         const std::byte* const rowIndices = workingMem.data() + rowIndicesOffset;
 
-        for (std::uint64_t x = 0; x < baseDims.width; x++)
+        for (std::uint_least32_t x = 0; x < static_cast<std::uint_least32_t>(baseDims.width); x++)
         {
             const std::uint8_t paletteIndex = std::uint8_t(rowIndices[x]);
             if (paletteIndex >= paletteColorCount)
                 return { ResultType::CorruptFileData, "Encountered an out-of-bounds index while de-indexing PNG file." };
-            const std::byte* colorPalettePtr = paletteColors + (std::size_t(paletteIndex) * 3);
+            const std::byte* colorPalettePtr = paletteColors + static_cast<std::size_t>(paletteIndex) * 3;
 
-            const std::uint64_t dstBufferOffset = (y * baseDims.height + x) * 3;
+            const std::size_t dstBufferOffset = (y * static_cast<std::size_t>(baseDims.height) + x) * 3;
             std::memcpy(dstImageBuffer.data() + dstBufferOffset, colorPalettePtr, 3);
         }
     }
@@ -601,8 +596,8 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
 }
 
 Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
-    const MetaData& metaData,
-    detail::MemReqs_PNG_BackendData& backendData,
+    const TextureInfo& textureInfo,
+    detail::ParsedFileInfo_PNG_BackendData& backendData,
     const ByteSpan dstImageBuffer,
     const ByteSpan workingMem)
 {
@@ -623,7 +618,13 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
         std::uint64_t memOffsetTracker = 0;
         while (true)
         {
-            const std::byte* const chunkStart = reinterpret_cast<const std::byte*>(backendData.idatChunkStart + memOffsetTracker);
+            // An IDAT chunk must be atleast 13 bytes to be valid.
+            // The file also needs to fit an IEND afterwards, which is 12 bytes.
+            // So we need atleast 25 more bytes for the file to be valid
+            if (backendData.idatChunkOffset + 25 >= backendData.srcFileBufferLength)
+                return { ResultType::CorruptFileData, "Encountered unexpected end of file while decompressing PNG IDAT chunks." };
+
+            const std::byte* const chunkStart = reinterpret_cast<const std::byte*>(backendData.srcFileBufferStart + backendData.idatChunkOffset + memOffsetTracker);
 
             // Chunk data length is the first entry in the chunk. It's a uint32_t
             const std::uint32_t chunkDataLength = PNG::toCorrectEndian_u32(chunkStart);
@@ -631,7 +632,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
             const PNG::ChunkType chunkType = PNG::getChunkType(chunkStart + sizeof(PNG::ChunkSize_T));
             if (chunkType != PNG::ChunkType::IDAT)
                 return { ResultType::CorruptFileData, "Found no IDAT chunk when decompressing PNG file. "
-                                                      "The file has changed since Texas::getMemReqs() was called." };
+                                                      "The file has changed since Texas::parseBuffer() was called." };
             // TODO: Validate chunk type.
 
             const std::byte* const chunkData = chunkStart + sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T);
@@ -654,23 +655,23 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
         }
     }
 
-    if (backendData.plteChunkStart == nullptr)
+    if (backendData.plteChunkOffset == 0)
     {
         // If the plteChunk is nullptr, then we are not dealing with indexed colors.
-        Result result = loadFromBuffer_Step2_DefilterIntoDstBuffer(metaData, dstImageBuffer, workingMem);
+        Result result = loadFromBuffer_Step2_DefilterIntoDstBuffer(textureInfo, dstImageBuffer, workingMem);
         if (!result.isSuccessful())
             return result;
     }
     else
     {
         // We are dealing with indexed colours. We defilter all the pixels (indices) in place.
-        Result result = loadFromBuffer_Step2_DefilterInPlace(metaData.baseDimensions, workingMem);
+        Result result = loadFromBuffer_Step2_DefilterInPlace(textureInfo.baseDimensions, workingMem);
         if (!result.isSuccessful())
             return result;
 
         result = loadFromBuffer_Step2_Deindex(
-            metaData.baseDimensions,
-            reinterpret_cast<const std::byte*>(backendData.plteChunkStart),
+            textureInfo.baseDimensions,
+            reinterpret_cast<const std::byte*>(backendData.srcFileBufferStart + backendData.plteChunkOffset),
             backendData.plteChunkDataLength,
             dstImageBuffer, 
             workingMem);
@@ -681,16 +682,16 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
     return { ResultType::Success, nullptr };
 }
 
-static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterIntoDstBuffer(const MetaData& metaData, const ByteSpan dstMem, const ByteSpan uncompressedData)
+static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterIntoDstBuffer(const TextureInfo& textureInfo, const ByteSpan dstMem, const ByteSpan uncompressedData)
 {
     const std::byte* const filteredData = uncompressedData.data();
     std::byte* const dstBuffer = dstMem.data();
     
     // Size is in bytes.
-    const std::uint8_t pixelWidth = PNG::getPixelWidth(metaData.pixelFormat);
+    const std::uint8_t pixelWidth = PNG::getPixelWidth(textureInfo.pixelFormat);
     // Size is in bytes
     // Does not include the byte for filter-type.
-    const std::uint64_t rowWidth = pixelWidth * metaData.baseDimensions.width;
+    const std::uint64_t rowWidth = pixelWidth * textureInfo.baseDimensions.width;
     // Size is in bytes
     // Includes the byte for filter-type.
     const std::uint64_t totalRowWidth = rowWidth + 1;
@@ -711,7 +712,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             // Copy first pixel of the row.
             std::memcpy(dstBuffer, &filteredData[1], pixelWidth);
             // Then do the Sub defiltering on all the rest of the pixels in the row
-            for (std::size_t widthByte = pixelWidth; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = pixelWidth; widthByte < rowWidth; widthByte++)
             {
                 // We offset by 1 because we have to jump over the byte that contains filtertype
                 const std::uint8_t filtX = std::uint8_t(filteredData[1 + widthByte]);
@@ -725,7 +726,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             std::memcpy(dstBuffer, &filteredData[1], pixelWidth);
             // Do Average defiltering on the rest of the bytes.
             // We don't use the Recon(b) value because it's always 0 inside the first row.
-            for (std::size_t widthByte = pixelWidth; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = pixelWidth; widthByte < rowWidth; widthByte++)
             {
                 // We offset by 1 to jump over the byte containing filtertype
                 const std::uint8_t filtX = std::uint8_t(filteredData[1 + widthByte]);
@@ -755,14 +756,14 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     }
 
     // Defilter rest of the rows
-    for (unsigned int y = 1; y < metaData.baseDimensions.height; y++)
+    for (unsigned int y = 1; y < textureInfo.baseDimensions.height; y++)
     {
-        const std::size_t filterTypeOffset = y * totalRowWidth;
+        const std::uint64_t filterTypeOffset = y * totalRowWidth;
         
         // This is where the filtered data start after the filtertype-byte starts.
-        const std::size_t filterRowOffset = filterTypeOffset + 1;
+        const std::uint64_t filterRowOffset = filterTypeOffset + 1;
         // This is where the unfiltered data starts.
-        const std::size_t unfilterRowOffset = filterTypeOffset - y;
+        const std::uint64_t unfilterRowOffset = filterTypeOffset - y;
 
         const PNG::FilterType filterType = static_cast<PNG::FilterType>(filteredData[filterTypeOffset]);
         switch (filterType)
@@ -775,7 +776,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             // Copy first pixel of the row, since Recon(b) is 0 anyways.
             std::memcpy(&dstBuffer[unfilterRowOffset], &filteredData[filterRowOffset], pixelWidth);
             // Then defilter the rest of the row.
-            for (std::size_t widthByte = pixelWidth; widthByte < rowWidth + 1; widthByte++)
+            for (std::uint64_t widthByte = pixelWidth; widthByte < rowWidth + 1; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filteredData[filterRowOffset + widthByte]);
                 const std::uint8_t reconA = std::uint8_t(dstBuffer[unfilterRowOffset + widthByte - pixelWidth]);
@@ -783,7 +784,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             }
             break;
         case FilterType::Up:
-            for (std::size_t widthByte = 0; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 0; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filteredData[filterRowOffset + widthByte]);
                 const std::uint8_t reconB = std::uint8_t(dstBuffer[unfilterRowOffset + widthByte - rowWidth]);
@@ -793,38 +794,38 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
         case FilterType::Average:
             // First traverse the first pixel of this row.
             // We do this because for the first pixel, Recon(a) will always be 0.
-            for (std::size_t widthByte = 0; widthByte < pixelWidth; widthByte++)
+            for (std::uint64_t widthByte = 0; widthByte < pixelWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filteredData[filterRowOffset + widthByte]);
                 const std::uint8_t reconB = std::uint8_t(dstBuffer[unfilterRowOffset + widthByte - rowWidth]);
                 dstBuffer[unfilterRowOffset + widthByte] = std::byte(filterX + reconB / 2);
             }
             // Then we perform the defiltering for the rest of the row.
-            for (std::size_t widthByte = pixelWidth; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = pixelWidth; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filteredData[filterRowOffset + widthByte]);
                 const std::uint8_t reconA = std::uint8_t(dstBuffer[unfilterRowOffset + widthByte - pixelWidth]);
                 const std::uint8_t reconB = std::uint8_t(dstBuffer[unfilterRowOffset + widthByte - rowWidth]);
-                dstBuffer[unfilterRowOffset + widthByte] = std::byte(filterX + (reconA + reconB) / 2);
+                dstBuffer[unfilterRowOffset + widthByte] = static_cast<std::byte>(filterX + (reconA + reconB) / 2);
             }
             break;
         case FilterType::Paeth:
             // Traverse every byte of the first pixel in this row.
             // We do this because Recon(a) and Recon(c) will always be 0 for the first pixel of a row.
-            for (std::size_t widthByte = 0; widthByte < pixelWidth; widthByte++)
+            for (std::uint64_t widthByte = 0; widthByte < pixelWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filteredData[filterRowOffset + widthByte]);
                 const std::uint8_t reconB = std::uint8_t(dstBuffer[unfilterRowOffset + widthByte - rowWidth]);
                 dstBuffer[unfilterRowOffset + widthByte] = std::byte(filterX + reconB);
             }
             // Traverse every byte of this row after the first pixel
-            for (std::size_t xByte = pixelWidth; xByte < rowWidth; xByte++)
+            for (std::uint64_t xByte = pixelWidth; xByte < rowWidth; xByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filteredData[filterRowOffset + xByte]);
                 const std::uint8_t reconA = std::uint8_t(dstBuffer[unfilterRowOffset + xByte - pixelWidth]); // Visual Studio says there's something wrong with this line.
                 const std::uint8_t reconB = std::uint8_t(dstBuffer[unfilterRowOffset + xByte - rowWidth]);
                 const std::uint8_t reconC = std::uint8_t(dstBuffer[unfilterRowOffset + xByte - rowWidth - pixelWidth]);
-                dstBuffer[unfilterRowOffset + xByte] = std::byte(filterX + PNG::paethPredictor(reconA, reconB, reconC));
+                dstBuffer[unfilterRowOffset + xByte] = static_cast<std::byte>(filterX + PNG::paethPredictor(reconA, reconB, reconC));
             }
             break;
         default:
@@ -850,7 +851,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     // Unfilter first row
     {
         // This is where the filtered data start excluding the filtertype-byte.
-        const std::size_t filterRowOffset = 1;
+        const std::uint64_t filterRowOffset = 1;
         PNG::FilterType filterType = static_cast<PNG::FilterType>(filterData[0]);
         switch (filterType)
         {
@@ -866,7 +867,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             //
             // Then do the Sub defiltering on all the rest of the pixels in the row
             // And we offset by 1 to take into account that we skipped the first pixel (index).
-            for (std::size_t widthByte = 1; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 1; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filterData[filterRowOffset + widthByte]);
                 const std::uint8_t reconA = std::uint8_t(filterData[filterRowOffset + widthByte - 1]);
@@ -881,7 +882,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             // Average defiltering on the rest of the bytes in the row.
             // We don't use the Recon(b) value because it's always 0 inside the first row.
             // And we offset by 1 to take into account that we skipped the first pixel (index).
-            for (std::size_t widthByte = 1; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 1; widthByte < rowWidth; widthByte++)
             {
                 // We offset by 1 to jump over the byte containing filtertype
                 const std::uint8_t filtX = std::uint8_t(filterData[filterRowOffset + widthByte]);
@@ -900,7 +901,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             // Recon(b) and Recon(c) exist on the previous scanline,
             // but there is not previous scanline for first row. So we just use 0.
             // And we offset by 1 to take into account that we skipped the first pixel (index)
-            for (std::size_t widthByte = 1; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 1; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filtX = std::uint8_t(filterData[filterRowOffset + widthByte]);
                 const std::uint8_t reconA = std::uint8_t(filterData[filterRowOffset + widthByte - 1]);
@@ -915,9 +916,9 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     // Defilter rest of the rows
     for (unsigned int y = 1; y < baseDims.height; y++)
     {
-        const std::size_t filterTypeOffset = y * totalRowWidth;
+        const std::uint64_t filterTypeOffset = y * totalRowWidth;
         // This is where the filtered data start excluding the filtertype-byte.
-        const std::size_t filterRowOffset = filterTypeOffset + 1;
+        const std::uint64_t filterRowOffset = filterTypeOffset + 1;
 
         const PNG::FilterType filterType = static_cast<PNG::FilterType>(filterData[filterTypeOffset]);
         switch (filterType)
@@ -929,7 +930,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             // Do nothing with the first pixel (index) of the row, since Recon(a) is 0 anyways.
             // Then defilter the rest of the row.
             // And we offset by 1 to take into account that we skipped the first pixel (index)
-            for (std::size_t widthByte = 1; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 1; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filterData[filterRowOffset + widthByte]);
                 const std::uint8_t reconA = std::uint8_t(filterData[filterRowOffset + widthByte - 1]);
@@ -937,7 +938,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
             }
             break;
         case FilterType::Up:
-            for (std::size_t widthByte = 1; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 1; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filterData[filterRowOffset + widthByte]);
                 const std::uint8_t reconB = std::uint8_t(filterData[filterRowOffset + widthByte - totalRowWidth]);
@@ -957,7 +958,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
 
             // Then we perform the defiltering for the rest of the row.
             // We offset by 1 because we skip the first pixel
-            for (std::size_t widthByte = 1; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 1; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filterData[filterRowOffset + widthByte]);
                 const std::uint8_t reconA = std::uint8_t(filterData[filterRowOffset + widthByte - 1]);
@@ -974,7 +975,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
                 filterData[filterRowOffset] = std::byte(filterX + reconB);
             }
             // Traverse every byte of this row after the first pixel
-            for (std::size_t widthByte = 1; widthByte < rowWidth; widthByte++)
+            for (std::uint64_t widthByte = 1; widthByte < rowWidth; widthByte++)
             {
                 const std::uint8_t filterX = std::uint8_t(filterData[filterRowOffset + widthByte]);
                 const std::uint8_t reconA = std::uint8_t(filterData[filterRowOffset + widthByte - 1]); // Visual Studio says there's something wrong with this line.

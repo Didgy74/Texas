@@ -12,9 +12,9 @@ namespace Texas
     /*
         Holds information about a texture.
     */
-    struct MetaData
+    struct TextureInfo
     {
-        FileFormat srcFileFormat = {};
+        FileFormat fileFormat = {};
         TextureType textureType = {};
         Dimensions baseDimensions = {};
         PixelFormat pixelFormat = {};

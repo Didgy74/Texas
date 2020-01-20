@@ -5,11 +5,11 @@
 
 Texas::Texture::Texture(Texture&& in) noexcept
 {
-	m_metaData = in.m_metaData;
+	m_textureInfo = in.m_textureInfo;
 	m_allocator = in.m_allocator;
 	m_buffer = in.m_buffer;
 
-	in.m_metaData = MetaData{};
+	in.m_textureInfo = TextureInfo{};
 	in.m_allocator = nullptr;
 	in.m_buffer = ByteSpan{};
 }
@@ -27,75 +27,75 @@ Texas::Texture& Texas::Texture::operator=(Texture&& other) noexcept
 	if (m_buffer.data() != nullptr)
 		deallocateInternalBuffer();
 
-	m_metaData = other.m_metaData;
+	m_textureInfo = other.m_textureInfo;
 	m_allocator = other.m_allocator;
 	m_buffer = other.m_buffer;
 
-	other.m_metaData = MetaData();
+	other.m_textureInfo = TextureInfo();
 	other.m_allocator = nullptr;
 	other.m_buffer = ByteSpan(nullptr, 0);
 
 	return *this;
 }
 
-const Texas::MetaData& Texas::Texture::metaData() const noexcept
+const Texas::TextureInfo& Texas::Texture::textureInfo() const noexcept
 {
-	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .metaData() on empty Texture object.");
-	return m_metaData;
+	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .textureInfo() on empty Texture object.");
+	return m_textureInfo;
 }
 
-Texas::FileFormat Texas::Texture::srcFileFormat() const noexcept
+Texas::FileFormat Texas::Texture::fileFormat() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .srcFileFormat() on empty Texture object.");
-	return m_metaData.srcFileFormat;
+	return m_textureInfo.fileFormat;
 }
 
 Texas::TextureType Texas::Texture::textureType() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .textureType() on empty Texture object.");
-	return m_metaData.textureType;
+	return m_textureInfo.textureType;
 }
 
 Texas::PixelFormat Texas::Texture::pixelFormat() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .pixelFormat() on empty Texture object.");
-	return m_metaData.pixelFormat;
+	return m_textureInfo.pixelFormat;
 }
 
 Texas::ChannelType Texas::Texture::channelType() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .channelType() on empty Texture object.");
-	return m_metaData.channelType;
+	return m_textureInfo.channelType;
 }
 
 Texas::ColorSpace Texas::Texture::colorSpace() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .colorSpace() on empty Texture object.");
-	return m_metaData.colorSpace;
+	return m_textureInfo.colorSpace;
 }
 
 Texas::Dimensions Texas::Texture::baseDimensions() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .baseDimensions() on empty Texture object.");
-	return m_metaData.baseDimensions;
+	return m_textureInfo.baseDimensions;
 }
 
 std::uint64_t Texas::Texture::mipLevelCount() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .mipLevelCount() on empty Texture object.");
-	return m_metaData.mipLevelCount;
+	return m_textureInfo.mipLevelCount;
 }
 
 std::uint64_t Texas::Texture::arrayLayerCount() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .arrayLayerCount() on empty Texture object.");
-	return m_metaData.arrayLayerCount;
+	return m_textureInfo.arrayLayerCount;
 }
 
 Texas::Optional<std::uint64_t> Texas::Texture::mipOffset(std::uint64_t mipLevelIndex) const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .mipOffset() on empty Texture object.");
-	return Texas::calcMipOffset(m_metaData, mipLevelIndex);
+	return Texas::calcMipOffset(m_textureInfo, mipLevelIndex);
 }
 
 Texas::Optional<std::uint64_t> Texas::Texture::mipSize(std::uint64_t mipLevelIndex) const noexcept
@@ -105,7 +105,7 @@ Texas::Optional<std::uint64_t> Texas::Texture::mipSize(std::uint64_t mipLevelInd
 	auto singleArrayLayerSize = arrayLayerSize(mipLevelIndex);
 	if (!singleArrayLayerSize.hasValue())
 		return {};
-	return { singleArrayLayerSize.value() * m_metaData.arrayLayerCount };
+	return { singleArrayLayerSize.value() * m_textureInfo.arrayLayerCount };
 }
 
 Texas::Optional<const std::byte*> Texas::Texture::mipData(std::uint64_t mipLevelIndex) const noexcept
@@ -136,17 +136,17 @@ Texas::Optional<std::uint64_t> Texas::Texture::arrayLayerOffset(std::uint64_t mi
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .arrayLayerOffset() on empty Texture object.");
 
-	return Texas::calcArrayLayerOffset(m_metaData, mipLevelIndex, arrayLayerIndex);
+	return Texas::calcArrayLayerOffset(m_textureInfo, mipLevelIndex, arrayLayerIndex);
 }
 
 Texas::Optional<std::uint64_t> Texas::Texture::arrayLayerSize(std::uint64_t mipIndex) const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .arrayLayerSize() on empty Texture object.");
 
-	auto dims = Texas::calcMipmapDimensions(m_metaData.baseDimensions, mipIndex);
-	if (dims.width == 0 && dims.height == 0 && dims.depth == 0)
+	auto dimsOpt = Texas::calcMipmapDimensions(m_textureInfo.baseDimensions, mipIndex);
+	if (!dimsOpt.hasValue())
 		return {};
-	return Texas::calcSingleImageDataSize(dims, m_metaData.pixelFormat);
+	return Texas::calcArrayLayerSize(dimsOpt.value(), m_textureInfo.pixelFormat);
 }
 
 Texas::Optional<const std::byte*> Texas::Texture::arrayLayerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const noexcept
@@ -182,7 +182,7 @@ const std::byte* Texas::Texture::rawBufferData() const noexcept
 std::uint64_t Texas::Texture::totalDataSize() const noexcept
 {
 	TEXAS_DETAIL_ASSERT_MSG(m_buffer.data() != nullptr, "Called .totalDataSize() on empty Texture object.");
-	return Texas::calcTotalSizeRequired(m_metaData);
+	return Texas::calcTotalSizeRequired(m_textureInfo);
 }
 
 Texas::ConstByteSpan Texas::Texture::rawBufferSpan() const noexcept

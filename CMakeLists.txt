@@ -52,11 +52,14 @@ project(Texas)
 
 	# Link .cpp files
 	set(TEXAS_SRC_FILES 
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.hpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/ParsedFileInfo.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/PNG.hpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/PrivateAccessor.hpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/MetaData.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/MemReqs.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp")
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/TextureInfo.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp")
 	target_sources(${LIB_NAME} INTERFACE ${TEXAS_SRC_FILES})
 #
 # END

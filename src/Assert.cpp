@@ -1,5 +1,3 @@
-#ifdef TEXAS_ENABLE_ASSERT
-
 #include "Texas/detail/Assert.hpp"
 
 #include <iostream>
@@ -25,5 +23,3 @@ namespace Texas::detail
 		std::abort();
 	}
 }
-
-#endif

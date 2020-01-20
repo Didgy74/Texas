@@ -8,27 +8,27 @@
 #include "KTX.hpp"
 #include "PNG.hpp"
 
-Texas::ResultValue<Texas::MemReqs> Texas::getMemReqs(const std::byte* const fileBuffer, const std::size_t bufferLength) noexcept
+Texas::ResultValue<Texas::ParsedFileInfo> Texas::parseBuffer(const std::byte* const fileBuffer, const std::size_t bufferLength) noexcept
 {
-    return detail::PrivateAccessor::getMemReqs(ConstByteSpan(fileBuffer, bufferLength));
+    return detail::PrivateAccessor::parseBuffer(ConstByteSpan(fileBuffer, bufferLength));
 }
 
-Texas::ResultValue<Texas::MemReqs> Texas::getMemReqs(const ConstByteSpan inputBuffer) noexcept
+Texas::ResultValue<Texas::ParsedFileInfo> Texas::parseBuffer(const ConstByteSpan inputBuffer) noexcept
 {
-    return detail::PrivateAccessor::getMemReqs(inputBuffer);
+    return detail::PrivateAccessor::parseBuffer(inputBuffer);
 }
 
-Texas::ResultValue<Texas::MetaData> Texas::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
+Texas::ResultValue<Texas::TextureInfo> Texas::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
 {
     return detail::PrivateAccessor::loadImageData(inputBuffer, dstBuffer, workingMemory);
 }
 
-Texas::Result Texas::loadImageData(const MemReqs& file, const ByteSpan dstBuffer, const ByteSpan workingMemory) noexcept
+Texas::Result Texas::loadImageData(const ParsedFileInfo& file, const ByteSpan dstBuffer, const ByteSpan workingMemory) noexcept
 {
     return detail::PrivateAccessor::loadImageData(file, dstBuffer, workingMemory);
 }
 
-Texas::Result Texas::loadImageData(const MemReqs& file, std::byte* const dstBuffer, const std::size_t dstBufferSize, std::byte* const workingMemory, const std::size_t workingMemorySize) noexcept
+Texas::Result Texas::loadImageData(const ParsedFileInfo& file, std::byte* const dstBuffer, const std::size_t dstBufferSize, std::byte* const workingMemory, const std::size_t workingMemorySize) noexcept
 {
     return detail::PrivateAccessor::loadImageData(file, ByteSpan(dstBuffer, dstBufferSize), ByteSpan(workingMemory, workingMemorySize));
 }
@@ -43,7 +43,7 @@ Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuff
     return detail::PrivateAccessor::loadFromBuffer(inputBuffer, &allocator);
 }
 
-Texas::ResultValue<Texas::MemReqs> Texas::detail::PrivateAccessor::getMemReqs(const ConstByteSpan inputBuffer) noexcept
+Texas::ResultValue<Texas::ParsedFileInfo> Texas::detail::PrivateAccessor::parseBuffer(const ConstByteSpan inputBuffer) noexcept
 {
     // Check if input buffer is larger than 0.
     // 12 bytes is the largest file identifier we know of... So far.
@@ -52,18 +52,18 @@ Texas::ResultValue<Texas::MemReqs> Texas::detail::PrivateAccessor::getMemReqs(co
         return { ResultType::InvalidLibraryUsage, "Input buffer cannot be smaller than 60. "
                                                   "No file supported by Texas can be smaller than 60(?) bytes and still be valid." };
 
-    MemReqs memReqs{};
+    ParsedFileInfo memReqs{};
 
     // We test the file's identifier to see if it's KTX
     if (std::memcmp(inputBuffer.data(), KTX::identifier, sizeof(KTX::identifier)) == 0)
     {
 #ifdef TEXAS_ENABLE_KTX_READ
-        Result result = KTX::loadFromBuffer_Step1(true, inputBuffer, memReqs.m_metaData, memReqs.m_backendData.ktx);
+        Result result = KTX::loadFromBuffer_Step1(inputBuffer, memReqs.m_textureInfo, memReqs.m_backendData.ktx);
         if (result.isSuccessful())
         {
-            memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.metaData());
+            memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.textureInfo());
             TEXAS_DETAIL_ASSERT_MSG(memReqs.m_memoryRequired != 0, "Texas author error. A successfully loaded texture cannot have memoryRequired == 0.");
-            return { static_cast<MemReqs&&>(memReqs) };
+            return { static_cast<ParsedFileInfo&&>(memReqs) };
         }
         else
             return { result };
@@ -76,12 +76,12 @@ Texas::ResultValue<Texas::MemReqs> Texas::detail::PrivateAccessor::getMemReqs(co
     if (std::memcmp(inputBuffer.data(), PNG::identifier, sizeof(PNG::identifier)) == 0)
     {
 #ifdef TEXAS_ENABLE_PNG_READ
-        Result result = PNG::loadFromBuffer_Step1(true, inputBuffer, memReqs.m_metaData, memReqs.m_workingMemoryRequired, memReqs.m_backendData.png);
+        Result result = PNG::loadFromBuffer_Step1(inputBuffer, memReqs.m_textureInfo, memReqs.m_workingMemoryRequired, memReqs.m_backendData.png);
         if (result.isSuccessful())
         {
-            memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.metaData());
+            memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.textureInfo());
             TEXAS_DETAIL_ASSERT_MSG(memReqs.m_memoryRequired != 0, "Texas author error. A successfully loaded texture cannot have memoryRequired == 0.");
-            return { static_cast<MemReqs&&>(memReqs) };
+            return { static_cast<ParsedFileInfo&&>(memReqs) };
         }
         else
             return { result };
@@ -94,7 +94,7 @@ Texas::ResultValue<Texas::MemReqs> Texas::detail::PrivateAccessor::getMemReqs(co
                                                                "or file-format is not supported." };
 }
 
-Texas::Result Texas::detail::PrivateAccessor::loadImageData(const MemReqs& file, const ByteSpan dstBuffer, const ByteSpan workingMem) noexcept
+Texas::Result Texas::detail::PrivateAccessor::loadImageData(const ParsedFileInfo& file, const ByteSpan dstBuffer, const ByteSpan workingMem) noexcept
 {
     if (dstBuffer.data() == nullptr)
         return { ResultType::InvalidLibraryUsage, "You need to send in a destination buffer." };
@@ -112,32 +112,32 @@ Texas::Result Texas::detail::PrivateAccessor::loadImageData(const MemReqs& file,
     }   
 
 #ifdef TEXAS_ENABLE_KTX_READ
-    if (file.metaData().srcFileFormat == FileFormat::KTX)
+    if (file.textureInfo().fileFormat == FileFormat::KTX)
     {
-        return detail::KTX::loadFromBuffer_Step2(file.metaData(), file.m_backendData.ktx, dstBuffer, workingMem);
+        return detail::KTX::loadFromBuffer_Step2(file.textureInfo(), file.m_backendData.ktx, dstBuffer, workingMem);
     }
 #endif
 
 #ifdef TEXAS_ENABLE_PNG_READ
-    if (file.metaData().srcFileFormat == FileFormat::PNG)
+    if (file.textureInfo().fileFormat == FileFormat::PNG)
     {
-        return detail::PNG::loadFromBuffer_Step2(file.metaData(), file.m_backendData.png, dstBuffer, workingMem);
+        return detail::PNG::loadFromBuffer_Step2(file.textureInfo(), file.m_backendData.png, dstBuffer, workingMem);
     }
 #endif
 
     return { ResultType::InvalidLibraryUsage, "Passed in an invalid MemReqs object." };
 }
 
-Texas::ResultValue<Texas::MetaData> Texas::detail::PrivateAccessor::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMem) noexcept
+Texas::ResultValue<Texas::TextureInfo> Texas::detail::PrivateAccessor::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMem) noexcept
 {
     if (dstBuffer.data() == nullptr || dstBuffer.size() == 0)
         return { ResultType::InvalidLibraryUsage, "Destination buffer cannot be nullptr or have size 0." };
 
-    ResultValue<MemReqs> parseResult = getMemReqs(inputBuffer);
+    ResultValue<ParsedFileInfo> parseResult = parseBuffer(inputBuffer);
     if (!parseResult.isSuccessful())
         return { parseResult.resultType(), parseResult.errorMessage() };
 
-    MemReqs memReqs = parseResult.value();
+    ParsedFileInfo memReqs = parseResult.value();
     if (dstBuffer.size() < memReqs.memoryRequired())
         return { ResultType::InvalidLibraryUsage, "Destination buffer not large enough for imagedata." };
     if (memReqs.workingMemoryRequired() > 0 && (workingMem.data() == nullptr || workingMem.size() < memReqs.workingMemoryRequired()))
@@ -153,14 +153,14 @@ Texas::ResultValue<Texas::MetaData> Texas::detail::PrivateAccessor::loadImageDat
 
 Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffer(ConstByteSpan inputBuffer, Allocator* allocator) noexcept
 {
-    ResultValue<MemReqs> parseFileResult = getMemReqs(inputBuffer);
+    ResultValue<ParsedFileInfo> parseFileResult = parseBuffer(inputBuffer);
     if (!parseFileResult.isSuccessful())
         return { parseFileResult.resultType(), parseFileResult.errorMessage() };
 
-    MemReqs& memReqs = parseFileResult.value();
+    ParsedFileInfo& memReqs = parseFileResult.value();
 
     Texture returnVal{};
-    returnVal.m_metaData = memReqs.metaData();
+    returnVal.m_textureInfo = memReqs.textureInfo();
     returnVal.m_allocator = allocator;
 
     // Allocate destination buffer

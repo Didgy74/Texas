@@ -3,7 +3,7 @@
 #include "Texas/PixelFormat.hpp"
 #include "Texas/Dimensions.hpp"
 #include "Texas/TextureType.hpp"
-#include "Texas/MetaData.hpp"
+#include "Texas/TextureInfo.hpp"
 #include "Texas/Optional.hpp"
 
 #include <cstdint>
@@ -13,19 +13,15 @@ namespace Texas
 {
     [[nodiscard]] std::uint64_t calcMaxMipLevelCount(Dimensions baseDimensions) noexcept;
 
-    [[nodiscard]] Dimensions calcMipmapDimensions(Dimensions baseDimensions, std::uint64_t mipLevelIndex) noexcept;
-
-    /*
-        Returns 0 upon failure
-    */
-    [[nodiscard]] std::uint64_t calcSingleImageDataSize(Dimensions dimensions, PixelFormat pixelFormat) noexcept;
+    [[nodiscard]] Optional<Dimensions> calcMipmapDimensions(Dimensions baseDimensions, std::uint64_t mipLevelIndex) noexcept;
 
     [[nodiscard]] std::uint64_t calcTotalSizeRequired(
         Dimensions baseDimensions, 
         PixelFormat pixelFormat, 
         std::uint64_t mipLevelCount, 
         std::uint64_t arrayLayerCount) noexcept;
-    [[nodiscard]] std::uint64_t calcTotalSizeRequired(const MetaData& metaData) noexcept;
+
+    [[nodiscard]] std::uint64_t calcTotalSizeRequired(const TextureInfo& textureInfo) noexcept;
 
     [[nodiscard]] Optional<std::uint64_t> calcMipOffset(
         Dimensions baseDimensions,
@@ -34,7 +30,7 @@ namespace Texas
         std::uint64_t mipLevelCount,
         std::uint64_t mipLevelIndex) noexcept;
 
-    [[nodiscard]] Optional<std::uint64_t> calcMipOffset(const MetaData& metaData, std::uint64_t mipLevelIndex) noexcept;
+    [[nodiscard]] Optional<std::uint64_t> calcMipOffset(const TextureInfo& textureInfo, std::uint64_t mipLevelIndex) noexcept;
 
     [[nodiscard]] Optional<std::uint64_t> calcArrayLayerOffset(
         Dimensions baseDimensions,
@@ -43,8 +39,11 @@ namespace Texas
         std::uint64_t mipLevelIndex,
         std::uint64_t arrayLayerCount,
         std::uint64_t arrayLayerIndex) noexcept;
+
     [[nodiscard]] Optional<std::uint64_t> calcArrayLayerOffset(
-        const MetaData& metaData,
+        const TextureInfo& textureInfo,
         std::uint64_t mipLevelIndex,
         std::uint64_t arrayLayerIndex) noexcept;
+
+    [[nodiscard]] std::uint64_t calcArrayLayerSize(Dimensions dimensions, PixelFormat pixelFormat) noexcept;
 }

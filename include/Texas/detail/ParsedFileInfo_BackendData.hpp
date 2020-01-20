@@ -4,30 +4,30 @@
 
 namespace Texas::detail
 {
-    struct MemReqs_KTX_BackendData
+    struct ParsedFileInfo_KTX_BackendData
     {
         const unsigned char* srcFileBufferStart = nullptr;
         std::uint64_t srcFileBufferLength = 0;
         const unsigned char* srcImageDataStart = nullptr;
     };
 
-	struct MemReqs_PNG_BackendData
+	struct ParsedFileInfo_PNG_BackendData
     {
         const unsigned char* srcFileBufferStart = nullptr;
         std::uint64_t srcFileBufferLength = 0;
-        const unsigned char* idatChunkStart = nullptr;
+        std::uint64_t idatChunkOffset = 0;
         std::uint32_t idatChunkCount = 0;
-        const unsigned char* plteChunkStart = nullptr;
-        std::uint32_t plteChunkDataLength = 0;
+        std::uint64_t plteChunkOffset = 0;
+        unsigned int plteChunkDataLength = 0;
     };
 
-    struct MemReqs_BackendData
+    struct ParsedFileInfo_BackendData
     {
 #ifdef TEXAS_ENABLE_KTX_READ
-        MemReqs_KTX_BackendData ktx;
+        ParsedFileInfo_KTX_BackendData ktx;
 #endif
 #ifdef TEXAS_ENABLE_PNG_READ
-        MemReqs_PNG_BackendData png;
+        ParsedFileInfo_PNG_BackendData png;
 #endif
     };
 }

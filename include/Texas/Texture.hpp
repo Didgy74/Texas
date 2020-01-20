@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Texas/MetaData.hpp"
+#include "Texas/TextureInfo.hpp"
 #include "Texas/Optional.hpp"
 #include "Texas/Allocator.hpp"
 #include "Texas/ByteSpan.hpp"
@@ -31,8 +31,8 @@ namespace Texas
 
         ~Texture();
 
-        [[nodiscard]] const MetaData& metaData() const noexcept;
-        [[nodiscard]] FileFormat srcFileFormat() const noexcept;
+        [[nodiscard]] const TextureInfo& textureInfo() const noexcept;
+        [[nodiscard]] FileFormat fileFormat() const noexcept;
         [[nodiscard]] TextureType textureType() const noexcept;
         [[nodiscard]] PixelFormat pixelFormat() const noexcept;
         [[nodiscard]] ChannelType channelType() const noexcept;
@@ -80,7 +80,6 @@ namespace Texas
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-
         [[nodiscard]] Optional<std::uint64_t> arrayLayerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const noexcept;
 
         /*
@@ -130,7 +129,7 @@ namespace Texas
     private:
         void deallocateInternalBuffer();
 
-        MetaData m_metaData{};
+        TextureInfo m_textureInfo{};
         ByteSpan m_buffer = {};
         Allocator* m_allocator = nullptr;
 
