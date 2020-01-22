@@ -9,25 +9,21 @@ project(Texas)
 	option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" OFF)
 	option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" OFF)
 	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan. Note! Requires Vulkan to be linked!" OFF)
-	option(TEXAS_ENABLE_ASSERTIONS "Enables assertions inside the codebase. This can be helpful to catch invalid usage of the interface." OFF)
+	option(TEXAS_ENABLE_EXCEPTIONS "Exceptions throw on invalid usage of the interface and/or stuff that will lead to UB." OFF)
 	option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables the parts of the library that allows the implementation to do dynamic allocations using operator new." OFF)
 #
 # END
 #
-
-
 
 # --------------------
 # Create CMake library
 # --------------------
 # START
 	set(LIB_NAME ${PROJECT_NAME})
-	add_library(${LIB_NAME} INTERFACE)
+	add_library(${LIB_NAME} STATIC)
 #
 # END
 #
-
-
 
 # ----------------------
 # Link include directory
@@ -43,7 +39,6 @@ project(Texas)
 #
 # END
 #
-
 
 # ------------------------
 # Link standard .cpp files
@@ -72,7 +67,7 @@ project(Texas)
 	if(TEXAS_ENABLE_EVERYTHING)
 		set(TEXAS_ENABLE_KTX_READ ON)
 		set(TEXAS_ENABLE_PNG_READ ON)
-		set(TEXAS_ENABLE_ASSERTIONS ON)
+		set(TEXAS_ENABLE_EXCEPTIONS ON)
 		set(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS ON)
 	endif()
 
@@ -114,21 +109,18 @@ project(Texas)
 		target_sources(${LIB_NAME} INTERFACE ${TEXAS_ZLIB_SRC_FILES})
 	endif()
 
-	if(TEXAS_ENABLE_ASSERTIONS)
-		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_ASSERT)
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/Assert.cpp")
-	endif()
-
-	if(TEXAS_ENABLE_VULKAN_TOOLS)
-		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/Vulkan-Tools")
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
+	if(TEXAS_ENABLE_EXCEPTIONS)
+		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_EXCEPTIONS)
 	endif()
 
 	if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 	endif()
+
+	if(TEXAS_ENABLE_VULKAN_TOOLS)
+		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/VulkanTools")
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
+	endif()
 #
 # END
 #
-
-

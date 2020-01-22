@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Texas/detail/Assert.hpp"
-
 namespace Texas
 {
 	template<typename T>
@@ -58,14 +56,14 @@ namespace Texas
 	template<typename T>
 	inline constexpr T& Optional<T>::value() noexcept
 	{
-		TEXAS_DETAIL_ASSERT_MSG(m_hasValue == true, "Attempted to access the value of a Texas::Optional<T> without a value.");
+		//TEXAS_DETAIL_EXCEPTION(m_hasValue == true, std::"Attempted to access the value of a Texas::Optional<T> without a value.");
 		return m_value;
 	}
 
 	template<typename T>
 	inline constexpr const T& Optional<T>::value() const noexcept
 	{
-		TEXAS_DETAIL_ASSERT_MSG(m_hasValue == true, "Attempted to access the value of a Texas::Optional<T> without a value.");
+		//TEXAS_DETAIL_ASSERT_MSG(m_hasValue == true, "Attempted to access the value of a Texas::Optional<T> without a value.");
 		return m_value;
 	}
 }

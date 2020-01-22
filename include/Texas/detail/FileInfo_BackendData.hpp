@@ -4,14 +4,14 @@
 
 namespace Texas::detail
 {
-    struct ParsedFileInfo_KTX_BackendData
+    struct FileInfo_KTX_BackendData
     {
         const unsigned char* srcFileBufferStart = nullptr;
         std::uint64_t srcFileBufferLength = 0;
         const unsigned char* srcImageDataStart = nullptr;
     };
 
-	struct ParsedFileInfo_PNG_BackendData
+	struct FileInfo_PNG_BackendData
     {
         const unsigned char* srcFileBufferStart = nullptr;
         std::uint64_t srcFileBufferLength = 0;
@@ -21,13 +21,13 @@ namespace Texas::detail
         unsigned int plteChunkDataLength = 0;
     };
 
-    struct ParsedFileInfo_BackendData
+    struct FileInfo_BackendData
     {
 #ifdef TEXAS_ENABLE_KTX_READ
-        ParsedFileInfo_KTX_BackendData ktx;
+        FileInfo_KTX_BackendData ktx;
 #endif
 #ifdef TEXAS_ENABLE_PNG_READ
-        ParsedFileInfo_PNG_BackendData png;
+        FileInfo_PNG_BackendData png;
 #endif
     };
 }

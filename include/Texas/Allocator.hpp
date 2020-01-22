@@ -13,7 +13,7 @@ namespace Texas
 	class Allocator
 	{
 	public:
-		virtual std::byte* allocate(std::uint64_t amount) = 0;
+		virtual std::byte* allocate(std::size_t amount) = 0;
 		virtual void deallocate(std::byte* ptr) = 0;
 	};
 }

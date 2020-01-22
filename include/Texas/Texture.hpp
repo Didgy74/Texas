@@ -31,100 +31,98 @@ namespace Texas
 
         ~Texture();
 
-        [[nodiscard]] const TextureInfo& textureInfo() const noexcept;
-        [[nodiscard]] FileFormat fileFormat() const noexcept;
-        [[nodiscard]] TextureType textureType() const noexcept;
-        [[nodiscard]] PixelFormat pixelFormat() const noexcept;
-        [[nodiscard]] ChannelType channelType() const noexcept;
-        [[nodiscard]] ColorSpace colorSpace() const noexcept;
-        [[nodiscard]] Dimensions baseDimensions() const noexcept;
-        [[nodiscard]] std::uint64_t mipLevelCount() const noexcept;
-        [[nodiscard]] std::uint64_t arrayLayerCount() const noexcept;
+        [[nodiscard]] const TextureInfo& textureInfo() const;
+        [[nodiscard]] FileFormat fileFormat() const;
+        [[nodiscard]] TextureType textureType() const;
+        [[nodiscard]] PixelFormat pixelFormat() const;
+        [[nodiscard]] ChannelType channelType() const;
+        [[nodiscard]] ColorSpace colorSpace() const;
+        [[nodiscard]] Dimensions baseDimensions() const;
+        [[nodiscard]] std::uint64_t mipLevelCount() const;
+        [[nodiscard]] std::uint64_t arrayLayerCount() const;
 
         /*
             Returns the offset from the start the imagedata to the specified mip level index.
 
-            Returns a non-value optional if: 
+            Causes undefined behavior if: 
              - If mipLevelIndex is equal to or higher than .mipLevelCount().
         */
-        [[nodiscard]] Optional<std::uint64_t> mipOffset(std::uint64_t mipLevelIndex) const noexcept;
+        [[nodiscard]] std::uint64_t mipOffset(std::uint64_t mipLevelIndex) const;
 
         /*
             Returns the size of the all the image-data at the specified mip level index.
 
-            Returns a non-value optional if:
+            Causes undefined behavior if: 
              - If mipLevelIndex is equal to or higher than .mipLevelCount().
         */
-        [[nodiscard]] Optional<std::uint64_t> mipSize(std::uint64_t mipLevelIndex) const noexcept;
+        [[nodiscard]] std::uint64_t mipSize(std::uint64_t mipLevelIndex) const;
 
         /*
             Returns a pointer to the image-data at the specified mip level index.
 
-            Returns a non-value Optional if:
+            Causes undefined behavior if: 
              - If mipLevelIndex is equal to or higher than .mipLevelCount().
         */
-        [[nodiscard]] Optional<const std::byte*> mipData(std::uint64_t mipLevelIndex) const noexcept;
+        [[nodiscard]] const std::byte* mipData(std::uint64_t mipLevelIndex) const;
 
         /*
             Returns a span to the image-data of the specified mip level index.
 
-            Returns a nullptr, zero-size span if:
+            Causes undefined behavior if: 
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
         */
-        [[nodiscard]] Optional<ConstByteSpan> mipSpan(std::uint64_t mipLevelIndex) const noexcept;
+        [[nodiscard]] ConstByteSpan mipSpan(std::uint64_t mipLevelIndex) const;
 
         /*
             Returns the offset from the start the imagedata to the specified array layer.
 
-            Returns a non-value optional if:
+            Causes undefined behavior if: 
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] Optional<std::uint64_t> arrayLayerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const noexcept;
+        [[nodiscard]] std::uint64_t arrayLayerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
 
         /*
             Returns the size of the specified array layer at the specified mip level.
 
-            Returns a non-value optional if:
+            Causes undefined behavior if: 
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] Optional<std::uint64_t> arrayLayerSize(std::uint64_t mipLevelIndex) const noexcept;
+        [[nodiscard]] std::uint64_t arrayLayerSize(std::uint64_t mipLevelIndex) const;
 
         /*
             Returns a pointer to the image-data at the specified array layer at the specified mip level.
 
-            Returns a non-value optional if:
+            Causes undefined behavior if: 
              - If mipLevelIndex is equal to or higher than .mipLevelCount().
              - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] Optional<const std::byte*> arrayLayerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const noexcept;
+        [[nodiscard]] const std::byte* arrayLayerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
 
         /*
             Returns a span to the image-data of the specified array layer at the specified mip level.
 
-            Returns a nullptr, zero-size span if:
+            Causes undefined behavior if: 
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] Optional<ConstByteSpan> arrayLayerSpan(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const noexcept;
+        [[nodiscard]] ConstByteSpan arrayLayerSpan(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
 
         /*
             Returns the pointer to the internal buffer of the Texture object.
-
-            Returns a nullptr if the Texture object is invalid.
         */
-        [[nodiscard]] const std::byte* rawBufferData() const noexcept;
+        [[nodiscard]] const std::byte* rawBufferData() const;
 
         /*
             Returns the size of the internal buffer of the Texture object.
         */
-        [[nodiscard]] std::uint64_t totalDataSize() const noexcept;
+        [[nodiscard]] std::uint64_t totalDataSize() const;
 
         /*
             Returns a span to the internal buffer of the Texture object.
         */
-        [[nodiscard]] ConstByteSpan rawBufferSpan() const noexcept;
+        [[nodiscard]] ConstByteSpan rawBufferSpan() const;
 
     private:
         void deallocateInternalBuffer();

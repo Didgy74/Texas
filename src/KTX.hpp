@@ -4,7 +4,7 @@
 #include "Texas/Result.hpp"
 #include "Texas/TextureInfo.hpp"
 #include "Texas/ByteSpan.hpp"
-#include "Texas/ParsedFileInfo.hpp"
+#include "Texas/FileInfo.hpp"
 
 namespace Texas::detail::KTX
 {
@@ -13,11 +13,11 @@ namespace Texas::detail::KTX
     Result loadFromBuffer_Step1(
         ConstByteSpan srcBuffer,
         TextureInfo& metaData,
-        detail::ParsedFileInfo_KTX_BackendData& backendDataBuffer);
+        detail::FileInfo_KTX_BackendData& backendDataBuffer);
 
     Result loadFromBuffer_Step2(
-        const TextureInfo& textureInfo,
-        detail::ParsedFileInfo_KTX_BackendData& backendDataBuffer,
-        const ByteSpan dstImageBuffer,
-        const ByteSpan workingMemory);
+        TextureInfo const& textureInfo,
+        detail::FileInfo_KTX_BackendData& backendDataBuffer,
+        ByteSpan dstImageBuffer,
+        ByteSpan workingMemory);
 }

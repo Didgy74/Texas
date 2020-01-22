@@ -43,7 +43,6 @@ namespace Texas::detail::PNG
         constexpr std::size_t ihdrChunkTypeOffset = 12;
         constexpr std::size_t ihdrChunkDataSize = 13;
 
-        using Dimension_T = std::uint32_t;
         constexpr std::size_t widthOffset = 16;
         constexpr std::size_t heightOffset = 20;
         constexpr std::size_t bitDepthOffset = 24;
@@ -61,11 +60,11 @@ namespace Texas::detail::PNG
     enum class FilterType : std::uint8_t;
 
     // Turns a 32-bit unsigned integer into correct endian, regardless of system endianness.
-    [[nodiscard]] static inline std::uint32_t toCorrectEndian_u32(const std::byte* const ptr);
+    [[nodiscard]] static inline std::uint32_t toCorrectEndian_u32(const std::byte* ptr);
 
-    [[nodiscard]] static inline bool validateColorTypeAndBitDepth(const PNG::ColorType colorType, const std::uint8_t bitDepth);
+    [[nodiscard]] static inline bool validateColorTypeAndBitDepth(PNG::ColorType colorType, std::uint8_t bitDepth);
 
-    [[nodiscard]] static inline PNG::ChunkType getChunkType(const std::byte* const in);
+    [[nodiscard]] static inline PNG::ChunkType getChunkType(const std::byte* in);
 
     [[nodiscard]] static inline PixelFormat toPixelFormat(PNG::ColorType colorType, std::uint8_t bitDepth);
 
@@ -81,19 +80,19 @@ namespace Texas::detail::PNG
     /*
         Defilters uncompressed data and immediately copies the result over to dstMem. Should only be used when colour-type != indexed colour.
     */
-    [[nodiscard]] static inline Result loadFromBuffer_Step2_DefilterIntoDstBuffer(const TextureInfo& textureInfo, const ByteSpan dstMem, const ByteSpan uncompressedData);
+    [[nodiscard]] static inline Result loadFromBuffer_Step2_DefilterIntoDstBuffer(TextureInfo const& textureInfo, ByteSpan dstMem, ByteSpan uncompressedData);
 
     /*
         Defilters uncompressed data in place. Only handles when each pixel (index) is 1 byte wide.
     */
-    [[nodiscard]] static inline Result loadFromBuffer_Step2_DefilterInPlace(const Dimensions& baseDims, const ByteSpan uncompressedData);
+    [[nodiscard]] static inline Result loadFromBuffer_Step2_DefilterInPlace(Dimensions baseDims, ByteSpan uncompressedData);
 
     [[nodiscard]] static inline Result loadFromBuffer_Step2_Deindex(
-        const Dimensions baseDims,
-        const std::byte* const plteChunkStart,
-        const unsigned int previous_plteChunkDataLength,
-        const ByteSpan dstImageBuffer,
-        const ByteSpan workingMem);
+        Dimensions baseDims,
+        const std::byte* plteChunkStart,
+        unsigned int previous_plteChunkDataLength,
+        ByteSpan dstImageBuffer,
+        ByteSpan workingMem);
 }
 
 enum class Texas::detail::PNG::ColorType : std::uint8_t
@@ -147,7 +146,7 @@ enum class Texas::detail::PNG::FilterType : std::uint8_t
     Paeth = 4,
 };
 
-static inline std::uint32_t Texas::detail::PNG::toCorrectEndian_u32(const std::byte* const ptr)
+static inline std::uint32_t Texas::detail::PNG::toCorrectEndian_u32(const std::byte* ptr)
 {
     std::uint32_t temp[4] = {
         static_cast<std::uint32_t>(ptr[0]),
@@ -158,7 +157,7 @@ static inline std::uint32_t Texas::detail::PNG::toCorrectEndian_u32(const std::b
     return temp[3] | (temp[2] << 8) | (temp[1] << 16) | (temp[0] << 24);
 }
 
-static inline bool Texas::detail::PNG::validateColorTypeAndBitDepth(const PNG::ColorType colorType, const std::uint8_t bitDepth)
+static inline bool Texas::detail::PNG::validateColorTypeAndBitDepth(PNG::ColorType colorType, std::uint8_t bitDepth)
 {
     switch (colorType)
     {
@@ -365,9 +364,9 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     ConstByteSpan srcBuffer,
     TextureInfo& textureInfo,
     std::uint64_t& workingMemRequired,
-    detail::ParsedFileInfo_PNG_BackendData& backendData)
+    detail::FileInfo_PNG_BackendData& backendData)
 {
-    backendData = detail::ParsedFileInfo_PNG_BackendData();
+    backendData = detail::FileInfo_PNG_BackendData();
     backendData.srcFileBufferStart = reinterpret_cast<const unsigned char*>(srcBuffer.data());
     backendData.srcFileBufferLength = srcBuffer.size();
 
@@ -432,7 +431,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     while (memOffsetTracker < srcBuffer.size() && chunkTypeCount[(int)PNG::ChunkType::IEND] == 0)
     {
         // 12 bytes is the smallest a chunk can be
-        if (memOffsetTracker + 12 >= srcBuffer.size())
+        if (memOffsetTracker + 12 > srcBuffer.size())
             return { ResultType::CorruptFileData, "Encountered unexpected end of file while parsing PNG chunks." };
 
         const std::byte* const chunkStart = srcBuffer.data() + memOffsetTracker;
@@ -454,7 +453,8 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
             if (chunkDataLength == 0)
                 return { ResultType::CorruptFileData, "PNG IDAT chunk's `Length' field is 0. PNG specification requires it to be >0." };
 
-            backendData.idatChunkOffset = memOffsetTracker;
+            if (chunkTypeCount[(int)PNG::ChunkType::IDAT] == 0)
+                backendData.idatChunkOffset = memOffsetTracker;
         }
             break;
         case ChunkType::IEND:
@@ -532,7 +532,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
             break;
         };
         
-        memOffsetTracker += sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T) + chunkDataLength + sizeof(PNG::ChunkCRC_T);
+        memOffsetTracker += static_cast<std::uint64_t>(sizeof(PNG::ChunkSize_T)) + sizeof(PNG::ChunkType_T) + chunkDataLength + sizeof(PNG::ChunkCRC_T);
         chunkTypeCount[(int)chunkType] += 1;
         previousChunkType = chunkType;
     }
@@ -540,7 +540,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
     if (chunkTypeCount[(int)PNG::ChunkType::IDAT] == 0)
         return { ResultType::CorruptFileData, "Found no IDAT chunk in PNG file. PNG specification requires the file to have atleast one IDAT chunk." };
     if (chunkTypeCount[(int)PNG::ChunkType::IEND] == 0)
-        return { ResultType::CorruptFileData, "Found no IEND chunk in PNG file. PNG specification requires the file to have atleast one IEND chunk." };
+        return { ResultType::CorruptFileData, "Found no IEND chunk in PNG file. PNG specification requires the file to have exactly one IEND chunk." };
     if (colorType == PNG::ColorType::Indexed_colour && chunkTypeCount[(int)PNG::ChunkType::PLTE] == 0)
         return { ResultType::CorruptFileData, "Found no PLTE chunk in PNG file with color-type 'Indexed colour'. "
                                               "PNG specification requires a PLTE chunk to exist when color-type is 'Indexed colour'" };
@@ -554,11 +554,11 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
 }
 
 Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
-    const Dimensions baseDims,
-    const std::byte* const plteChunkStart,
-    const unsigned int previous_plteChunkDataLength, 
-    const ByteSpan dstImageBuffer,
-    const ByteSpan workingMem)
+    Dimensions baseDims,
+    const std::byte* plteChunkStart,
+    unsigned int previous_plteChunkDataLength, 
+    ByteSpan dstImageBuffer,
+    ByteSpan workingMem)
 {
     // Unindex the data
     const std::uint32_t plteChunkDataLength = PNG::toCorrectEndian_u32(plteChunkStart);
@@ -596,10 +596,10 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_Deindex(
 }
 
 Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
-    const TextureInfo& textureInfo,
-    detail::ParsedFileInfo_PNG_BackendData& backendData,
-    const ByteSpan dstImageBuffer,
-    const ByteSpan workingMem)
+    TextureInfo const& textureInfo,
+    detail::FileInfo_PNG_BackendData& backendData,
+    ByteSpan dstImageBuffer,
+    ByteSpan workingMem)
 {
     z_stream zLibDecompressJob{};
 
@@ -639,19 +639,23 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
             zLibDecompressJob.next_in = (Bytef*)chunkData;
             zLibDecompressJob.avail_in = (uInt)chunkDataLength;
 
-            const int err = inflate(&zLibDecompressJob, 0);
-            if (err == Z_STREAM_END)
+            const int zLibError = inflate(&zLibDecompressJob, 0);
+            if (zLibError == Z_STREAM_END)
             {
                 // No more IDAT chunks to decompress
                 inflateEnd(&zLibDecompressJob);
                 break;
             }
-            if (err == Z_OK)
+            else if (zLibError == Z_OK)
             {
                 // more IDAT chunks to decompress
             }
+            else if (zLibError == Z_DATA_ERROR)
+            {
+                return { ResultType::CorruptFileData, "zLib reported a data error while running inflate on PNG IDAT data." };
+            }
 
-            memOffsetTracker += sizeof(PNG::ChunkSize_T) + sizeof(PNG::ChunkType_T) + chunkDataLength + sizeof(PNG::ChunkCRC_T);
+            memOffsetTracker += static_cast<std::uint64_t>(sizeof(PNG::ChunkSize_T)) + sizeof(PNG::ChunkType_T) + chunkDataLength + sizeof(PNG::ChunkCRC_T);
         }
     }
 
@@ -682,7 +686,7 @@ Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
     return { ResultType::Success, nullptr };
 }
 
-static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterIntoDstBuffer(const TextureInfo& textureInfo, const ByteSpan dstMem, const ByteSpan uncompressedData)
+static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterIntoDstBuffer(TextureInfo const& textureInfo, ByteSpan dstMem, ByteSpan uncompressedData)
 {
     const std::byte* const filteredData = uncompressedData.data();
     std::byte* const dstBuffer = dstMem.data();
@@ -698,7 +702,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
 
     // Unfilter first row
     {
-        PNG::FilterType filterType = static_cast<PNG::FilterType>(filteredData[0]);
+        const PNG::FilterType filterType = static_cast<PNG::FilterType>(filteredData[0]);
         switch (filterType)
         {
         case FilterType::None:
@@ -756,7 +760,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     }
 
     // Defilter rest of the rows
-    for (unsigned int y = 1; y < textureInfo.baseDimensions.height; y++)
+    for (std::uint_least32_t y = 1; y < textureInfo.baseDimensions.height; y++)
     {
         const std::uint64_t filterTypeOffset = y * totalRowWidth;
         
@@ -836,7 +840,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     return { ResultType::Success, nullptr };
 }
 
-[[nodiscard]] static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInPlace(const Dimensions& baseDims, const ByteSpan uncompressedData)
+[[nodiscard]] static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInPlace(Dimensions baseDims, ByteSpan uncompressedData)
 {
     // Start of the buffer that includes all filtered bytes, includes all filter-type bytes.
     std::byte* const filterData = uncompressedData.data();
@@ -852,7 +856,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     {
         // This is where the filtered data start excluding the filtertype-byte.
         const std::uint64_t filterRowOffset = 1;
-        PNG::FilterType filterType = static_cast<PNG::FilterType>(filterData[0]);
+        const PNG::FilterType filterType = static_cast<PNG::FilterType>(filterData[0]);
         switch (filterType)
         {
         case FilterType::None:
@@ -914,7 +918,7 @@ static inline Texas::Result Texas::detail::PNG::loadFromBuffer_Step2_DefilterInt
     }
 
     // Defilter rest of the rows
-    for (unsigned int y = 1; y < baseDims.height; y++)
+    for (std::uint_least32_t y = 1; y < baseDims.height; y++)
     {
         const std::uint64_t filterTypeOffset = y * totalRowWidth;
         // This is where the filtered data start excluding the filtertype-byte.

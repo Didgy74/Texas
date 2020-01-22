@@ -3,7 +3,7 @@
 #include "Texas/Result.hpp"
 #include "Texas/TextureInfo.hpp"
 #include "Texas/ByteSpan.hpp"
-#include "Texas/ParsedFileInfo.hpp"
+#include "Texas/FileInfo.hpp"
 
 #include <cstdint>
 
@@ -15,11 +15,11 @@ namespace Texas::detail::PNG
         ConstByteSpan srcBuffer,
         TextureInfo& metaData,
         std::uint64_t& workingMemRequired,
-        detail::ParsedFileInfo_PNG_BackendData& backendData);
+        detail::FileInfo_PNG_BackendData& backendData);
 
     Result loadFromBuffer_Step2(
         const TextureInfo& textureInfo,
-        detail::ParsedFileInfo_PNG_BackendData& backendData,
+        detail::FileInfo_PNG_BackendData& backendData,
         const ByteSpan dstImageBuffer,
         const ByteSpan workingMemory);
 }

@@ -3,7 +3,7 @@
 #include "Texas/ByteSpan.hpp"
 #include "PrivateAccessor.hpp"
 
-#include "Texas/GLFormats.hpp"
+#include "Texas/detail/GLTools.hpp"
 
 #include "Texas/Tools.hpp"
 
@@ -32,7 +32,7 @@ namespace Texas::detail::KTX
         constexpr std::size_t bytesOfKeyValueData_Offset = 60;
     }
 
-    [[nodiscard]] static inline std::uint32_t toU32(const std::byte* const ptr)
+    [[nodiscard]] static inline std::uint32_t toU32(const std::byte* ptr)
     {
         std::uint32_t temp = 0;
         std::memcpy(&temp, ptr, sizeof(std::uint32_t));
@@ -41,7 +41,7 @@ namespace Texas::detail::KTX
 
     [[nodiscard]] static inline constexpr TextureType toTextureType(
         const std::uint32_t* dimensions, 
-        std::uint32_t arrayCount, 
+        std::uint_least32_t arrayCount, 
         bool isCubemap) noexcept
     {
         if (arrayCount > 0)
@@ -80,7 +80,7 @@ namespace Texas::detail::KTX
         }
     }
 
-    [[nodiscard]] static inline constexpr bool isCubemap(const TextureType texType)
+    [[nodiscard]] static inline constexpr bool isCubemap(TextureType texType)
     {
         return texType == TextureType::Cubemap || texType == TextureType::ArrayCubemap;
     }
@@ -88,36 +88,34 @@ namespace Texas::detail::KTX
     Result loadFromBuffer_Step1(
         ConstByteSpan srcBuffer,
         TextureInfo& textureInfo,
-        detail::ParsedFileInfo_KTX_BackendData& backendData)
+        detail::FileInfo_KTX_BackendData& backendData)
     {
         // Check if buffer is long enough to hold the KTX header
         if (srcBuffer.size() <= Header::totalSize)
             return { ResultType::PrematureEndOfFile, "KTX-file is not large enough to hold all header-data." };
 
-        backendData = detail::ParsedFileInfo_KTX_BackendData();
+        backendData = detail::FileInfo_KTX_BackendData();
 
         textureInfo.fileFormat = FileFormat::KTX;
-
 
         // Check if file endianness matches system's
         if (KTX::toU32(srcBuffer.data() + Header::endianness_Offset) != Header::correctEndian)
             return { ResultType::FileNotSupported, "KTX-file's endianness does not match system endianness. Texas not capable of converting." };
 
-
         // Grab pixel format
-        const Tools::detail::GLEnum fileGLType = static_cast<Tools::detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glType_Offset));
-        const Tools::detail::GLEnum fileGLFormat = static_cast<Tools::detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glFormat_Offset));
-        const Tools::detail::GLEnum fileGLInternalFormat = static_cast<Tools::detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glInternalFormat_Offset));
-        const Tools::detail::GLEnum fileGLBaseInternalFormat = static_cast<Tools::detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glBaseInternalFormat_Offset));
-        textureInfo.colorSpace = Tools::detail::toColorSpace(fileGLInternalFormat, fileGLType);
-        textureInfo.pixelFormat = Tools::detail::toPixelFormat(fileGLInternalFormat, fileGLType);
-        textureInfo.channelType = Tools::detail::toChannelType(fileGLInternalFormat, fileGLType);
+        const detail::GLEnum fileGLType = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glType_Offset));
+        const detail::GLEnum fileGLFormat = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glFormat_Offset));
+        const detail::GLEnum fileGLInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glInternalFormat_Offset));
+        const detail::GLEnum fileGLBaseInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glBaseInternalFormat_Offset));
+        textureInfo.colorSpace = detail::toColorSpace(fileGLInternalFormat, fileGLType);
+        textureInfo.pixelFormat = detail::toPixelFormat(fileGLInternalFormat, fileGLType);
+        textureInfo.channelType = detail::toChannelType(fileGLInternalFormat, fileGLType);
         if (textureInfo.pixelFormat == PixelFormat::Invalid || textureInfo.colorSpace == ColorSpace::Invalid || textureInfo.channelType == ChannelType::Invalid)
             return { ResultType::PixelFormatNotSupported, "KTX pixel-format not supported." };;
 
 
         // Grab dimensions
-        const std::uint32_t origBaseDimensions[3] = {
+        const std::uint_least32_t origBaseDimensions[3] = {
             KTX::toU32(srcBuffer.data() + Header::pixelWidth_Offset),
             KTX::toU32(srcBuffer.data() + Header::pixelHeight_Offset),
             KTX::toU32(srcBuffer.data() + Header::pixelDepth_Offset)
@@ -129,14 +127,14 @@ namespace Texas::detail::KTX
 
 
         // Grab array layer count
-        const std::uint32_t origArrayLayerCount = KTX::toU32(srcBuffer.data() + Header::numberOfArrayElements_Offset);
+        const std::uint_least32_t origArrayLayerCount = KTX::toU32(srcBuffer.data() + Header::numberOfArrayElements_Offset);
 
 
         // Grab number of faces.
-        const std::uint32_t origNumberOfFaces = KTX::toU32(srcBuffer.data() + Header::numberOfFaces_Offset);
+        const std::uint_least32_t origNumberOfFaces = KTX::toU32(srcBuffer.data() + Header::numberOfFaces_Offset);
         if (origNumberOfFaces != 1 && origNumberOfFaces != 6)
             return { ResultType::CorruptFileData, "KTX specification requires field 'numberOfFaces' to be 1 or 6." };
-        bool texIsCubemap = origNumberOfFaces == 6;
+        const bool texIsCubemap = origNumberOfFaces == 6;
         if (texIsCubemap)
         {
             if (texIsCubemap)
@@ -169,14 +167,14 @@ namespace Texas::detail::KTX
 
 
         // For now we don't do anything with the key-value data.
-        const std::uint32_t totalKeyValueDataSize = KTX::toU32(srcBuffer.data() + Header::bytesOfKeyValueData_Offset);
+        const std::uint_least32_t totalKeyValueDataSize = KTX::toU32(srcBuffer.data() + Header::bytesOfKeyValueData_Offset);
         // Check the buffer is long enough to hold all the key-value-data
         if (srcBuffer.size() <= Header::totalSize + totalKeyValueDataSize)
             return { ResultType::PrematureEndOfFile, "KTX-file is not large enough to hold any image-data." };
-        std::uint32_t keyValueDataCounter = 0;
+        std::uint_least32_t keyValueDataCounter = 0;
         while (keyValueDataCounter < totalKeyValueDataSize)
         {
-            const std::uint32_t keyValuePairSize = KTX::toU32(srcBuffer.data() + Header::bytesOfKeyValueData_Offset + sizeof(std::uint32_t) + keyValueDataCounter);
+            const std::uint_least32_t keyValuePairSize = KTX::toU32(srcBuffer.data() + Header::bytesOfKeyValueData_Offset + sizeof(std::uint32_t) + keyValueDataCounter);
             const std::byte* key = srcBuffer.data() + Header::bytesOfKeyValueData_Offset + sizeof(std::uint32_t) + keyValueDataCounter + sizeof(std::uint32_t);
             keyValueDataCounter += keyValuePairSize + (3 - ((keyValuePairSize + 3) % 4));
         }
@@ -187,8 +185,8 @@ namespace Texas::detail::KTX
     }
 
     Result loadFromBuffer_Step2(
-        const TextureInfo& textureInfo,
-        detail::ParsedFileInfo_KTX_BackendData& backendData,
+        TextureInfo const& textureInfo,
+        detail::FileInfo_KTX_BackendData& backendData,
         const ByteSpan dstImageBuffer,
         const ByteSpan workingMem)
     {
@@ -201,10 +199,10 @@ namespace Texas::detail::KTX
         }
         else
         {
-            for (std::uint32_t mipIndex = 0; mipIndex < textureInfo.mipLevelCount; mipIndex++)
+            for (std::uint_least32_t mipIndex = 0; mipIndex < textureInfo.mipLevelCount; mipIndex++)
             {
                 // Contains the amount of data from all array images of this mip level
-                const std::uint32_t mipDataSize = KTX::toU32(reinterpret_cast<const std::byte*>(backendData.srcImageDataStart + srcMemOffset));
+                const std::uint_least32_t mipDataSize = KTX::toU32(reinterpret_cast<const std::byte*>(backendData.srcImageDataStart + srcMemOffset));
                 
                 std::memcpy(dstImageBuffer.data() + dstMemOffset, backendData.srcImageDataStart + srcMemOffset + sizeof(std::uint32_t), mipDataSize);
                 const std::uint8_t padding = (3 - ((mipDataSize + 3) % 4));

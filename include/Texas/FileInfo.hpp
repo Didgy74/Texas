@@ -4,7 +4,7 @@
 #include "Texas/Dimensions.hpp"
 
 // Include detail headers
-#include "Texas/detail/ParsedFileInfo_BackendData.hpp"
+#include "Texas/detail/FileInfo_BackendData.hpp"
 #include "Texas/detail/PrivateAccessor_Declaration.hpp"
 
 #include <cstdint>
@@ -17,7 +17,7 @@ namespace Texas
         This includes metadata and some fileformat-specific data for 
         loading imagedata from said fileformat.
     */
-    class ParsedFileInfo
+    class FileInfo
     {
     public:
         [[nodiscard]] const TextureInfo& textureInfo() const noexcept;
@@ -31,13 +31,13 @@ namespace Texas
         //[[nodiscard]] std::uint64_t mipOffset(std::uint64_t mipIndex) const noexcept;
 
     private:
-        ParsedFileInfo() = default;
+        FileInfo() = default;
 
         TextureInfo m_textureInfo = {};
         std::uint64_t m_memoryRequired = 0;
         std::uint64_t m_workingMemoryRequired = 0;
 
-        mutable detail::ParsedFileInfo_BackendData m_backendData{};
+        mutable detail::FileInfo_BackendData m_backendData{};
 
         friend class detail::PrivateAccessor;
     };

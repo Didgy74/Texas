@@ -1,6 +1,7 @@
 #include "Texas/Texas.hpp"
 #include "PrivateAccessor.hpp"
-#include "Texas/detail/Assert.hpp"
+#include "Texas/detail/NumericLimits.hpp"
+#include "Texas/detail/Exception.hpp"
 #include "Texas/Tools.hpp"
 
 #include <cstring>
@@ -8,42 +9,47 @@
 #include "KTX.hpp"
 #include "PNG.hpp"
 
-Texas::ResultValue<Texas::ParsedFileInfo> Texas::parseBuffer(const std::byte* const fileBuffer, const std::size_t bufferLength) noexcept
+Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(const std::byte* fileBuffer, std::size_t bufferLength)
 {
     return detail::PrivateAccessor::parseBuffer(ConstByteSpan(fileBuffer, bufferLength));
 }
 
-Texas::ResultValue<Texas::ParsedFileInfo> Texas::parseBuffer(const ConstByteSpan inputBuffer) noexcept
+Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(ConstByteSpan inputBuffer)
 {
     return detail::PrivateAccessor::parseBuffer(inputBuffer);
 }
 
-Texas::ResultValue<Texas::TextureInfo> Texas::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
+Texas::ResultValue<Texas::TextureInfo> Texas::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory)
 {
     return detail::PrivateAccessor::loadImageData(inputBuffer, dstBuffer, workingMemory);
 }
 
-Texas::Result Texas::loadImageData(const ParsedFileInfo& file, const ByteSpan dstBuffer, const ByteSpan workingMemory) noexcept
+Texas::Result Texas::loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMemory)
 {
     return detail::PrivateAccessor::loadImageData(file, dstBuffer, workingMemory);
 }
 
-Texas::Result Texas::loadImageData(const ParsedFileInfo& file, std::byte* const dstBuffer, const std::size_t dstBufferSize, std::byte* const workingMemory, const std::size_t workingMemorySize) noexcept
+Texas::Result Texas::loadImageData(
+    const FileInfo& file, 
+    std::byte* dstBuffer, 
+    std::size_t dstBufferSize, 
+    std::byte* workingMemory, 
+    std::size_t workingMemorySize)
 {
     return detail::PrivateAccessor::loadImageData(file, ByteSpan(dstBuffer, dstBufferSize), ByteSpan(workingMemory, workingMemorySize));
 }
 
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(const std::byte* inputBuffer, std::size_t inputBufferSize, Allocator& allocator) noexcept
+Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(const std::byte* inputBuffer, std::size_t inputBufferSize, Allocator& allocator)
 {
     return detail::PrivateAccessor::loadFromBuffer(ConstByteSpan(inputBuffer, inputBufferSize), &allocator);
 }
 
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator) noexcept
+Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator)
 {
     return detail::PrivateAccessor::loadFromBuffer(inputBuffer, &allocator);
 }
 
-Texas::ResultValue<Texas::ParsedFileInfo> Texas::detail::PrivateAccessor::parseBuffer(const ConstByteSpan inputBuffer) noexcept
+Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseBuffer(ConstByteSpan inputBuffer)
 {
     // Check if input buffer is larger than 0.
     // 12 bytes is the largest file identifier we know of... So far.
@@ -52,7 +58,7 @@ Texas::ResultValue<Texas::ParsedFileInfo> Texas::detail::PrivateAccessor::parseB
         return { ResultType::InvalidLibraryUsage, "Input buffer cannot be smaller than 60. "
                                                   "No file supported by Texas can be smaller than 60(?) bytes and still be valid." };
 
-    ParsedFileInfo memReqs{};
+    FileInfo memReqs{};
 
     // We test the file's identifier to see if it's KTX
     if (std::memcmp(inputBuffer.data(), KTX::identifier, sizeof(KTX::identifier)) == 0)
@@ -62,8 +68,8 @@ Texas::ResultValue<Texas::ParsedFileInfo> Texas::detail::PrivateAccessor::parseB
         if (result.isSuccessful())
         {
             memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.textureInfo());
-            TEXAS_DETAIL_ASSERT_MSG(memReqs.m_memoryRequired != 0, "Texas author error. A successfully loaded texture cannot have memoryRequired == 0.");
-            return { static_cast<ParsedFileInfo&&>(memReqs) };
+            TEXAS_DETAIL_EXCEPTION(memReqs.m_memoryRequired != 0, "Library bug: A successfully loaded texture cannot have memoryRequired == 0.");
+            return { static_cast<FileInfo&&>(memReqs) };
         }
         else
             return { result };
@@ -80,8 +86,8 @@ Texas::ResultValue<Texas::ParsedFileInfo> Texas::detail::PrivateAccessor::parseB
         if (result.isSuccessful())
         {
             memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.textureInfo());
-            TEXAS_DETAIL_ASSERT_MSG(memReqs.m_memoryRequired != 0, "Texas author error. A successfully loaded texture cannot have memoryRequired == 0.");
-            return { static_cast<ParsedFileInfo&&>(memReqs) };
+            TEXAS_DETAIL_EXCEPTION(memReqs.m_memoryRequired != 0, "Library bug: A successfully loaded texture cannot have memoryRequired == 0.");
+            return { static_cast<FileInfo&&>(memReqs) };
         }
         else
             return { result };
@@ -94,7 +100,7 @@ Texas::ResultValue<Texas::ParsedFileInfo> Texas::detail::PrivateAccessor::parseB
                                                                "or file-format is not supported." };
 }
 
-Texas::Result Texas::detail::PrivateAccessor::loadImageData(const ParsedFileInfo& file, const ByteSpan dstBuffer, const ByteSpan workingMem) noexcept
+Texas::Result Texas::detail::PrivateAccessor::loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMem)
 {
     if (dstBuffer.data() == nullptr)
         return { ResultType::InvalidLibraryUsage, "You need to send in a destination buffer." };
@@ -128,22 +134,22 @@ Texas::Result Texas::detail::PrivateAccessor::loadImageData(const ParsedFileInfo
     return { ResultType::InvalidLibraryUsage, "Passed in an invalid MemReqs object." };
 }
 
-Texas::ResultValue<Texas::TextureInfo> Texas::detail::PrivateAccessor::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMem) noexcept
+Texas::ResultValue<Texas::TextureInfo> Texas::detail::PrivateAccessor::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMem)
 {
     if (dstBuffer.data() == nullptr || dstBuffer.size() == 0)
         return { ResultType::InvalidLibraryUsage, "Destination buffer cannot be nullptr or have size 0." };
 
-    ResultValue<ParsedFileInfo> parseResult = parseBuffer(inputBuffer);
+    ResultValue<FileInfo> parseResult = parseBuffer(inputBuffer);
     if (!parseResult.isSuccessful())
         return { parseResult.resultType(), parseResult.errorMessage() };
 
-    ParsedFileInfo memReqs = parseResult.value();
-    if (dstBuffer.size() < memReqs.memoryRequired())
+    FileInfo fileInfo = parseResult.value();
+    if (dstBuffer.size() < fileInfo.memoryRequired())
         return { ResultType::InvalidLibraryUsage, "Destination buffer not large enough for imagedata." };
-    if (memReqs.workingMemoryRequired() > 0 && (workingMem.data() == nullptr || workingMem.size() < memReqs.workingMemoryRequired()))
+    if (fileInfo.workingMemoryRequired() > 0 && (workingMem.data() == nullptr || workingMem.size() < fileInfo.workingMemoryRequired()))
         return { ResultType::InvalidLibraryUsage, "Not enough working memory." };
 
-    Result loadResult = loadImageData(memReqs, dstBuffer, workingMem);
+    Result loadResult = loadImageData(fileInfo, dstBuffer, workingMem);
     if (!loadResult.isSuccessful())
         return { loadResult };
 
@@ -151,57 +157,78 @@ Texas::ResultValue<Texas::TextureInfo> Texas::detail::PrivateAccessor::loadImage
                                            "or file-format is not supported." };
 }
 
-Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffer(ConstByteSpan inputBuffer, Allocator* allocator) noexcept
+Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffer(ConstByteSpan inputBuffer, Allocator* allocator)
 {
-    ResultValue<ParsedFileInfo> parseFileResult = parseBuffer(inputBuffer);
+    ResultValue<FileInfo> parseFileResult = parseBuffer(inputBuffer);
     if (!parseFileResult.isSuccessful())
         return { parseFileResult.resultType(), parseFileResult.errorMessage() };
 
-    ParsedFileInfo& memReqs = parseFileResult.value();
+    FileInfo& fileInfo = parseFileResult.value();
 
     Texture returnVal{};
-    returnVal.m_textureInfo = memReqs.textureInfo();
+    returnVal.m_textureInfo = fileInfo.textureInfo();
     returnVal.m_allocator = allocator;
 
+    std::uint64_t dstBufferSize = fileInfo.memoryRequired();
+
+    if constexpr (detail::maxValue<std::uint64_t>() > detail::maxValue<std::size_t>())
+    {
+        if (dstBufferSize > detail::maxValue<std::size_t>())
+            return { ResultType::FileNotSupported, "Image requires more memory than the system can possibly allocate." };
+    }
+
     // Allocate destination buffer
-    auto dstBufferSize = memReqs.memoryRequired();
     if (allocator != nullptr)
     {
-        returnVal.m_buffer = ByteSpan{ allocator->allocate(dstBufferSize), dstBufferSize };
+        returnVal.m_buffer = ByteSpan{ allocator->allocate(static_cast<std::size_t>(dstBufferSize)), static_cast<std::size_t>(dstBufferSize) };
         if (returnVal.m_buffer.data() == nullptr)
             return { ResultType::InvalidLibraryUsage, "Allocator returned nullptr when attempting to allocate memory for image-data." };
     }
     else
     {
 #ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
-        returnVal.m_buffer = ByteSpan{ new std::byte[dstBufferSize], dstBufferSize };
+        returnVal.m_buffer = ByteSpan{ 
+            new std::byte[static_cast<std::size_t>(dstBufferSize)],
+            static_cast<std::size_t>(dstBufferSize)
+        };
 #else
-        TEXAS_DETAIL_ASSERT_MSG(false, "Author error. "
-                                       "Function 'detail::PrivateAccessor::loadFromBuffer' received a nullptr allocator, "
-                                       "but dynamic allocations have not been enabled.");
+        TEXAS_DETAIL_EXCEPTION(false, "Library bug: "
+                                      "Function 'detail::PrivateAccessor::loadFromBuffer' received a nullptr allocator, "
+                                      "but dynamic allocations have not been enabled.");
 #endif
     }
 
     // Allocate working memory if needed
     std::byte* workingMem = nullptr;
-    auto workingMemSize = memReqs.workingMemoryRequired();
+    std::uint64_t workingMemSize = fileInfo.workingMemoryRequired();
+
+    if constexpr (detail::maxValue<std::uint64_t>() > detail::maxValue<std::size_t>())
+    {
+        if (workingMemSize > detail::maxValue<std::size_t>())
+            return { ResultType::FileNotSupported, "Image requires more working memory than the system can possibly allocate." };
+    }
+
     if (workingMemSize > 0)
     {
         if (allocator != nullptr)
         {
-            workingMem = allocator->allocate(workingMemSize);
+            workingMem = allocator->allocate(static_cast<std::size_t>(workingMemSize));
             if (workingMem == nullptr)
                 return { ResultType::InvalidLibraryUsage, "Allocator returned nullptr when attempting to allocate working-memory." };
         }
         else
         {
 #ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
-            workingMem = new std::byte[workingMemSize];
+            workingMem = new std::byte[static_cast<std::size_t>(workingMemSize)];
+#else
+            TEXAS_DETAIL_EXCEPTION(false, "Library bug: "
+                "Function 'detail::PrivateAccessor::loadFromBuffer' received a nullptr allocator, "
+                "but dynamic allocations have not been enabled.");
 #endif
         }
     }
 
-    Result loadResult = loadImageData(memReqs, returnVal.m_buffer, ByteSpan{ workingMem, workingMemSize });
+    Result loadResult = loadImageData(fileInfo, returnVal.m_buffer, ByteSpan{ workingMem, static_cast<std::size_t>(workingMemSize) });
     
     if (workingMem != nullptr)
     {
@@ -210,7 +237,7 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffe
         else
         {
 #ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
-            workingMem = new std::byte[workingMemSize];
+            delete[] workingMem;
 #endif
         }
     }

@@ -4,46 +4,71 @@
 #include "Texas/Dimensions.hpp"
 #include "Texas/TextureType.hpp"
 #include "Texas/TextureInfo.hpp"
-#include "Texas/Optional.hpp"
 
 #include <cstdint>
-#include <cstddef>
 
 namespace Texas
 {
-    [[nodiscard]] std::uint64_t calcMaxMipLevelCount(Dimensions baseDimensions) noexcept;
+    /*
+        Returns the maximum amount of mip levels a texture with baseDimensions can hold.
+    */
+    [[nodiscard]] std::uint64_t calcMaxMipCount(Dimensions baseDimensions);
 
-    [[nodiscard]] Optional<Dimensions> calcMipmapDimensions(Dimensions baseDimensions, std::uint64_t mipLevelIndex) noexcept;
+    /*
+        Returns the dimensions of a mip-level based on the baseDimensions.
 
+        Will return { 0, 0, 0 } if mipLevelIndex is equal to or higher than the maximum mip count baseDimensions can support.
+    */
+    [[nodiscard]] Dimensions calcMipDimensions(Dimensions baseDimensions, std::uint64_t mipLevelIndex);
+
+    /*
+        Returns the total amount of memory an image will require.
+    */
     [[nodiscard]] std::uint64_t calcTotalSizeRequired(
         Dimensions baseDimensions, 
         PixelFormat pixelFormat, 
         std::uint64_t mipLevelCount, 
-        std::uint64_t arrayLayerCount) noexcept;
+        std::uint64_t arrayLayerCount);
 
-    [[nodiscard]] std::uint64_t calcTotalSizeRequired(const TextureInfo& textureInfo) noexcept;
+    /*
+        Returns the total amount of memory an image will require.
+    */
+    [[nodiscard]] std::uint64_t calcTotalSizeRequired(TextureInfo const& textureInfo);
 
-    [[nodiscard]] Optional<std::uint64_t> calcMipOffset(
+    /*
+        Returns the offset from the start of a buffer to a mip level.
+    */
+    [[nodiscard]] std::uint64_t calcMipOffset(
         Dimensions baseDimensions,
         PixelFormat pixelFormat,
         std::uint64_t arrayLayerCount,
-        std::uint64_t mipLevelCount,
-        std::uint64_t mipLevelIndex) noexcept;
+        std::uint64_t mipLevelIndex);
 
-    [[nodiscard]] Optional<std::uint64_t> calcMipOffset(const TextureInfo& textureInfo, std::uint64_t mipLevelIndex) noexcept;
+    /*
+        Returns the offset from the start of a buffer to a mip level.
+    */
+    [[nodiscard]] std::uint64_t calcMipOffset(TextureInfo const& textureInfo, std::uint64_t mipLevelIndex);
 
-    [[nodiscard]] Optional<std::uint64_t> calcArrayLayerOffset(
+    /*
+        Returns the offset from the start of a buffer to an array layer.
+    */
+    [[nodiscard]] std::uint64_t calcArrayLayerOffset(
         Dimensions baseDimensions,
         PixelFormat pixelFormat,
-        std::uint64_t mipLevelCount,
         std::uint64_t mipLevelIndex,
         std::uint64_t arrayLayerCount,
-        std::uint64_t arrayLayerIndex) noexcept;
+        std::uint64_t arrayLayerIndex);
 
-    [[nodiscard]] Optional<std::uint64_t> calcArrayLayerOffset(
-        const TextureInfo& textureInfo,
+    /*
+        Returns the offset from the start of a buffer to an array layer.
+    */
+    [[nodiscard]] std::uint64_t calcArrayLayerOffset(
+        TextureInfo const& textureInfo,
         std::uint64_t mipLevelIndex,
-        std::uint64_t arrayLayerIndex) noexcept;
+        std::uint64_t arrayLayerIndex);
 
-    [[nodiscard]] std::uint64_t calcArrayLayerSize(Dimensions dimensions, PixelFormat pixelFormat) noexcept;
+    /*
+        Returns the size of a single array layer.
+    */
+    [[nodiscard]] std::uint64_t calcArrayLayerSize(Dimensions dimensions, PixelFormat pixelFormat);
 }

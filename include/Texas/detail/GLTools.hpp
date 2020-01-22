@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-namespace Texas::Tools::detail
+namespace Texas::detail
 {
     enum class GLEnum : std::uint32_t
     {
