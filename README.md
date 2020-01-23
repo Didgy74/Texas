@@ -39,8 +39,8 @@ All of the library exists within the `Texas` namespace.
  `TEXAS_ENABLE_PNG_READ`
  Enables reading PNG files 
 
-`TEXAS_ENABLE_ASSERTIONS`
-Enables assertions inside the codebase. This can be helpful to catch invalid usage of the interface.
+`TEXAS_ENABLE_EXCEPTIONS`
+Enables exceptions inside the codebase. This can be helpful to catch invalid usage of the interface.
 
 `TEXAS_ENABLE_DYNAMIC_ALLOCATIONS`
 Enables the loading paths that lets the implementation do dynamic allocations under the hood
