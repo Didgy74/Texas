@@ -34,11 +34,9 @@ Texas::PixelFormat pixelFormat = loadedTexture.pixelFormat();
 
 Texas::Dimensions baseDimensions = loadTexture.baseDimensions();
 
-// The image-data span for the base image, this includes array elements.
-// This function can fail, and therefore return a Texas::Optional<ConstByteSpan>
-// but since know all images have a mip-level 0 and all textures returned from
-// Texas loading functions are valid, we can dereference the value right away.
-Texas::ConstByteSpan baseMipLeveImageData = loadTexture.mipSpan(0).value();
+// The image-data span for the base image, this includes array elements.'
+// Passing in an index equal or higher than loadTexture.mipLevelCount() is UB.
+Texas::ConstByteSpan baseMipLeveImageData = loadTexture.mipSpan(0);
 
 // The former function returns a Texas::ConstByteSpan if successful,
 // the pointer and size can be acquired separately using the following
@@ -50,10 +48,10 @@ unsigned int size = baseMipLevelImageData.size();
 // These types of methods may fail 
 // - If the mip-level index is equal or higher than the texture's mip-level count, 
 // - If the array-layer index is equal or higher than the texture's array-layer count.
-// - If the texture-object has become invalid (usually as a result of being moved from) 
-Texas::ConstByteSpan wantedArrayLayer = loadTexture.arrayLevelSpan(2, 1).value();
+// - If the texture-object is not containing any data (usually happens only when moving data out of a Texture)
+Texas::ConstByteSpan wantedArrayLayer = loadTexture.arrayLevelSpan(2, 1);
 ```
-The list of Texture's methods can be found in the [Texture.hpp](https://github.com/Didgy74/Texas/blob/development/include/Texas/Texture.hpp) header file.
+The list of Texture's methods can be found in the [Texture.hpp](https://github.com/Didgy74/Texas/blob/master/include/Texas/Texture.hpp) header file.
 
 ## Loading into your buffer
 The process of loading image-data onto your own pre-allocated buffer is usually three steps:
@@ -64,17 +62,17 @@ The process of loading image-data onto your own pre-allocated buffer is usually 
 
 In terms of code, you will be using one of the following functions
 ```cpp
-ResultValue<ParsedFileInfo> parseBuffer(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
-ResultValue<ParsedFileInfo> parseBuffer(ConstByteSpan inputBuffer) noexcept;
+ResultValue<FileInfo> parseBuffer(const std::byte* inputBuffer, std::size_t bufferSize) noexcept;
+ResultValue<FileInfo> parseBuffer(ConstByteSpan inputBuffer) noexcept;
 ```
-If successful, the function returns a struct `ParsedFileInfo` which contains the amount of image-memory required, amount of working-memory required and the texture-info of the file. It also contains some hidden data used for speeding up loading image-data from the input-buffer later.
+If successful, the function returns a struct `FileInfo` which contains the amount of image-memory required, amount of working-memory required and the texture-info of the file. It also contains some hidden data used for speeding up loading image-data from the input-buffer later.
 
 After allocating the data needed, you will want to use one of the following functions
 ```cpp
-Result loadImageData(const ParsedFileInfo& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
-Result loadImageData(const ParsedFileInfo& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize) noexcept;
+Result loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept;
+Result loadImageData(ParsedFileInfo const& file, std::byte* dstBuffer, std::size_t dstBufferSize, std::byte* workingMemory, std::size_t workingMemorySize) noexcept;
 ```
-If `ParsedFileInfo::workingMemoryRequired()` returns 0, you can pass in `nullptr` and 0 for the working memory parameters.
+If `FileInfo::workingMemoryRequired()` returns 0, you can pass in `nullptr` and 0 for the working memory parameters.
 
 The struct `Result` contains a field for an error code of type `ResultType`, and also a `const char*` for an error message.
 
@@ -91,7 +89,7 @@ const std::byte* bufferForFileData = // Load your buffer filled with file data
 
 Texas::ConstByteSpan fileBufferSpan = { bufferForFileData, bufferForFileDataSize };
 
-Texas::ResultValue<Texas::ParsedFileInfo> parseFileResult = Texas::parseBuffer(fileBufferSpan);
+Texas::ResultValue<Texas::FileInfo> parseFileResult = Texas::parseBuffer(fileBufferSpan);
 if (!parseFileResult.isSuccessful())
 {
     Texas::ResultType errorCode = parseFileResult.resultType();

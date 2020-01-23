@@ -52,6 +52,7 @@ Enables tools to load a texture into Vulkan
 This version is very limited in functionality and supported files. It can only load KTX and PNG from existing memory buffers.
 
 PNG files are always decompressed to grayscale, grayscale with alpha, RGB or RGBA upon loading based on the file's pixel format. PNG support is currently limited to the following features:
+ - Grayscale with alpha
  - RGB 8-bit per channel
  - RGBA 8-bit per channel
  - Indexed colors
@@ -60,6 +61,7 @@ Texas does not yet support interlaced PNG images. Support for sRGB colorspace is
 
 The KTX support can load all mipmaps and all array-layers of a texture. It can also extract the color-space information (linear or sRGB).
 Currently tested KTX formats:
+ - R 8-bit
  - RGB 8-bit 
  - RGBA 8-bit
  - BC7
@@ -70,7 +72,7 @@ ETC and ASTC support is planned.
 
 ## Planned features
   - Full support to read and write:
-	 -  KTX
+	 - KTX
 	 - KTX2
 	 - DDS
 	 - PNG
@@ -78,10 +80,10 @@ ETC and ASTC support is planned.
  - 1D textures
  - 3D textures
  - Cubemaps
+ - RG images
  - ETC compression format
  - ASTC compression
  - BCn compression support
- - Greyscale images
  - Color space information
  - Pixel formats with bit-depth higher than 8 bits per channel
  - "Load-from-buffer" loading path with allocation callbacks
@@ -93,7 +95,7 @@ ETC and ASTC support is planned.
 ### Dependencies
 
  - zLib 1.2.11 - [zLib Home Site](https://www.zlib.net/)
-zLib gets linked when you enable PNG support, otherwise it's not compiled at all.
+	 - zLib gets linked when you enable PNG support, otherwise it's not compiled at all.
 
 ### Contribution and Feedback
 I will very much welcome feedback or any suggestions. Please open issues or pull requests to show me what can be improved.
