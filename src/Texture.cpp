@@ -119,7 +119,7 @@ Texas::ConstByteSpan Texas::Texture::mipSpan(std::uint64_t mipLevelIndex) const
 std::uint64_t Texas::Texture::arrayLayerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const
 {
 	TEXAS_DETAIL_EXCEPTION(m_buffer.data() != nullptr, "Called .arrayLayerOffset() on empty Texture object.");
-	return arrayLayerOffset(mipLevelIndex, arrayLayerIndex);
+	return Texas::calcArrayLayerOffset(m_textureInfo, mipLevelIndex, arrayLayerIndex);
 }
 
 std::uint64_t Texas::Texture::arrayLayerSize(std::uint64_t mipIndex) const

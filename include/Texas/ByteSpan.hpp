@@ -12,9 +12,9 @@ namespace Texas
         std::size_t m_size = 0;
 
     public:
-        [[nodiscard]] inline constexpr ConstByteSpan() noexcept {}
+        inline constexpr ConstByteSpan() noexcept {}
 
-        [[nodiscard]] inline constexpr ConstByteSpan(const std::byte* data, std::size_t size) noexcept :
+        inline constexpr ConstByteSpan(const std::byte* data, std::size_t size) noexcept :
             m_data(data),
             m_size(size)
         {}
@@ -42,9 +42,9 @@ namespace Texas
         std::size_t m_size = 0;
 
     public:
-        [[nodiscard]] inline constexpr ByteSpan() noexcept {}
+        inline constexpr ByteSpan() noexcept {}
 
-        [[nodiscard]] inline constexpr ByteSpan(std::byte* data, std::size_t size) noexcept :
+        inline constexpr ByteSpan(std::byte* data, std::size_t size) noexcept :
             m_data(data),
             m_size(size)
         {}

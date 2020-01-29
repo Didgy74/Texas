@@ -155,10 +155,10 @@ std::uint64_t Texas::calcArrayLayerSize(Dimensions dims, PixelFormat pFormat)
 
     if (isBCnCompressed(pFormat))
     {
-        std::uint64_t blockCountX = static_cast<std::uint64_t>(std::ceilf(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
+        std::uint64_t blockCountX = static_cast<std::uint64_t>(std::ceil(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
         if (blockCountX == 0)
             blockCountX = 1;
-        std::uint64_t blockCountY = static_cast<std::uint64_t>(std::ceilf(static_cast<float>(dims.height) / static_cast<float>(blockInfo.height)));
+        std::uint64_t blockCountY = static_cast<std::uint64_t>(std::ceil(static_cast<float>(dims.height) / static_cast<float>(blockInfo.height)));
         if (blockCountY == 0)
             blockCountY = 1;
 

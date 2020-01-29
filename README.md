@@ -13,7 +13,7 @@ The library has been tested to run on the following compilers
  - MSVC 14.24
 
 #### Ubuntu x64
- - Not tested yet
+ - GCC 9.1.0
 
 ## Integration
 Integration is built around CMake, but it is possible to integrate the library without it. By default, Texas does not enable any functionality. To make it to compile, you need to enable reading for **atleast** one file-format. The easiest way to integrate is just enable all features. You can do this and add all the correct files to your project by adding the following lines to your CMakeLists.txt

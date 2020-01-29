@@ -20,7 +20,18 @@ project(Texas)
 # --------------------
 # START
 	set(LIB_NAME ${PROJECT_NAME})
-	add_library(${LIB_NAME} STATIC)
+
+	# Link .cpp files
+	set(TEXAS_SRC_FILES 
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.hpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/FileInfo.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/PNG.hpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/PrivateAccessor.hpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/TextureInfo.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp")
+	add_library(${LIB_NAME} STATIC ${TEXAS_SRC_FILES})
 #
 # END
 #
@@ -32,30 +43,10 @@ project(Texas)
 	set(INCLUDE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
 	target_include_directories(
 		${LIB_NAME}
-		INTERFACE
+		PUBLIC
 		$<BUILD_INTERFACE:${INCLUDE_FOLDER}>
 		$<INSTALL_INTERFACE:include>
 	)
-#
-# END
-#
-
-# ------------------------
-# Link standard .cpp files
-# ------------------------
-# START
-
-	# Link .cpp files
-	set(TEXAS_SRC_FILES 
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.hpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/ParsedFileInfo.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/PNG.hpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/PrivateAccessor.hpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/TextureInfo.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp")
-	target_sources(${LIB_NAME} INTERFACE ${TEXAS_SRC_FILES})
 #
 # END
 #
@@ -80,13 +71,13 @@ project(Texas)
 	endif()
 
 	if (TEXAS_ENABLE_KTX_READ)
-		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_KTX_READ)
+		target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_KTX_READ)
 		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Read.cpp")
 	endif()
 
 	if (TEXAS_ENABLE_PNG_READ)
-		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_PNG_READ)
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_read.cpp")
+		target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_PNG_READ)
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_Read.cpp")
 		set(TEXAS_LINK_ZLIB 1)
 	endif()
 
@@ -119,7 +110,7 @@ project(Texas)
 
 	if(TEXAS_ENABLE_VULKAN_TOOLS)
 		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/VulkanTools")
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VkFormats.cpp")
+		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VulkanTools.cpp")
 	endif()
 #
 # END

@@ -1,4 +1,5 @@
-#include "Texas/VkFormats.hpp"
+#include "Texas/detail/VulkanTools.hpp"
+#include "Texas/VulkanTools.hpp"
 
 namespace Texas::detail
 {

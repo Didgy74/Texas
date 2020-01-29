@@ -5,7 +5,7 @@
 namespace Texas::detail
 {
 	template<typename Integer_T>
-	[[nodiscard]] constexpr Integer_T maxValue() = delete;
+	[[nodiscard]] constexpr Integer_T maxValue() noexcept = delete;
 
 	template<>
 	[[nodiscard]] constexpr std::uint32_t maxValue<std::uint32_t>() noexcept { return static_cast<std::uint32_t>(-1); }

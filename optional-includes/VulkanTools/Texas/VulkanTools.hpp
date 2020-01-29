@@ -30,7 +30,7 @@ namespace Texas
         return static_cast<std::uint32_t>(toVkFormat(metaData.pixelFormat, metaData.colorSpace, metaData.channelType));
     }
 
-    [[nodiscard]] inline VkExtent3D toVkExtent3D(Dimensions dimensions) noexcept
+    [[nodiscard]] inline VkExtent3D toVkExtent3D(Dimensions dimensions)
     {
         TEXAS_DETAIL_EXCEPTION(dimensions.width <= detail::maxValue<std::uint32_t>(), );
         TEXAS_DETAIL_EXCEPTION(dimensions.height <= detail::maxValue<std::uint32_t>(), );
