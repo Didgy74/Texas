@@ -1,30 +1,34 @@
 #include "Texas/Texas.hpp"
-#include "PrivateAccessor.hpp"
-#include "Texas/detail/NumericLimits.hpp"
 #include "Texas/detail/Exception.hpp"
+#include "PrivateAccessor.hpp"
 #include "Texas/Tools.hpp"
+#include "NumericLimits.hpp"
 
 #include <cstring>
 
 #include "KTX.hpp"
 #include "PNG.hpp"
 
-Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(const std::byte* fileBuffer, std::size_t bufferLength)
+#if !defined(TEXAS_ENABLE_KTX_READ) && !defined(TEXAS_ENABLE_PNG_READ)
+#error Cannot compile Texas without enabling atleast one file-format.
+#endif
+
+Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(const std::byte* fileBuffer, std::size_t bufferLength) noexcept
 {
     return detail::PrivateAccessor::parseBuffer(ConstByteSpan(fileBuffer, bufferLength));
 }
 
-Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(ConstByteSpan inputBuffer)
+Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(ConstByteSpan inputBuffer) noexcept
 {
     return detail::PrivateAccessor::parseBuffer(inputBuffer);
 }
 
-Texas::ResultValue<Texas::TextureInfo> Texas::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory)
+Texas::ResultValue<Texas::TextureInfo> Texas::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
 {
     return detail::PrivateAccessor::loadImageData(inputBuffer, dstBuffer, workingMemory);
 }
 
-Texas::Result Texas::loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMemory)
+Texas::Result Texas::loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
 {
     return detail::PrivateAccessor::loadImageData(file, dstBuffer, workingMemory);
 }
@@ -34,22 +38,22 @@ Texas::Result Texas::loadImageData(
     std::byte* dstBuffer, 
     std::size_t dstBufferSize, 
     std::byte* workingMemory, 
-    std::size_t workingMemorySize)
+    std::size_t workingMemorySize)  noexcept
 {
     return detail::PrivateAccessor::loadImageData(file, ByteSpan(dstBuffer, dstBufferSize), ByteSpan(workingMemory, workingMemorySize));
 }
 
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(const std::byte* inputBuffer, std::size_t inputBufferSize, Allocator& allocator)
+Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(const std::byte* inputBuffer, std::size_t inputBufferSize, Allocator& allocator) noexcept
 {
     return detail::PrivateAccessor::loadFromBuffer(ConstByteSpan(inputBuffer, inputBufferSize), &allocator);
 }
 
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator)
+Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator) noexcept
 {
     return detail::PrivateAccessor::loadFromBuffer(inputBuffer, &allocator);
 }
 
-Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseBuffer(ConstByteSpan inputBuffer)
+Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseBuffer(ConstByteSpan inputBuffer) noexcept
 {
     // Check if input buffer is larger than 0.
     // 12 bytes is the largest file identifier we know of... So far.
@@ -67,8 +71,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseBuffer(
         Result result = KTX::loadFromBuffer_Step1(inputBuffer, memReqs.m_textureInfo, memReqs.m_backendData.ktx);
         if (result.isSuccessful())
         {
-            memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.textureInfo());
-            TEXAS_DETAIL_EXCEPTION(memReqs.m_memoryRequired != 0, "Library bug: A successfully loaded texture cannot have memoryRequired == 0.");
+            memReqs.m_memoryRequired = calcTotalSize(memReqs.textureInfo());
             return { static_cast<FileInfo&&>(memReqs) };
         }
         else
@@ -85,8 +88,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseBuffer(
         Result result = PNG::loadFromBuffer_Step1(inputBuffer, memReqs.m_textureInfo, memReqs.m_workingMemoryRequired, memReqs.m_backendData.png);
         if (result.isSuccessful())
         {
-            memReqs.m_memoryRequired = calcTotalSizeRequired(memReqs.textureInfo());
-            TEXAS_DETAIL_EXCEPTION(memReqs.m_memoryRequired != 0, "Library bug: A successfully loaded texture cannot have memoryRequired == 0.");
+            memReqs.m_memoryRequired = calcTotalSize(memReqs.textureInfo());
             return { static_cast<FileInfo&&>(memReqs) };
         }
         else
@@ -100,7 +102,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseBuffer(
                                                                "or file-format is not supported." };
 }
 
-Texas::Result Texas::detail::PrivateAccessor::loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMem)
+Texas::Result Texas::detail::PrivateAccessor::loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMem) noexcept
 {
     if (dstBuffer.data() == nullptr)
         return { ResultType::InvalidLibraryUsage, "You need to send in a destination buffer." };
@@ -134,7 +136,7 @@ Texas::Result Texas::detail::PrivateAccessor::loadImageData(FileInfo const& file
     return { ResultType::InvalidLibraryUsage, "Passed in an invalid MemReqs object." };
 }
 
-Texas::ResultValue<Texas::TextureInfo> Texas::detail::PrivateAccessor::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMem)
+Texas::ResultValue<Texas::TextureInfo> Texas::detail::PrivateAccessor::loadImageData(ConstByteSpan inputBuffer, ByteSpan dstBuffer, ByteSpan workingMem) noexcept
 {
     if (dstBuffer.data() == nullptr || dstBuffer.size() == 0)
         return { ResultType::InvalidLibraryUsage, "Destination buffer cannot be nullptr or have size 0." };
@@ -157,7 +159,7 @@ Texas::ResultValue<Texas::TextureInfo> Texas::detail::PrivateAccessor::loadImage
                                            "or file-format is not supported." };
 }
 
-Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffer(ConstByteSpan inputBuffer, Allocator* allocator)
+Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffer(ConstByteSpan inputBuffer, Allocator* allocator) noexcept
 {
     ResultValue<FileInfo> parseFileResult = parseBuffer(inputBuffer);
     if (!parseFileResult.isSuccessful())
@@ -192,9 +194,10 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffe
             static_cast<std::size_t>(dstBufferSize)
         };
 #else
-        TEXAS_DETAIL_EXCEPTION(false, "Library bug: "
-                                      "Function 'detail::PrivateAccessor::loadFromBuffer' received a nullptr allocator, "
-                                      "but dynamic allocations have not been enabled.");
+        // Disabled for now because this function is supposed to be noexcept.
+        //TEXAS_DETAIL_EXCEPTION(false, "Library bug: "
+        //                              "Function 'detail::PrivateAccessor::loadFromBuffer' received a nullptr allocator, "
+        //                              "but dynamic allocations have not been enabled.");
 #endif
     }
 
@@ -221,9 +224,7 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffe
 #ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
             workingMem = new std::byte[static_cast<std::size_t>(workingMemSize)];
 #else
-            TEXAS_DETAIL_EXCEPTION(false, "Library bug: "
-                "Function 'detail::PrivateAccessor::loadFromBuffer' received a nullptr allocator, "
-                "but dynamic allocations have not been enabled.");
+        // We already covered this case above.
 #endif
         }
     }
@@ -249,12 +250,12 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffe
 }
 
 #ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(const std::byte* fileBuffer, std::size_t bufferLength)
+Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(const std::byte* fileBuffer, std::size_t bufferLength) noexcept
 {
     return detail::PrivateAccessor::loadFromBuffer(ConstByteSpan(fileBuffer, bufferLength), nullptr);
 }
 
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer)
+Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer) noexcept
 {
     return detail::PrivateAccessor::loadFromBuffer(inputBuffer, nullptr);
 }

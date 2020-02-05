@@ -149,7 +149,7 @@ const std::byte* Texas::Texture::rawBufferData() const
 std::uint64_t Texas::Texture::totalDataSize() const
 {
 	TEXAS_DETAIL_EXCEPTION(m_buffer.data() != nullptr, "Called .totalDataSize() on empty Texture object.");
-	return Texas::calcTotalSizeRequired(m_textureInfo);
+	return Texas::calcTotalSize(m_textureInfo);
 }
 
 Texas::ConstByteSpan Texas::Texture::rawBufferSpan() const

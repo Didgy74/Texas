@@ -12,26 +12,6 @@
 
 namespace Texas::detail::KTX
 {
-    namespace Header
-    {
-        constexpr std::uint32_t correctEndian = 0x04030201;
-        constexpr std::size_t totalSize = 64;
-        constexpr std::size_t identifier_Offset = 0;
-        constexpr std::size_t endianness_Offset = 12;
-        constexpr std::size_t glType_Offset = 16;
-        constexpr std::size_t glTypeSize_Offset = 20;
-        constexpr std::size_t glFormat_Offset = 24;
-        constexpr std::size_t glInternalFormat_Offset = 28;
-        constexpr std::size_t glBaseInternalFormat_Offset = 32;
-        constexpr std::size_t pixelWidth_Offset = 36;
-        constexpr std::size_t pixelHeight_Offset = 40;
-        constexpr std::size_t pixelDepth_Offset = 44;
-        constexpr std::size_t numberOfArrayElements_Offset = 48;
-        constexpr std::size_t numberOfFaces_Offset = 52;
-        constexpr std::size_t numberOfMipmapLevels_Offset = 56;
-        constexpr std::size_t bytesOfKeyValueData_Offset = 60;
-    }
-
     [[nodiscard]] static inline std::uint32_t toU32(const std::byte* ptr)
     {
         std::uint32_t temp = 0;
@@ -162,6 +142,9 @@ namespace Texas::detail::KTX
         // Grab amount of mip levels
         // Usually, mipCount = 0 means a mipmap pyramid should be generated at loadtime. But we ignore it.
         textureInfo.mipLevelCount = KTX::toU32(srcBuffer.data() + Header::numberOfMipmapLevels_Offset);
+        // KTX supports 32 mip levels maximally
+        if (textureInfo.mipLevelCount > 32)
+            return { ResultType::Success, "KTX specification doesn't allow mip-level count higher than 32." };
         if (textureInfo.mipLevelCount == 0)
             textureInfo.mipLevelCount = 1;
 

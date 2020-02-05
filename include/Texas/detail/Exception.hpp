@@ -14,8 +14,12 @@
 	} \
 } \
 
+#define TEXAS_DETAIL_NOEXCEPT noexcept
+
 #else
 	
 #define TEXAS_DETAIL_EXCEPTION(expression, msg)
+
+#define TEXAS_DETAIL_NOEXCEPT
 
 #endif

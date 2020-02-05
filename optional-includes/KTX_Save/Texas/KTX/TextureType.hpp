@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace Texas
+namespace Texas::KTX
 {
     enum class TextureType : std::uint_least8_t
     {
@@ -14,9 +14,10 @@ namespace Texas
 
         Array1D,
         Array2D,
-        Array3D,
 
         Cubemap,
         ArrayCubemap,
     };
+
+
 }

@@ -74,7 +74,7 @@ namespace Texas
         Result m_result{ ResultType::Success, "" };
         union
         {
-            std::uint8_t m_maybeUnused{};
+            alignas(T) unsigned char m_valueBuffer[sizeof(T)] = {};
             T m_value;
         };
 
@@ -84,14 +84,14 @@ namespace Texas
     template<typename T>
     ResultValue<T>::ResultValue(Result in) noexcept :
         m_result(in),
-        m_maybeUnused(std::uint8_t())
+        m_valueBuffer()
     {
     }
 
     template<typename T>
     ResultValue<T>::ResultValue(ResultType resultType, const char* errorMessage) noexcept :
         m_result(resultType, errorMessage),
-        m_maybeUnused(std::uint8_t())
+        m_valueBuffer()
     {
     }
 

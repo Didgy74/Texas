@@ -5,10 +5,11 @@
 
 namespace Texas::detail
 {
+
     /*
         Returns the block-info for given pixelFormat.
     */
-    constexpr BlockInfo getBlockInfo(PixelFormat pixelFormat) noexcept;
+    [[nodiscard]] constexpr BlockInfo getBlockInfo(PixelFormat pixelFormat) noexcept;
 
     constexpr BlockInfo getBlockInfo(PixelFormat pixelFormat) noexcept
     {

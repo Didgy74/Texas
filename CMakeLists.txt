@@ -7,8 +7,9 @@ project(Texas)
 # START
 	option(TEXAS_ENABLE_EVERYTHING "Enables all library functionality." OFF)
 	option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" OFF)
+	option(TEXAS_ENABLE_KTX_SAVE "Enables saving KTX files" OFF)
 	option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" OFF)
-	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan. Note! Requires Vulkan to be linked!" OFF)
+	option(TEXAS_ENABLE_VULKAN_TOOLS "Enables tools for interop with Vulkan. Note! Requires Vulkan headers to be present!" OFF)
 	option(TEXAS_ENABLE_EXCEPTIONS "Exceptions throw on invalid usage of the interface and/or stuff that will lead to UB." OFF)
 	option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables the parts of the library that allows the implementation to do dynamic allocations using operator new." OFF)
 #
@@ -57,6 +58,7 @@ project(Texas)
 # START
 	if(TEXAS_ENABLE_EVERYTHING)
 		set(TEXAS_ENABLE_KTX_READ ON)
+		set(TEXAS_ENABLE_KTX_SAVE ON)
 		set(TEXAS_ENABLE_PNG_READ ON)
 		set(TEXAS_ENABLE_EXCEPTIONS ON)
 		set(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS ON)
@@ -72,12 +74,18 @@ project(Texas)
 
 	if (TEXAS_ENABLE_KTX_READ)
 		target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_KTX_READ)
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Read.cpp")
+		target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Read.cpp")
+	endif()
+
+	if (TEXAS_ENABLE_KTX_SAVE)
+		target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_KTX_SAVE)
+		target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/KTX_Save")
+		target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Save.cpp")
 	endif()
 
 	if (TEXAS_ENABLE_PNG_READ)
 		target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_PNG_READ)
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_Read.cpp")
+		target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_Read.cpp")
 		set(TEXAS_LINK_ZLIB 1)
 	endif()
 
@@ -101,16 +109,16 @@ project(Texas)
 	endif()
 
 	if(TEXAS_ENABLE_EXCEPTIONS)
-		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_EXCEPTIONS)
+		target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_EXCEPTIONS)
 	endif()
 
 	if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
-		target_compile_definitions(${LIB_NAME} INTERFACE TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
+		target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 	endif()
 
 	if(TEXAS_ENABLE_VULKAN_TOOLS)
-		target_include_directories(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/VulkanTools")
-		target_sources(${LIB_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/VulkanTools.cpp")
+		target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/VulkanTools")
+		target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/VulkanTools.cpp")
 	endif()
 #
 # END

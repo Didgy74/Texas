@@ -9,6 +9,8 @@ namespace Texas::detail
 {
     enum class GLEnum : std::uint32_t
     {
+        Invalid = 0,
+
         TEXTURE_1D = 0x0DE0,
         TEXTURE_2D = 0x0DE1,
         TEXTURE_3D = 0x806F,
@@ -21,12 +23,14 @@ namespace Texas::detail
         INT = 0x1404,
         UNSIGNED_INT = 0x1405,
         FLOAT = 0x1406,
+        HALF_FLOAT = 0x140B,
 
-        // Standard
         RED = 0x1903,
         RG = 0x8227,
         RGB = 0x1907,
+        BGR = 0x80E0,
         RGBA = 0x1908,
+        BGRA = 0x80E1,
 
         R8 = 0x8229,
         R8_SNORM = 0x8F94,
@@ -101,9 +105,7 @@ namespace Texas::detail
     };
 
     [[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType);
-
     [[nodiscard]] inline constexpr ColorSpace toColorSpace(GLEnum GLInternalFormat, GLEnum GLType);
-
     [[nodiscard]] inline constexpr ChannelType toChannelType(GLEnum GLInternalFormat, GLEnum GLType);
 
     [[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType)
@@ -381,5 +383,237 @@ namespace Texas::detail
         }
 
         return ChannelType::Invalid;
+    }
+
+    [[nodiscard]] inline GLEnum toGLType(ChannelType chType);
+    [[nodiscard]] inline GLEnum toGLFormat(PixelFormat pFormat);
+    [[nodiscard]] inline GLEnum toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType);
+
+    inline GLEnum toGLType(ChannelType chType)
+    {
+        switch (chType)
+        {
+        case ChannelType::UnsignedNormalized:
+            return GLEnum::UNSIGNED_BYTE;
+        case ChannelType::SignedNormalized:
+            return GLEnum::BYTE;
+        case ChannelType::SignedFloat:
+            return GLEnum::FLOAT;
+        }
+
+        return GLEnum::Invalid;
+    }
+
+    inline GLEnum toGLFormat(PixelFormat pFormat)
+    {
+        switch (pFormat)
+        {
+        case PixelFormat::R_8:
+        case PixelFormat::R_16:
+        case PixelFormat::R_32:
+            return GLEnum::RED;
+        case PixelFormat::RG_8:
+        case PixelFormat::RG_16:
+        case PixelFormat::RG_32:
+            return GLEnum::RG;
+        case PixelFormat::RGB_8:
+        case PixelFormat::RGB_16:
+        case PixelFormat::RGB_32:
+            return GLEnum::RGB;
+        case PixelFormat::BGR_8:
+        case PixelFormat::BGR_16:
+        case PixelFormat::BGR_32:
+            return GLEnum::BGR;
+        case PixelFormat::RGBA_8:
+        case PixelFormat::RGBA_16:
+        case PixelFormat::RGBA_32:
+            return GLEnum::RGBA;
+        case PixelFormat::BGRA_8:
+        case PixelFormat::BGRA_16:
+        case PixelFormat::BGRA_32:
+            return GLEnum::BGRA;
+        }
+
+        return GLEnum::Invalid;
+    }
+
+    inline GLEnum toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType)
+    {
+        switch (pFormat)
+        {
+        case PixelFormat::R_8:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::R8;
+            case ChannelType::SignedNormalized:
+                return GLEnum::R8_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::R8UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::R8I;
+
+            }
+            break;
+        case PixelFormat::R_16:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::R16;
+            case ChannelType::SignedNormalized:
+                return GLEnum::R16_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::R16UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::R16I;
+            case ChannelType::SignedFloat:
+                return GLEnum::R16F;
+            }
+            break;
+        case PixelFormat::R_32:
+            switch (chType)
+            {
+            case ChannelType::UnsignedInteger:
+                return GLEnum::R32UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::R32I;
+            case ChannelType::SignedFloat:
+                return GLEnum::R32F;
+            }
+            break;
+        case PixelFormat::RG_8:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::RG8;
+            case ChannelType::SignedNormalized:
+                return GLEnum::RG8_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RG8UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RG8I;
+            }
+            break;
+        case PixelFormat::RG_16:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::RG16;
+            case ChannelType::SignedNormalized:
+                return GLEnum::RG16_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RG16UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RG16I;
+            case ChannelType::SignedFloat:
+                return GLEnum::RG16F;
+            }
+            break;
+        case PixelFormat::RG_32:
+            switch (chType)
+            {
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RG32UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RG32I;
+            case ChannelType::SignedFloat:
+                return GLEnum::RG32F;
+            }
+            break;
+        case PixelFormat::RGB_8:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::RGB8;
+            case ChannelType::SignedNormalized:
+                return GLEnum::RGB8_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RGB8UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RGB8I;
+            case ChannelType::sRGB:
+                return GLEnum::SRGB8;
+            }
+            break;
+        case PixelFormat::RGB_16:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::RGB16;
+            case ChannelType::SignedNormalized:
+                return GLEnum::RGB16_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RGB16UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RGB16I;
+            case ChannelType::SignedFloat:
+                return GLEnum::RGB16F;
+            }
+            break;
+        case PixelFormat::RGB_32:
+            switch (chType)
+            {
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RGB32UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RGB32UI;
+            case ChannelType::SignedFloat:
+                return GLEnum::RGB32F;
+            }
+            break;
+        case PixelFormat::RGBA_8:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::RGBA8;
+            case ChannelType::SignedNormalized:
+                return GLEnum::RGBA8_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RGBA8UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RGBA8I;
+            case ChannelType::sRGB:
+                return GLEnum::SRGB8_ALPHA8;
+            }
+            break;
+        case PixelFormat::RGBA_16:
+            switch (chType)
+            {
+            case ChannelType::UnsignedNormalized:
+                return GLEnum::RGBA16;
+            case ChannelType::SignedNormalized:
+                return GLEnum::RGBA16_SNORM;
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RGBA16UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RGBA16I;
+            case ChannelType::SignedFloat:
+                return GLEnum::RGBA16F;
+            }
+            break;
+        case PixelFormat::RGBA_32:
+            switch (chType)
+            {
+            case ChannelType::UnsignedInteger:
+                return GLEnum::RGBA32UI;
+            case ChannelType::SignedInteger:
+                return GLEnum::RGBA32I;
+            case ChannelType::SignedFloat:
+                return GLEnum::RGBA32F;
+            }
+            break;
+
+        case PixelFormat::BC7_RGBA:
+            switch (cSpace)
+            {
+            case ColorSpace::Linear:
+                return GLEnum::COMPRESSED_RGBA_BPTC_UNORM;
+            case ColorSpace::sRGB:
+                return GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
+            }
+            break;
+        }
+
+        return GLEnum::Invalid;
     }
 }

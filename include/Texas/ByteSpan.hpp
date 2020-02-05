@@ -4,6 +4,34 @@
 
 namespace Texas
 {
+    template<typename T>
+    class Span
+    {
+    private:
+        T const* m_data = nullptr;
+        std::size_t m_size = 0;
+
+    public:
+        inline constexpr Span() noexcept = default;
+        inline constexpr Span(T const* data, std::size_t size) noexcept;
+
+        [[nodiscard]] inline constexpr T const* data() const noexcept;
+        [[nodiscard]] inline constexpr std::size_t size() const noexcept;
+    };
+
+    template<typename T>
+    inline constexpr Span<T>::Span(T const* data, std::size_t size) noexcept :
+        m_data(data),
+        m_size(size)
+    {
+    }
+
+    template<typename T>
+    inline constexpr T const* Span<T>::data() const noexcept { return m_data; }
+
+    template<typename T>
+    inline constexpr std::size_t Span<T>::size() const noexcept { return m_size; }
+
     // Defines a range of bytes
     class ConstByteSpan
     {
@@ -14,7 +42,7 @@ namespace Texas
     public:
         inline constexpr ConstByteSpan() noexcept {}
 
-        inline constexpr ConstByteSpan(const std::byte* data, std::size_t size) noexcept :
+        inline constexpr ConstByteSpan(std::byte const* data, std::size_t size) noexcept :
             m_data(data),
             m_size(size)
         {}

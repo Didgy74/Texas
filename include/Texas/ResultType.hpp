@@ -15,6 +15,7 @@ namespace Texas
         CorruptFileData,
         FileNotSupported,
         InvalidLibraryUsage,
+        InvalidInputParameter,
         PixelFormatNotSupported,
         PrematureEndOfFile,
     };
