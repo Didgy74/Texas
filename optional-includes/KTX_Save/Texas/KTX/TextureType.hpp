@@ -4,6 +4,7 @@
 
 namespace Texas::KTX
 {
+    /*
     enum class TextureType : std::uint_least8_t
     {
         Invalid,
@@ -18,6 +19,6 @@ namespace Texas::KTX
         Cubemap,
         ArrayCubemap,
     };
-
+    */
 
 }

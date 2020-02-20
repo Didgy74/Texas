@@ -125,7 +125,7 @@ std::uint64_t Texas::Texture::arrayLayerOffset(std::uint64_t mipLevelIndex, std:
 std::uint64_t Texas::Texture::arrayLayerSize(std::uint64_t mipIndex) const
 {
 	TEXAS_DETAIL_EXCEPTION(m_buffer.data() != nullptr, "Called .arrayLayerSize() on empty Texture object.");
-	return Texas::calcArrayLayerSize(Texas::calcMipDimensions(m_textureInfo.baseDimensions, mipIndex), m_textureInfo.pixelFormat);
+	return Texas::calcSingleImageSize(Texas::calcMipDimensions(m_textureInfo.baseDimensions, mipIndex), m_textureInfo.pixelFormat);
 }
 
 const std::byte* Texas::Texture::arrayLayerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const

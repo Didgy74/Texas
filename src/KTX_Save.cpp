@@ -99,6 +99,39 @@ namespace Texas::detail::KTX
 	}
 }
 
+Texas::Result Texas::KTX::canSave(TextureInfo const& texInfo) noexcept
+{
+	if (texInfo.textureType == TextureType::Array3D)
+		return { ResultType::InvalidInputParameter, "KTX format does not support 3D arrays." };
+
+	if (texInfo.baseDimensions.width == 0)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'width' equal to 0 as KTX format." };
+	if (texInfo.baseDimensions.height == 0)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'height' equal to 0 as KTX format." };
+	if (texInfo.baseDimensions.depth == 0)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'depth' equal to 0 as KTX format." };
+	if (texInfo.arrayLayerCount == 0)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'arrayLayerCount' equal to 0 as KTX format." };
+	if (texInfo.mipLevelCount == 0)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipLevelCount' equal to 0 as KTX format." };
+
+	if (texInfo.baseDimensions.width > detail::maxValue<std::uint32_t>())
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'width' higher than uint32 max value as KTX format." };
+	if (texInfo.baseDimensions.height > detail::maxValue<std::uint32_t>())
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'height' higher than uint32 max value as KTX format." };
+	if (texInfo.baseDimensions.depth > detail::maxValue<std::uint32_t>())
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'depth' higher than uint32 max value as KTX format." };
+	if (texInfo.arrayLayerCount > detail::maxValue<std::uint32_t>())
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'arrayLayerCount' higher than uint32 max value as KTX format." };
+	if (texInfo.mipLevelCount > 32)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipLevelCount' higher than 32 as KTX format." };
+
+	if (texInfo.mipLevelCount > calcMaxMipCount(texInfo.baseDimensions))
+		return { ResultType::InvalidInputParameter, "Passed in texture-info with 'mipLevelCount' higher than 'baseDimensions' can hold." };
+
+	return { ResultType::Success, nullptr };
+}
+
 Texas::ResultValue<std::uint64_t> Texas::detail::PrivateAccessor::KTX_calcFileSize(TextureInfo const& texInfo) noexcept
 {
 	Result isValidResult = detail::KTX::isValid(texInfo);
@@ -156,8 +189,6 @@ Texas::Result Texas::KTX::saveToFile(char const* path, Texas::TextureInfo const&
 	if (!saveResult.isSuccessful())
 		return saveResult;
 
-	streamObject.stream.close();
-
 	return { ResultType::Success, nullptr };
 }
 
@@ -203,27 +234,27 @@ Texas::Result Texas::KTX::saveToStream(Texas::TextureInfo const& texInfo, Span<C
 	memOffsetTracker += sizeof(detail::KTX::Header::correctEndian);
 
 	// Set the 'glType' field
-	std::uint32_t const glType = static_cast<std::uint32_t>(detail::toGLType(texInfo.channelType));
+	detail::GLEnum const glType = detail::toGLType(texInfo.pixelFormat, texInfo.channelType);
 	stream.write(reinterpret_cast<char const*>(&glType), sizeof(glType));
 	memOffsetTracker += sizeof(glType);
 
 	// Set the 'glTypeSize' field
-	std::uint32_t const glTypeSize = static_cast<std::uint32_t>(detail::toGLType(texInfo.channelType));
+	std::uint32_t const glTypeSize = detail::toGLTypeSize(texInfo.pixelFormat);
 	stream.write(reinterpret_cast<char const*>(&glTypeSize), sizeof(glTypeSize));
 	memOffsetTracker += sizeof(glTypeSize);
 
 	// Set the 'glFormat' field
-	std::uint32_t const glFormat = static_cast<std::uint32_t>(detail::toGLFormat(texInfo.pixelFormat));
+	detail::GLEnum const glFormat = detail::toGLFormat(texInfo.pixelFormat);
 	stream.write(reinterpret_cast<char const*>(&glFormat), sizeof(glFormat));
 	memOffsetTracker += sizeof(glFormat);
 
 	// Set the 'glInternalFormat' field
-	std::uint32_t const glInternalFormat = static_cast<std::uint32_t>(detail::toGLInternalFormat(texInfo.pixelFormat, texInfo.colorSpace, texInfo.channelType));
+	detail::GLEnum const glInternalFormat = detail::toGLInternalFormat(texInfo.pixelFormat, texInfo.colorSpace, texInfo.channelType);
 	stream.write(reinterpret_cast<char const*>(&glInternalFormat), sizeof(glInternalFormat));
 	memOffsetTracker += sizeof(glInternalFormat);
 
 	// Set the 'glBaseInternalFormat' field
-	std::uint32_t const glBaseInternalFormat = 0;
+	detail::GLEnum const glBaseInternalFormat = (detail::GLEnum)0;
 	stream.write(reinterpret_cast<char const*>(&glBaseInternalFormat), sizeof(glBaseInternalFormat));
 	memOffsetTracker += sizeof(glBaseInternalFormat);
 

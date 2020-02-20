@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Texas/KTX/TextureInfo.hpp"
-
 #include "Texas/Texture.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/ResultValue.hpp"
@@ -15,6 +13,8 @@ namespace Texas
 
 namespace Texas::KTX
 {
+	[[nodiscard]] Result canSave(TextureInfo const& texInfo) noexcept;
+
 	[[nodiscard]] ResultValue<std::uint64_t> calcFileSize(TextureInfo const& texInfo) noexcept;
 
 	/*

@@ -6,7 +6,7 @@ namespace Texas
 {
     enum class FileFormat : std::uint8_t
     {
-        Unsupported,
+        Invalid,
 
 #if defined(TEXAS_ENABLE_KTX_READ) || defined(TEXAS_ENABLE_KTX_WRITE)
         KTX,

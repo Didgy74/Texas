@@ -9,8 +9,6 @@ namespace Texas::detail
 {
     enum class GLEnum : std::uint32_t
     {
-        Invalid = 0,
-
         TEXTURE_1D = 0x0DE0,
         TEXTURE_2D = 0x0DE1,
         TEXTURE_3D = 0x806F,
@@ -104,11 +102,11 @@ namespace Texas::detail
         COMPRESSED_SRGB_ALPHA_BPTC_UNORM = 0x8E8D,
     };
 
-    [[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType);
-    [[nodiscard]] inline constexpr ColorSpace toColorSpace(GLEnum GLInternalFormat, GLEnum GLType);
-    [[nodiscard]] inline constexpr ChannelType toChannelType(GLEnum GLInternalFormat, GLEnum GLType);
+    [[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType) noexcept;
+    [[nodiscard]] inline constexpr ColorSpace toColorSpace(GLEnum GLInternalFormat, GLEnum GLType) noexcept;
+    [[nodiscard]] inline constexpr ChannelType toChannelType(GLEnum GLInternalFormat, GLEnum GLType) noexcept;
 
-    [[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType)
+    [[nodiscard]] inline constexpr PixelFormat toPixelFormat(GLEnum GLInternalFormat, GLEnum GLType) noexcept
     {
         switch (GLInternalFormat)
         {
@@ -210,7 +208,7 @@ namespace Texas::detail
         return PixelFormat::Invalid;
     }
 
-    [[nodiscard]] inline constexpr ColorSpace toColorSpace(GLEnum GLInternalFormat, GLEnum GLType)
+    [[nodiscard]] inline constexpr ColorSpace toColorSpace(GLEnum GLInternalFormat, GLEnum GLType) noexcept
     {
         switch (GLInternalFormat)
         {
@@ -298,7 +296,7 @@ namespace Texas::detail
         return ColorSpace::Invalid;
     }
 
-    [[nodiscard]] inline constexpr ChannelType toChannelType(GLEnum GLInternalFormat, GLEnum GLType)
+    [[nodiscard]] inline constexpr ChannelType toChannelType(GLEnum GLInternalFormat, GLEnum GLType) noexcept
     {
         switch (GLInternalFormat)
         {
@@ -385,12 +383,17 @@ namespace Texas::detail
         return ChannelType::Invalid;
     }
 
-    [[nodiscard]] inline GLEnum toGLType(ChannelType chType);
-    [[nodiscard]] inline GLEnum toGLFormat(PixelFormat pFormat);
-    [[nodiscard]] inline GLEnum toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType);
+    [[nodiscard]] inline GLEnum toGLType(PixelFormat pFormat, ChannelType chType) noexcept;
+    [[nodiscard]] inline std::uint32_t toGLTypeSize(PixelFormat pFormat) noexcept;
+    [[nodiscard]] inline GLEnum toGLFormat(PixelFormat pFormat) noexcept;
+    [[nodiscard]] inline GLEnum toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept;
+    [[nodiscard]] inline GLEnum toGLBaseInternalFormat(PixelFormat pFormat) noexcept;
 
-    inline GLEnum toGLType(ChannelType chType)
+    inline GLEnum toGLType(PixelFormat pFormat, ChannelType chType) noexcept
     {
+        if (isCompressed(pFormat))
+            return GLEnum(0);
+
         switch (chType)
         {
         case ChannelType::UnsignedNormalized:
@@ -401,10 +404,46 @@ namespace Texas::detail
             return GLEnum::FLOAT;
         }
 
-        return GLEnum::Invalid;
+        return GLEnum(0);
     }
 
-    inline GLEnum toGLFormat(PixelFormat pFormat)
+    inline std::uint32_t toGLTypeSize(PixelFormat pFormat) noexcept
+    {
+        switch (pFormat)
+        {
+        case PixelFormat::R_8:
+        case PixelFormat::RG_8:
+        case PixelFormat::RA_8:
+        case PixelFormat::RGB_8:
+        case PixelFormat::BGR_8:
+        case PixelFormat::RGBA_8:
+        case PixelFormat::BGRA_8:
+            return 1;
+        case PixelFormat::R_16:
+        case PixelFormat::RG_16:
+        case PixelFormat::RA_16:
+        case PixelFormat::RGB_16:
+        case PixelFormat::BGR_16:
+        case PixelFormat::RGBA_16:
+        case PixelFormat::BGRA_16:
+            return 2;
+        case PixelFormat::R_32:
+        case PixelFormat::RG_32:
+        case PixelFormat::RA_32:
+        case PixelFormat::RGB_32:
+        case PixelFormat::BGR_32:
+        case PixelFormat::RGBA_32:
+        case PixelFormat::BGRA_32:
+            return 4;
+        }
+
+        if (isCompressed(pFormat))
+            return 1;
+
+        return 0;
+    }
+
+    inline GLEnum toGLFormat(PixelFormat pFormat) noexcept
     {
         switch (pFormat)
         {
@@ -434,10 +473,10 @@ namespace Texas::detail
             return GLEnum::BGRA;
         }
 
-        return GLEnum::Invalid;
+        return GLEnum(0);
     }
 
-    inline GLEnum toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType)
+    inline GLEnum toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept
     {
         switch (pFormat)
         {
@@ -614,6 +653,24 @@ namespace Texas::detail
             break;
         }
 
-        return GLEnum::Invalid;
+        return GLEnum(0);
+    }
+
+    inline GLEnum toGLBaseInternalFormat(PixelFormat pFormat) noexcept
+    {
+        if (!isCompressed(pFormat))
+            return toGLFormat(pFormat);
+
+        switch (pFormat)
+        {
+        case PixelFormat::BC1_RGB:
+            return GLEnum::RGB;
+        case PixelFormat::BC1_RGBA:
+            return GLEnum::RGBA;
+        case PixelFormat::BC7_RGBA:
+            return GLEnum::RGBA;
+        }
+
+        return GLEnum(0);
     }
 }
