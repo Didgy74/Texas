@@ -59,7 +59,7 @@ PNG files are always decompressed to grayscale, grayscale with alpha, RGB or RGB
 
 Texas does not yet support interlaced PNG images. Support for sRGB colorspace is still pretty bad for PNGs.
 
-The KTX support can load all mipmaps and all array-layers of a texture. It can also extract the color-space information (linear or sRGB).
+The KTX support can load all mipmaps and all array-layers of a texture. It can also extract the color-space information (currently very limited).
 Currently tested KTX formats:
  - R 8-bit
  - RGB 8-bit 
@@ -80,10 +80,10 @@ ETC and ASTC support is planned.
  - 1D textures
  - 3D textures
  - Cubemaps
- - RG images
- - ETC compression format
- - ASTC compression
- - BCn compression support
+ - Any PixelFormat with channel count 1-4
+ - ETC - Read only
+ - ASTC - Read only
+ - BCn - Read only
  - Color space information
  - Pixel formats with bit-depth higher than 8 bits per channel
  - "Load-from-buffer" loading path with allocation callbacks
