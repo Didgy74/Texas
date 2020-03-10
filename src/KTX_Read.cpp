@@ -70,132 +70,157 @@ namespace Texas::detail::KTX
         TextureInfo& textureInfo,
         detail::FileInfo_KTX_BackendData& backendData)
     {
-        // Check if buffer is long enough to hold the KTX header
-        if (srcBuffer.size() <= Header::totalSize)
-            return { ResultType::PrematureEndOfFile, "KTX-file is not large enough to hold all header-data." };
-
-        backendData = detail::FileInfo_KTX_BackendData();
-
-        textureInfo.fileFormat = FileFormat::KTX;
-
-        // Check if file endianness matches system's
-        if (KTX::toU32(srcBuffer.data() + Header::endianness_Offset) != Header::correctEndian)
-            return { ResultType::FileNotSupported, "KTX-file's endianness does not match system endianness. Texas not capable of converting." };
-
-        // Grab pixel format
-        const detail::GLEnum fileGLType = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glType_Offset));
-        const detail::GLEnum fileGLFormat = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glFormat_Offset));
-        const detail::GLEnum fileGLInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glInternalFormat_Offset));
-        const detail::GLEnum fileGLBaseInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(srcBuffer.data() + Header::glBaseInternalFormat_Offset));
-        textureInfo.colorSpace = detail::toColorSpace(fileGLInternalFormat, fileGLType);
-        textureInfo.pixelFormat = detail::toPixelFormat(fileGLInternalFormat, fileGLType);
-        textureInfo.channelType = detail::toChannelType(fileGLInternalFormat, fileGLType);
-        if (textureInfo.pixelFormat == PixelFormat::Invalid || textureInfo.colorSpace == ColorSpace::Invalid || textureInfo.channelType == ChannelType::Invalid)
-            return { ResultType::PixelFormatNotSupported, "KTX pixel-format not supported." };;
-
-
-        // Grab dimensions
-        const std::uint_least32_t origBaseDimensions[3] = {
-            KTX::toU32(srcBuffer.data() + Header::pixelWidth_Offset),
-            KTX::toU32(srcBuffer.data() + Header::pixelHeight_Offset),
-            KTX::toU32(srcBuffer.data() + Header::pixelDepth_Offset)
-        };
-        if (origBaseDimensions[0] == 0)
-            return { ResultType::CorruptFileData, "KTX specification does not allow field 'pixelWidth' to be 0." };
-        if (origBaseDimensions[2] > 0 && origBaseDimensions[1] == 0)
-            return { ResultType::CorruptFileData, "KTX specification does not allow field 'pixelHeight' to be 0 when field 'pixelDepth' is >0." };
-
-
-        // Grab array layer count
-        const std::uint_least32_t origArrayLayerCount = KTX::toU32(srcBuffer.data() + Header::numberOfArrayElements_Offset);
-
-
-        // Grab number of faces.
-        const std::uint_least32_t origNumberOfFaces = KTX::toU32(srcBuffer.data() + Header::numberOfFaces_Offset);
-        if (origNumberOfFaces != 1 && origNumberOfFaces != 6)
-            return { ResultType::CorruptFileData, "KTX specification requires field 'numberOfFaces' to be 1 or 6." };
-        const bool texIsCubemap = origNumberOfFaces == 6;
-        if (texIsCubemap)
-        {
-            if (texIsCubemap)
-                return { ResultType::FileNotSupported, "KTX cubemaps not yet supported." };
-            if (origBaseDimensions[1] == 0)
-                return { ResultType::CorruptFileData, "KTX specification requires cubemaps to have field 'pixelHeight' be >0." };
-            if (origBaseDimensions[2] != 0)
-                return { ResultType::CorruptFileData, "KTX specification requires cubemaps to have field 'pixelDepth' be 0." };
-        }
-
-        textureInfo.textureType = toTextureType(origBaseDimensions, origArrayLayerCount, texIsCubemap);
-
-        // Grab dimensions
-        textureInfo.baseDimensions.width = origBaseDimensions[0];
-        textureInfo.baseDimensions.height = origBaseDimensions[1];
-        if (textureInfo.baseDimensions.height == 0)
-            textureInfo.baseDimensions.height = 1;
-        textureInfo.baseDimensions.depth = origBaseDimensions[2];
-        if (textureInfo.baseDimensions.depth == 0)
-            textureInfo.baseDimensions.depth = 1;
-        // Grab amount of array layers
-        textureInfo.arrayLayerCount = origArrayLayerCount;
-        if (textureInfo.arrayLayerCount == 0)
-            textureInfo.arrayLayerCount = 1;
-        // Grab amount of mip levels
-        // Usually, mipCount = 0 means a mipmap pyramid should be generated at loadtime. But we ignore it.
-        textureInfo.mipLevelCount = KTX::toU32(srcBuffer.data() + Header::numberOfMipmapLevels_Offset);
-        // KTX supports 32 mip levels maximally
-        if (textureInfo.mipLevelCount > 32)
-            return { ResultType::Success, "KTX specification doesn't allow mip-level count higher than 32." };
-        if (textureInfo.mipLevelCount == 0)
-            textureInfo.mipLevelCount = 1;
-
-
-        // For now we don't do anything with the key-value data.
-        const std::uint_least32_t totalKeyValueDataSize = KTX::toU32(srcBuffer.data() + Header::bytesOfKeyValueData_Offset);
-        // Check the buffer is long enough to hold all the key-value-data
-        if (srcBuffer.size() <= Header::totalSize + totalKeyValueDataSize)
-            return { ResultType::PrematureEndOfFile, "KTX-file is not large enough to hold any image-data." };
-        std::uint_least32_t keyValueDataCounter = 0;
-        while (keyValueDataCounter < totalKeyValueDataSize)
-        {
-            const std::uint_least32_t keyValuePairSize = KTX::toU32(srcBuffer.data() + Header::bytesOfKeyValueData_Offset + sizeof(std::uint32_t) + keyValueDataCounter);
-            const std::byte* key = srcBuffer.data() + Header::bytesOfKeyValueData_Offset + sizeof(std::uint32_t) + keyValueDataCounter + sizeof(std::uint32_t);
-            keyValueDataCounter += keyValuePairSize + (3 - ((keyValuePairSize + 3) % 4));
-        }
-
-        backendData.srcImageDataStart = reinterpret_cast<const unsigned char*>(srcBuffer.data() + Header::totalSize + totalKeyValueDataSize);
-
         return { ResultType::Success, nullptr };
     }
 
     Result loadFromBuffer_Step2(
         TextureInfo const& textureInfo,
         detail::FileInfo_KTX_BackendData& backendData,
-        const ByteSpan dstImageBuffer,
-        const ByteSpan workingMem)
+        ByteSpan dstImageBuffer,
+        ByteSpan workingMem)
     {
-        std::size_t srcMemOffset = 0;
-        std::size_t dstMemOffset = 0;
-
-        if (isCubemap(textureInfo.textureType))
-        {
-            return Result(ResultType::FileNotSupported, "KTX cubemaps not yet supported.");
-        }
-        else
-        {
-            for (std::uint_least32_t mipIndex = 0; mipIndex < textureInfo.mipLevelCount; mipIndex++)
-            {
-                // Contains the amount of data from all array images of this mip level
-                const std::uint_least32_t mipDataSize = KTX::toU32(reinterpret_cast<const std::byte*>(backendData.srcImageDataStart + srcMemOffset));
-                
-                std::memcpy(dstImageBuffer.data() + dstMemOffset, backendData.srcImageDataStart + srcMemOffset + sizeof(std::uint32_t), mipDataSize);
-                const std::uint8_t padding = (3 - ((mipDataSize + 3) % 4));
-                srcMemOffset += sizeof(mipDataSize) + mipDataSize + padding;
-                dstMemOffset += mipDataSize;
-            }
-        }
-
-
-
         return Result(ResultType::Success, nullptr);
     }
+}
+
+Texas::Result Texas::detail::KTX::loadFromStream(
+    InputStream& stream, 
+    TextureInfo& textureInfo)
+{
+    Result result{};
+
+    textureInfo.fileFormat = FileFormat::KTX;
+
+    std::byte headerBuffer[Header::totalSize] = {};
+    result = stream.read({ headerBuffer, Header::totalSize });
+    if (!result.isSuccessful())
+        return result;
+
+    // Test that identifier is correct.
+    std::byte identifier[12] = {};
+    std::memcpy(identifier, headerBuffer, 12);
+    if (std::memcmp(identifier, KTX::identifier, 12) != 0)
+        return { ResultType::CorruptFileData, "Identifier of file does not match KTX identifier." };
+
+    // Check if file endianness matches system's
+    if (KTX::toU32(headerBuffer + Header::endianness_Offset) != Header::correctEndian)
+        return { ResultType::FileNotSupported, 
+        "KTX-file's endianness does not match system endianness. \
+                     Texas not capable of converting." };
+
+    // Grab pixel format
+    detail::GLEnum const fileGLType = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glType_Offset));
+    detail::GLEnum const fileGLFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glFormat_Offset));
+    detail::GLEnum const fileGLInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glInternalFormat_Offset));
+    detail::GLEnum const fileGLBaseInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glBaseInternalFormat_Offset));
+    textureInfo.colorSpace = detail::toColorSpace(fileGLInternalFormat, fileGLType);
+    textureInfo.pixelFormat = detail::toPixelFormat(fileGLInternalFormat, fileGLType);
+    textureInfo.channelType = detail::toChannelType(fileGLInternalFormat, fileGLType);
+    if (textureInfo.pixelFormat == PixelFormat::Invalid || textureInfo.colorSpace == ColorSpace::Invalid || textureInfo.channelType == ChannelType::Invalid)
+        return { ResultType::PixelFormatNotSupported, "KTX pixel-format not supported." };;
+
+
+    // Grab dimensions
+    std::uint32_t const origBaseDimensions[3] = {
+        KTX::toU32(headerBuffer + Header::pixelWidth_Offset),
+        KTX::toU32(headerBuffer + Header::pixelHeight_Offset),
+        KTX::toU32(headerBuffer + Header::pixelDepth_Offset)
+    };
+    if (origBaseDimensions[0] == 0)
+        return { ResultType::CorruptFileData, 
+        "KTX specification does not allow field 'pixelWidth' to be 0." };
+    if (origBaseDimensions[2] > 0 && origBaseDimensions[1] == 0)
+        return { ResultType::CorruptFileData, 
+        "KTX specification does not allow field 'pixelHeight' to be 0 \
+                      when field 'pixelDepth' is >0." };
+
+
+    // Grab array layer count
+    std::uint32_t const origArrayLayerCount = KTX::toU32(headerBuffer + Header::numberOfArrayElements_Offset);
+
+
+    // Grab number of faces.
+    std::uint32_t const origNumberOfFaces = KTX::toU32(headerBuffer + Header::numberOfFaces_Offset);
+    if (origNumberOfFaces != 1 && origNumberOfFaces != 6)
+        return { ResultType::CorruptFileData, "KTX specification requires field 'numberOfFaces' to be 1 or 6." };
+    bool const texIsCubemap = origNumberOfFaces == 6;
+    if (texIsCubemap)
+    {
+        if (texIsCubemap)
+            return { ResultType::FileNotSupported, "KTX cubemaps not yet supported." };
+        if (origBaseDimensions[1] == 0)
+            return { ResultType::CorruptFileData, "KTX specification requires cubemaps to have field 'pixelHeight' be >0." };
+        if (origBaseDimensions[2] != 0)
+            return { ResultType::CorruptFileData, "KTX specification requires cubemaps to have field 'pixelDepth' be 0." };
+    }
+
+    textureInfo.textureType = toTextureType(origBaseDimensions, origArrayLayerCount, texIsCubemap);
+
+    // Grab dimensions
+    textureInfo.baseDimensions.width = origBaseDimensions[0];
+    textureInfo.baseDimensions.height = origBaseDimensions[1];
+    if (textureInfo.baseDimensions.height == 0)
+        textureInfo.baseDimensions.height = 1;
+    textureInfo.baseDimensions.depth = origBaseDimensions[2];
+    if (textureInfo.baseDimensions.depth == 0)
+        textureInfo.baseDimensions.depth = 1;
+    // Grab amount of array layers
+    textureInfo.arrayLayerCount = origArrayLayerCount;
+    if (textureInfo.arrayLayerCount == 0)
+        textureInfo.arrayLayerCount = 1;
+    // Grab amount of mip levels
+    // Usually, mipCount = 0 means a mipmap pyramid should be generated at loadtime. But we ignore it.
+    textureInfo.mipLevelCount = KTX::toU32(headerBuffer + Header::numberOfMipmapLevels_Offset);
+    // KTX supports 32 mip levels maximally
+    if (textureInfo.mipLevelCount > 32)
+        return { ResultType::Success, "KTX specification doesn't allow mip-level count higher than 32." };
+    if (textureInfo.mipLevelCount == 0)
+        textureInfo.mipLevelCount = 1;
+
+
+    // For now we don't do anything with the key-value data.
+    std::uint32_t const totalKeyValueDataSize = KTX::toU32(headerBuffer + Header::bytesOfKeyValueData_Offset);
+
+    stream.ignore(totalKeyValueDataSize);
+
+    return { ResultType::Success, nullptr };
+}
+
+Texas::Result Texas::detail::KTX::loadImageData(
+    InputStream& stream,
+    ByteSpan dstBuffer,
+    TextureInfo const& textureInfo)
+{
+    Result result{};
+    std::size_t dstMemOffset = 0;
+
+    if (isCubemap(textureInfo.textureType))
+    {
+        return Result(ResultType::FileNotSupported, "KTX cubemaps not yet supported.");
+    }
+    else
+    {
+        for (std::uint32_t mipIndex = 0; mipIndex < textureInfo.mipLevelCount; mipIndex += 1)
+        {
+            // Contains the amount of data from all array images of this mip level
+            std::uint32_t mipDataSize = 0;
+            result = stream.read({ reinterpret_cast<std::byte*>(&mipDataSize), sizeof(mipDataSize) });
+            if (!result.isSuccessful())
+                return result;
+            if (mipDataSize == 0)
+                return { ResultType::CorruptFileData , "KTX spec doesn't allow a mip-level to have size 0." };
+            // TODO: Maybe add some validation to check if size is correct multiple...
+
+            // Copy all the data of this mip-level.
+            result = stream.read({ dstBuffer.data() + dstMemOffset, mipDataSize });
+            if (!result.isSuccessful())
+                return result;
+
+            std::uint8_t const padding = (3 - ((mipDataSize + 3) % 4));
+            stream.ignore(padding);
+            dstMemOffset += mipDataSize;
+        }
+    }
+
+    return { ResultType::Success, nullptr };
 }

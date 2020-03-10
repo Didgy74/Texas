@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Texas/InputStream.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/TextureInfo.hpp"
 #include "Texas/ByteSpan.hpp"
@@ -16,6 +17,11 @@ namespace Texas::detail::PNG
         TextureInfo& metaData,
         std::uint64_t& workingMemRequired,
         detail::FileInfo_PNG_BackendData& backendData);
+
+    Result parseStream(
+        InputStream& stream,
+        TextureInfo& metaData,
+        std::uint64_t& workingMemRequired);
 
     Result loadFromBuffer_Step2(
         const TextureInfo& textureInfo,

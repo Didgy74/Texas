@@ -13,7 +13,13 @@ namespace Texas
 	class Allocator
 	{
 	public:
-		virtual std::byte* allocate(std::size_t amount) = 0;
-		virtual void deallocate(std::byte* ptr) = 0;
+		enum class MemoryType : char
+		{
+			ImageData,
+			WorkingData
+		};
+
+		virtual std::byte* allocate(std::size_t amount, MemoryType memType) = 0;
+		virtual void deallocate(std::byte* ptr, MemoryType memType) = 0;
 	};
 }

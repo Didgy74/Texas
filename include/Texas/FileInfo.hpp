@@ -20,7 +20,9 @@ namespace Texas
     class FileInfo
     {
     public:
-        [[nodiscard]] const TextureInfo& textureInfo() const noexcept;
+        FileInfo() noexcept = default;
+
+        [[nodiscard]] TextureInfo const & textureInfo() const noexcept;
 
         [[nodiscard]] Dimensions baseDimensions() const noexcept;
 
@@ -28,11 +30,7 @@ namespace Texas
 
         [[nodiscard]] std::uint64_t workingMemoryRequired() const noexcept;
 
-        //[[nodiscard]] std::uint64_t mipOffset(std::uint64_t mipIndex) const noexcept;
-
     private:
-        FileInfo() = default;
-
         TextureInfo m_textureInfo = {};
         std::uint64_t m_memoryRequired = 0;
         std::uint64_t m_workingMemoryRequired = 0;

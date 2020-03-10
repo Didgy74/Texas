@@ -10,7 +10,9 @@ namespace Texas
     class Result
     {
     public:
-        inline constexpr Result(ResultType resultType, const char* errorMessage) :
+        inline constexpr Result() = default;
+
+        inline constexpr Result(ResultType resultType, char const* errorMessage) :
             m_resultType(resultType),
             m_errorMessage(errorMessage)
         {
@@ -21,7 +23,7 @@ namespace Texas
             return m_resultType;
         }
 
-        [[nodiscard]] inline constexpr const char* errorMessage() const noexcept
+        [[nodiscard]] inline constexpr char const* errorMessage() const noexcept
         {
             return m_errorMessage;
         }
@@ -37,7 +39,7 @@ namespace Texas
         }
 
     private:
-        ResultType m_resultType;
-        const char* m_errorMessage;
+        ResultType m_resultType = ResultType::Success;
+        char const* m_errorMessage = nullptr;
     };
 }

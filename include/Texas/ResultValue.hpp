@@ -21,9 +21,20 @@ namespace Texas
     class ResultValue
     {
     public:
-        ResultValue() = delete;
+        ResultValue();
         ResultValue(const T&) = delete;
         ResultValue(T&& data) noexcept;
+        /*
+        Note! The parameter "result" cannot be ResultType::Success.
+        Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
+        */
+        ResultValue(Result result) noexcept;
+
+        /*
+        Note! The parameter "result" cannot be ResultType::Success.
+        Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
+        */
+        ResultValue(ResultType resultType, const char* errorMessage) noexcept;
 
         ~ResultValue() noexcept;
 
@@ -59,18 +70,6 @@ namespace Texas
         operator Result() const noexcept;
 
     private:
-        /*
-            Note! The parameter "result" cannot be ResultType::Success.
-            Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
-        */
-        ResultValue(Result result) noexcept;
-
-        /*
-            Note! The parameter "result" cannot be ResultType::Success.
-            Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
-        */
-        ResultValue(ResultType resultType, const char* errorMessage) noexcept;
-
         Result m_result{ ResultType::Success, "" };
         union
         {

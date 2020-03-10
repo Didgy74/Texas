@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Texas/InputStream.hpp"
 #include "Texas/ResultValue.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/TextureInfo.hpp"
@@ -20,6 +21,15 @@ namespace Texas::detail::KTX
         detail::FileInfo_KTX_BackendData& backendDataBuffer,
         ByteSpan dstImageBuffer,
         ByteSpan workingMemory);
+
+    [[nodiscard]] Result loadFromStream(
+        InputStream& stream,
+        TextureInfo& textureInfo);
+
+    [[nodiscard]] Result loadImageData(
+        InputStream& stream,
+        ByteSpan dstBuffer,
+        TextureInfo const& textureInfo);
 
     namespace Header
     {

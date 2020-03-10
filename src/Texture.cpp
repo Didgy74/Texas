@@ -161,11 +161,12 @@ Texas::ConstByteSpan Texas::Texture::rawBufferSpan() const
 void Texas::Texture::deallocateInternalBuffer()
 {
 	if (m_allocator != nullptr)
-		m_allocator->deallocate(m_buffer.data());
+		m_allocator->deallocate(m_buffer.data(), Allocator::MemoryType::ImageData);
 	else
 	{
 #ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
 		delete m_buffer.data();
+		m_buffer = {};
 #else
 		TEXAS_DETAIL_EXCEPTION(
 			true, 

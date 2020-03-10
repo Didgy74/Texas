@@ -3,6 +3,7 @@
 [o] = Cancelled
 
 To do list for 0.1v
+[ ] - Make documentation explaining the "imagedata memory" vs "working memory"
 [ ] - Change features to be opt-out by default
 [ ] - Test that all feature-configurations work as intended
 [ ] - Add ReadStream loading paths
