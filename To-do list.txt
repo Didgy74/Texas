@@ -3,15 +3,16 @@
 [o] = Cancelled
 
 To do list for 0.1v
-[ ] - Make documentation explaining the "imagedata memory" vs "working memory"
+[ ] - Make documentation explaining the memory type distinction, how mips are defined etc...
 [ ] - Change features to be opt-out by default
 [ ] - Test that all feature-configurations work as intended
-[ ] - Add ReadStream loading paths
-[ ] - Add "load from file path" loading paths
+[o] - Add ReadStream loading paths
+[o] - Add "load from file path" loading paths
 [ ] - Revise GL enum -> Texas enum conversions
 [ ] - Revise Vulkan enum -> Texas enum conversions
-[ ] - (?) Add memory-type enum for Allocator interface to differentiate between image-data memory and working memory.
+[x] - (?) Add memory-type enum for Allocator interface to differentiate between image-data memory and working memory.
 [ ] - Revise KTX writing code
+[ ] - Fix the error-handling made by Texture class.
 
 After 0.1v
 [-] - Better support for reading PNG

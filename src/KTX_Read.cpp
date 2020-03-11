@@ -12,16 +12,16 @@
 
 namespace Texas::detail::KTX
 {
-    [[nodiscard]] static inline std::uint32_t toU32(const std::byte* ptr)
+    [[nodiscard]] static std::uint32_t toU32(const std::byte* ptr)
     {
         std::uint32_t temp = 0;
         std::memcpy(&temp, ptr, sizeof(std::uint32_t));
         return temp;
     }
 
-    [[nodiscard]] static inline constexpr TextureType toTextureType(
-        const std::uint32_t* dimensions, 
-        std::uint_least32_t arrayCount, 
+    [[nodiscard]] static constexpr TextureType toTextureType(
+        std::uint32_t const* dimensions, 
+        std::uint32_t arrayCount, 
         bool isCubemap) noexcept
     {
         if (arrayCount > 0)
@@ -60,7 +60,7 @@ namespace Texas::detail::KTX
         }
     }
 
-    [[nodiscard]] static inline constexpr bool isCubemap(TextureType texType)
+    [[nodiscard]] static constexpr bool isCubemap(TextureType texType)
     {
         return texType == TextureType::Cubemap || texType == TextureType::ArrayCubemap;
     }

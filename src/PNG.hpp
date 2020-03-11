@@ -21,7 +21,15 @@ namespace Texas::detail::PNG
     Result parseStream(
         InputStream& stream,
         TextureInfo& metaData,
-        std::uint64_t& workingMemRequired);
+        std::uint64_t& workingMemRequired,
+        detail::FileInfo_PNG_BackendData& backendData) noexcept;
+
+    Result loadFromStream(
+        InputStream& stream,
+        TextureInfo const& textureInfo,
+        detail::FileInfo_PNG_BackendData const& backendData,
+        ByteSpan dstImageBuffer,
+        ByteSpan workingMem) noexcept;
 
     Result loadFromBuffer_Step2(
         const TextureInfo& textureInfo,
