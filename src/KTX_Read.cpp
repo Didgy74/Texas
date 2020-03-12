@@ -64,23 +64,6 @@ namespace Texas::detail::KTX
     {
         return texType == TextureType::Cubemap || texType == TextureType::ArrayCubemap;
     }
-
-    Result loadFromBuffer_Step1(
-        ConstByteSpan srcBuffer,
-        TextureInfo& textureInfo,
-        detail::FileInfo_KTX_BackendData& backendData)
-    {
-        return { ResultType::Success, nullptr };
-    }
-
-    Result loadFromBuffer_Step2(
-        TextureInfo const& textureInfo,
-        detail::FileInfo_KTX_BackendData& backendData,
-        ByteSpan dstImageBuffer,
-        ByteSpan workingMem)
-    {
-        return Result(ResultType::Success, nullptr);
-    }
 }
 
 Texas::Result Texas::detail::KTX::loadFromStream(
@@ -189,7 +172,8 @@ Texas::Result Texas::detail::KTX::loadFromStream(
 Texas::Result Texas::detail::KTX::loadImageData(
     InputStream& stream,
     ByteSpan dstBuffer,
-    TextureInfo const& textureInfo)
+    TextureInfo const& textureInfo,
+    FileInfo_KTX_BackendData const& backendData)
 {
     Result result{};
     std::size_t dstMemOffset = 0;

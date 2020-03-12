@@ -7,13 +7,8 @@
 
 namespace Texas
 {
-    namespace detail
-    {
-        class PrivateAccessor;
-    }
-
     /*
-        Holds a Result, and an optional value.
+        Holds a Texas::Result, and an optional value.
         If .resultType() equals ResultType::Successful, the struct has a valid value.
         Accessing .value() is UB when .resultType() does not equal ResultType::Success.
     */
@@ -22,24 +17,25 @@ namespace Texas
     {
     public:
         ResultValue();
-        ResultValue(const T&) = delete;
+        ResultValue(T const&) noexcept;
         ResultValue(T&& data) noexcept;
+
         /*
-        Note! The parameter "result" cannot be ResultType::Success.
-        Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
+            Passing in a Result with ResultType equal to Result::Success
+            is undefined behavior.
         */
         ResultValue(Result result) noexcept;
 
         /*
-        Note! The parameter "result" cannot be ResultType::Success.
-        Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
+            Note! The parameter "result" cannot be ResultType::Success.
+            Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
         */
-        ResultValue(ResultType resultType, const char* errorMessage) noexcept;
+        ResultValue(ResultType resultType, char const* errorMessage) noexcept;
 
         ~ResultValue() noexcept;
 
         ResultType resultType() const noexcept;
-        const char* errorMessage() const noexcept;
+        char const* errorMessage() const noexcept;
 
         /*
             Returns the loaded struct.
@@ -53,7 +49,7 @@ namespace Texas
 
             Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
         */
-        const T& value() const noexcept;
+        T const& value() const noexcept;
 
         /*
             Returns true if .resultType() returns ResultType::Success.
@@ -70,14 +66,12 @@ namespace Texas
         operator Result() const noexcept;
 
     private:
-        Result m_result{ ResultType::Success, "" };
+        Result m_result{ ResultType::Success, nullptr };
         union
         {
             alignas(T) unsigned char m_valueBuffer[sizeof(T)] = {};
             T m_value;
         };
-
-        friend detail::PrivateAccessor;
     };
 
     template<typename T>
@@ -115,7 +109,7 @@ namespace Texas
     }
 
     template<typename T>
-    const char* ResultValue<T>::errorMessage() const noexcept
+    char const* ResultValue<T>::errorMessage() const noexcept
     {
         return m_result.errorMessage();
     }
@@ -132,7 +126,7 @@ namespace Texas
     }
 
     template<typename T>
-    const T& ResultValue<T>::value() const noexcept
+    T const& ResultValue<T>::value() const noexcept
     {
         return m_value;
     }

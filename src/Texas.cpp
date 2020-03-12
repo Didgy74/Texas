@@ -1,49 +1,145 @@
-#include "PrivateAccessor.hpp"
-#include "PrivateAccessor.hpp"
 #include "Texas/Texas.hpp"
-#include "Texas/detail/Exception.hpp"
 #include "PrivateAccessor.hpp"
 #include "Texas/Tools.hpp"
 #include "NumericLimits.hpp"
 
-#include <cstring>
-
 #include "KTX.hpp"
 #include "PNG.hpp"
+
+#include <cstring>
+// For file IO
+#include <cstdio>
 
 #if !defined(TEXAS_ENABLE_KTX_READ) && !defined(TEXAS_ENABLE_PNG_READ)
 #error Cannot compile Texas without enabling atleast one file-format.
 #endif
 
-Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(ConstByteSpan inputBuffer) noexcept
+namespace Texas::detail
 {
-    return detail::PrivateAccessor::parseBuffer(inputBuffer);
+    class FileIOStreamWrapper : public InputStream
+    {
+    public:
+        std::FILE* filestream = nullptr;
+        virtual ~FileIOStreamWrapper()
+        {
+            if (filestream != nullptr)
+            {
+                std::fclose(filestream);
+                // Handle error??
+            }
+        }
+        virtual Result read(ByteSpan dst) noexcept override
+        {
+            std::size_t bytesRead = std::fread(dst.data(), 1, dst.size(), filestream);
+            if (bytesRead != dst.size())
+                return { ResultType::PrematureEndOfFile, "Reached premature end of filestream." };
+            return { ResultType::Success, nullptr };
+        }
+        virtual void ignore(std::size_t amount) noexcept override
+        {
+            int seekResult = std::fseek(filestream, static_cast<long>(amount), SEEK_CUR);
+            if (seekResult != 0)
+            {
+                // TODO: handle seek error
+            }
+        }
+        virtual std::size_t tell() noexcept override
+        {
+            long tellResult = std::ftell(filestream);
+            if (tellResult == -1)
+            {
+                // TODO: Error
+            }
+            return static_cast<std::size_t>(tellResult);
+        }
+        virtual void seek(std::size_t pos) noexcept override
+        {
+            int seekResult = std::fseek(filestream, static_cast<long>(pos), SEEK_SET);
+            if (seekResult != 0)
+            {
+                // TODO: handle seek error
+            }
+        }
+    };
+
+    class BufferStreamWrapper : public InputStream
+    {
+    public:
+        ConstByteSpan inputBuffer{};
+        std::size_t offset = 0;
+
+        virtual Result read(ByteSpan dst) noexcept override
+        {
+            if (offset + dst.size() > inputBuffer.size())
+                return { ResultType::PrematureEndOfFile, 
+                         "Encountered premature end of file when loading." };
+            std::memcpy(dst.data(), inputBuffer.data() + offset, dst.size());
+            offset += dst.size();
+            return { ResultType::Success, nullptr };
+        }
+        virtual void ignore(std::size_t amount) noexcept override
+        {
+            offset += amount;
+        }
+        virtual std::size_t tell() noexcept override
+        {
+            return offset;
+        }
+        virtual void seek(std::size_t pos) noexcept override
+        {
+            offset = pos;
+        }
+    };
 }
 
-Texas::Result Texas::loadImageData(FileInfo const& file, ByteSpan dstBuffer, ByteSpan workingMemory) noexcept
+Texas::ResultValue<Texas::Texture> Texas::loadFromStream(InputStream& stream, Allocator& allocator) noexcept
 {
-    return detail::PrivateAccessor::loadImageData(file, dstBuffer, workingMemory);
+    return detail::PrivateAccessor::loadFromStream(stream, &allocator);
 }
 
 Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator) noexcept
 {
-    return detail::PrivateAccessor::loadFromBuffer(inputBuffer, &allocator);
+    detail::BufferStreamWrapper temp{};
+    temp.inputBuffer = inputBuffer;
+    return loadFromStream(temp, allocator);
 }
 
-Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseBuffer(ConstByteSpan inputBuffer) noexcept
+Texas::ResultValue<Texas::Texture> Texas::loadFromPath(char const* path, Allocator& allocator) noexcept
 {
-
-    return { ResultType::FileNotSupported, "Could not identify file-format of input, "
-                                                               "or file-format is not supported." };
+    detail::FileIOStreamWrapper temp{};
+    errno_t error = fopen_s(&temp.filestream, path, "rb");
+    if (error != 0 || temp.filestream == nullptr)
+        return { ResultType::CouldNotOpenFile, "Failed to open this file for reading." };
+    return loadFromStream(temp, allocator);
 }
 
-Texas::Result Texas::detail::PrivateAccessor::loadImageData(
-    FileInfo const& file, 
-    ByteSpan dstBuffer, 
-    ByteSpan workingMem) noexcept
+Texas::ResultValue<Texas::FileInfo> Texas::parseStream(InputStream& stream) noexcept
 {
-    return { ResultType::InvalidLibraryUsage, "Passed in an invalid MemReqs object." };
+    return detail::PrivateAccessor::parseStream(stream);
 }
+
+#ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
+Texas::ResultValue<Texas::Texture> Texas::loadFromStream(InputStream& stream) noexcept
+{
+    return detail::PrivateAccessor::loadFromStream(stream, nullptr);
+}
+
+Texas::ResultValue<Texas::Texture> Texas::loadFromPath(char const* path) noexcept
+{    
+    detail::FileIOStreamWrapper temp{};
+    errno_t error = fopen_s(&temp.filestream, path, "rb");
+    if (error != 0 || temp.filestream == nullptr)
+        return { ResultType::CouldNotOpenFile, "Failed to open this file for reading." };
+    return loadFromStream(temp);
+}
+
+Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer) noexcept
+{
+    detail::BufferStreamWrapper temp{};
+    temp.inputBuffer = inputBuffer;
+    return loadFromStream(temp);
+}
+#endif // End ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
 
 Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(InputStream& stream) noexcept
 {
@@ -62,7 +158,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
 
     FileInfo memReqs{};
 
-    // We test the file's identifierBuffer to see if it's KTX
+    // Test identifier for KTX
     if (std::memcmp(identifierBuffer, KTX::identifier, sizeof(KTX::identifier)) == 0)
     {
 #ifdef TEXAS_ENABLE_KTX_READ
@@ -82,7 +178,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
     }
 
     
-    // Test if it's a PNG file
+    // Test identifier for PNG
     if (std::memcmp(identifierBuffer, PNG::identifier, sizeof(PNG::identifier)) == 0)
     {
 #ifdef TEXAS_ENABLE_PNG_READ
@@ -103,10 +199,16 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
 #endif
     }
     
-
     return { ResultType::FileNotSupported, 
-             "Could not identify file-format of input, "
+             "Could not identify file-format of input "
              "or file-format is not supported." };
+}
+
+Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(ConstByteSpan inputBuffer) noexcept
+{
+    detail::BufferStreamWrapper temp{};
+    temp.inputBuffer = inputBuffer;
+    return parseStream(temp);
 }
 
 Texas::Result Texas::detail::PrivateAccessor::loadImageData(
@@ -129,16 +231,18 @@ Texas::Result Texas::detail::PrivateAccessor::loadImageData(
         else if (workingMem.size() < file.workingMemoryRequired())
             return { ResultType::InvalidLibraryUsage, 
                      "Working-memory passed in is not large enough to load the image-data." };
-    }   
+    }
 
 #ifdef TEXAS_ENABLE_KTX_READ
     if (file.textureInfo().fileFormat == FileFormat::KTX)
     {
-        return detail::KTX::loadImageData(stream, dstBuffer, file.textureInfo());
+        return detail::KTX::loadImageData(
+            stream, 
+            dstBuffer, 
+            file.textureInfo(),
+            file.m_backendData.ktx);
     }
 #endif
-
-    
 #ifdef TEXAS_ENABLE_PNG_READ
     if (file.textureInfo().fileFormat == FileFormat::PNG)
     {
@@ -151,7 +255,6 @@ Texas::Result Texas::detail::PrivateAccessor::loadImageData(
     }
 #endif
     
-
     return { ResultType::InvalidLibraryUsage, "Passed in an invalid FileInfo object." };
 }
 
@@ -246,57 +349,3 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromStrea
 
     return returnVal;
 }
-
-Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromBuffer(
-    ConstByteSpan inputBuffer, 
-    Allocator* allocator) noexcept
-{
-    return { ResultType::FileNotSupported, "" };
-}
-
-#ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
-Texas::ResultValue<Texas::Texture> Texas::loadFromStream(InputStream& stream) noexcept
-{
-    return detail::PrivateAccessor::loadFromStream(stream, nullptr);
-}
-
-#include <fstream>
-Texas::ResultValue<Texas::Texture> Texas::loadFromPath(char const* path) noexcept
-{
-    class Test : public InputStream
-    {
-    public:
-        std::ifstream internalStream{};
-
-        virtual Result read(ByteSpan dst) noexcept override
-        {
-            if (internalStream.eof())
-                return { ResultType::PrematureEndOfFile, 
-                         "Encountered premate end of file." };
-            internalStream.read((char*)dst.data(), dst.size());
-            return { ResultType::Success, nullptr };
-        }
-        virtual void ignore(std::size_t amount) noexcept override
-        {
-            internalStream.ignore(amount);
-        }
-        virtual std::size_t tell() noexcept override
-        {
-            return internalStream.tellg();
-        }
-        virtual void seek(std::size_t pos) noexcept override
-        {
-            internalStream.seekg(pos);
-        }
-    };
-
-    Test temp{};
-    temp.internalStream = std::ifstream(path, std::ios::binary);
-    return loadFromStream(temp);
-}
-
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer) noexcept
-{
-    return detail::PrivateAccessor::loadFromBuffer(inputBuffer, nullptr);
-}
-#endif // End ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS

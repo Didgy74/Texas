@@ -1,6 +1,5 @@
 #include "Texas/Tools.hpp"
 #include "Texas/detail/Tools.hpp"
-#include "Texas/detail/Exception.hpp"
 
 #include "Texas/Dimensions.hpp"
 
@@ -26,7 +25,7 @@ Texas::Dimensions Texas::calcMipDimensions(Dimensions baseDims, std::uint64_t mi
     if (mipIndex == 0)
         return baseDims;
 
-    const std::uint64_t powerOf2 = std::uint64_t(1) << mipIndex;
+    std::uint64_t const powerOf2 = std::uint64_t(1) << mipIndex;
     Dimensions returnValue{};
     returnValue.width = baseDims.width / powerOf2;
     if (returnValue.width == 0)
@@ -40,7 +39,11 @@ Texas::Dimensions Texas::calcMipDimensions(Dimensions baseDims, std::uint64_t mi
     return returnValue;
 }
 
-std::uint64_t Texas::calcTotalSize(Dimensions baseDims, PixelFormat pFormat, std::uint64_t mipCount, std::uint64_t arrayCount) noexcept
+std::uint64_t Texas::calcTotalSize(
+    Dimensions baseDims, 
+    PixelFormat pFormat, 
+    std::uint64_t mipCount, 
+    std::uint64_t arrayCount) noexcept
 {
     if (baseDims.width == 0 || baseDims.height == 0 || baseDims.depth == 0 || mipCount == 0 || arrayCount == 0)
         return 0;
@@ -51,7 +54,7 @@ std::uint64_t Texas::calcTotalSize(Dimensions baseDims, PixelFormat pFormat, std
     return sum * arrayCount;
 }
 
-std::uint64_t Texas::calcTotalSize(TextureInfo const& meta)
+std::uint64_t Texas::calcTotalSize(TextureInfo const& meta) noexcept
 {
     return calcTotalSize(meta.baseDimensions, meta.pixelFormat, meta.mipLevelCount, meta.arrayLayerCount);
 }
@@ -60,29 +63,27 @@ std::uint64_t Texas::calcMipOffset(
     Dimensions baseDims, 
     PixelFormat pFormat, 
     std::uint64_t arrayCount,
-    std::uint64_t mipIndex)
+    std::uint64_t mipIndex) noexcept
 {
     if (mipIndex == 0)
         return 0;
     return { calcTotalSize(baseDims, pFormat, mipIndex, arrayCount) };
 }
 
-std::uint64_t Texas::calcMipOffset(TextureInfo const& meta, std::uint64_t mipLevelIndex)
+std::uint64_t Texas::calcMipOffset(
+    TextureInfo const& meta, 
+    std::uint64_t mipLevelIndex) noexcept
 {
     return calcMipOffset(meta.baseDimensions, meta.pixelFormat, meta.arrayLayerCount, mipLevelIndex);
 }
 
-std::uint64_t Texas::calcArrayLayerOffset(
+std::uint64_t Texas::calcLayerOffset(
     Dimensions baseDimensions,
     PixelFormat pixelFormat,
     std::uint64_t mipLevelIndex,
     std::uint64_t arrayLayerCount,
-    std::uint64_t arrayLayerIndex)
+    std::uint64_t arrayLayerIndex) noexcept
 {
-    TEXAS_DETAIL_EXCEPTION(
-        arrayLayerIndex < arrayLayerCount, 
-        std::out_of_range("Tried to calculate array-layer offset with an array-layer index equal or higher than the array-layer count."));
-
     if (mipLevelIndex == 0 && arrayLayerCount == 0)
         return 0;
 
@@ -93,15 +94,17 @@ std::uint64_t Texas::calcArrayLayerOffset(
     return sum;
 }
 
-std::uint64_t Texas::calcArrayLayerOffset(
-    const TextureInfo& textureInfo,
+std::uint64_t Texas::calcLayerOffset(
+    TextureInfo const& textureInfo,
     std::uint64_t mipLevelIndex,
-    std::uint64_t arrayLayerIndex)
+    std::uint64_t arrayLayerIndex) noexcept
 {
-    TEXAS_DETAIL_EXCEPTION(
-        mipLevelIndex < textureInfo.mipLevelCount, 
-        std::out_of_range("Inputted mipLevelIndex is equal to or higher than the mip-level count."));
-    return calcArrayLayerOffset(textureInfo.baseDimensions, textureInfo.pixelFormat, mipLevelIndex, textureInfo.arrayLayerCount,arrayLayerIndex);
+    return calcLayerOffset(
+        textureInfo.baseDimensions, 
+        textureInfo.pixelFormat, 
+        mipLevelIndex, 
+        textureInfo.arrayLayerCount, 
+        arrayLayerIndex);
 }
 
 namespace Texas::detail
@@ -147,7 +150,7 @@ namespace Texas::detail
 
 std::uint64_t Texas::calcSingleImageSize(Dimensions dims, PixelFormat pFormat) noexcept
 {
-    const detail::BlockInfo blockInfo = detail::getBlockInfo(pFormat);
+    detail::BlockInfo const blockInfo = detail::getBlockInfo(pFormat);
 
     if (isBCnCompressed(pFormat))
     {

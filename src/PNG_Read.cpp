@@ -330,15 +330,23 @@ static std::uint64_t Texas::detail::PNG::calcWorkingMemRequired_Stream(
 {
     std::uint64_t sum = 0;
         
-    std::uint64_t max = backendData.maxIdatChunkDataLength;
-    if (backendData.plteChunkDataLength > max)
-        max = backendData.plteChunkDataLength;
-    sum += max;
+    sum += backendData.maxIdatChunkDataLength;
 
-    // The decompressed data will be filtered. It will contain all pixels of the image,
-    // but each row will have 1 additional byte for storing the filtering method.
-    // So we add +baseDims.height to accomodate this.
-    sum += baseDims.width * baseDims.height * getPixelWidth(pFormat) + baseDims.height;
+    if (isIndexed)
+    {
+        if (backendData.plteChunkDataLength > backendData.maxIdatChunkDataLength)
+            sum += backendData.plteChunkDataLength - backendData.maxIdatChunkDataLength;
+
+        // One byte per index, one byte extra per row for filter-method.
+        sum += baseDims.width * baseDims.height + baseDims.height;
+    }
+    else
+    {
+        // The decompressed data will be filtered. It will contain all pixels of the image,
+        // but each row will have 1 additional byte for storing the filtering method.
+        // So we add +baseDims.height to accomodate this.
+        sum += baseDims.width * baseDims.height * getPixelWidth(pFormat) + baseDims.height;
+    }
 
     return sum;
 }
@@ -383,15 +391,6 @@ static std::uint8_t Texas::detail::PNG::paethPredictor(
         return b;
     else
         return c;
-}
-
-Texas::Result Texas::detail::PNG::loadFromBuffer_Step1(
-    ConstByteSpan srcBuffer,
-    TextureInfo& textureInfo,
-    std::uint64_t& workingMemRequired,
-    detail::FileInfo_PNG_BackendData& backendData)
-{
-    return { ResultType::Success, nullptr };
 }
 
 Texas::Result Texas::detail::PNG::parseStream(
@@ -973,17 +972,6 @@ static Texas::Result Texas::detail::PNG::defilterIndicesInPlace(
     }
 
     return { ResultType::Success, nullptr };
-}
-
-Texas::Result Texas::detail::PNG::loadFromBuffer_Step2(
-    TextureInfo const& textureInfo,
-    detail::FileInfo_PNG_BackendData& backendData,
-    ByteSpan dstImageBuffer,
-    ByteSpan workingMem)
-{
-    
-
-    return { ResultType::FileNotSupported, nullptr };
 }
 
 // Assumes the stream is placed at the start of the IDAT chunk(s)

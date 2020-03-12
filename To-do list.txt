@@ -6,13 +6,17 @@ To do list for 0.1v
 [ ] - Make documentation explaining the memory type distinction, how mips are defined etc...
 [ ] - Change features to be opt-out by default
 [ ] - Test that all feature-configurations work as intended
-[o] - Add ReadStream loading paths
-[o] - Add "load from file path" loading paths
+[x] - Add ReadStream loading paths
+[x] - Add "load from file path" loading paths
+[x] - Repair buffer loading paths to be a wrapper for the stream-based one
 [ ] - Revise GL enum -> Texas enum conversions
 [ ] - Revise Vulkan enum -> Texas enum conversions
 [x] - (?) Add memory-type enum for Allocator interface to differentiate between image-data memory and working memory.
 [ ] - Revise KTX writing code
 [ ] - Fix the error-handling made by Texture class.
+[x] - Maybe use C runtime FILE for "load from file path"?
+[ ] - Define the Texas::ResultValue copy constructor.
+[ ] - Setup proper comments for the public interface.
 
 After 0.1v
 [-] - Better support for reading PNG

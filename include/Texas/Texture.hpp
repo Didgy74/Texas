@@ -80,7 +80,7 @@ namespace Texas
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] std::uint64_t arrayLayerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
+        [[nodiscard]] std::uint64_t layerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
 
         /*
             Returns the size of the specified array layer at the specified mip level.
@@ -89,7 +89,7 @@ namespace Texas
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] std::uint64_t arrayLayerSize(std::uint64_t mipLevelIndex) const;
+        [[nodiscard]] std::uint64_t layerSize(std::uint64_t mipLevelIndex) const;
 
         /*
             Returns a pointer to the image-data at the specified array layer at the specified mip level.
@@ -98,7 +98,7 @@ namespace Texas
              - If mipLevelIndex is equal to or higher than .mipLevelCount().
              - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] const std::byte* arrayLayerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
+        [[nodiscard]] const std::byte* layerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
 
         /*
             Returns a span to the image-data of the specified array layer at the specified mip level.
@@ -107,7 +107,7 @@ namespace Texas
             - If mipLevelIndex is equal to or higher than .mipLevelCount().
             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
         */
-        [[nodiscard]] ConstByteSpan arrayLayerSpan(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
+        [[nodiscard]] ConstByteSpan layerSpan(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
 
         /*
             Returns the pointer to the internal buffer of the Texture object.

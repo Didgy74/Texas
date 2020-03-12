@@ -7,9 +7,6 @@ namespace Texas::detail
 {
     struct FileInfo_KTX_BackendData
     {
-        const unsigned char* srcFileBufferStart = nullptr;
-        std::uint64_t srcFileBufferLength = 0;
-        const unsigned char* srcImageDataStart = nullptr;
     };
 
 	struct FileInfo_PNG_BackendData

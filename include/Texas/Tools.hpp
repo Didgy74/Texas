@@ -16,9 +16,6 @@ namespace Texas
 
     /*
         Returns the dimensions of a mip-level based on the baseDimensions.
-
-        Will return { 0, 0, 0 } if any of the dimensions equal 0.
-        Will return { 0, 0, 0 } if mipLevelIndex is equal to or higher than the maximum mip count baseDimensions can support.
     */
     [[nodiscard]] Dimensions calcMipDimensions(Dimensions baseDimensions, std::uint64_t mipLevelIndex) noexcept;
 
@@ -34,7 +31,7 @@ namespace Texas
     /*
         Returns the total amount of memory an image will require.
     */
-    [[nodiscard]] std::uint64_t calcTotalSize(TextureInfo const& textureInfo);
+    [[nodiscard]] std::uint64_t calcTotalSize(TextureInfo const& textureInfo) noexcept;
 
     /*
         Returns the offset from the start of a buffer to a mip level.
@@ -43,30 +40,30 @@ namespace Texas
         Dimensions baseDimensions,
         PixelFormat pixelFormat,
         std::uint64_t arrayLayerCount,
-        std::uint64_t mipLevelIndex);
+        std::uint64_t mipLevelIndex) noexcept;
 
     /*
         Returns the offset from the start of a buffer to a mip level.
     */
-    [[nodiscard]] std::uint64_t calcMipOffset(TextureInfo const& textureInfo, std::uint64_t mipLevelIndex);
+    [[nodiscard]] std::uint64_t calcMipOffset(TextureInfo const& textureInfo, std::uint64_t mipLevelIndex) noexcept;
 
     /*
         Returns the offset from the start of a buffer to an array layer.
     */
-    [[nodiscard]] std::uint64_t calcArrayLayerOffset(
+    [[nodiscard]] std::uint64_t calcLayerOffset(
         Dimensions baseDimensions,
         PixelFormat pixelFormat,
         std::uint64_t mipLevelIndex,
         std::uint64_t arrayLayerCount,
-        std::uint64_t arrayLayerIndex);
+        std::uint64_t arrayLayerIndex) noexcept;
 
     /*
         Returns the offset from the start of a buffer to an array layer.
     */
-    [[nodiscard]] std::uint64_t calcArrayLayerOffset(
+    [[nodiscard]] std::uint64_t calcLayerOffset(
         TextureInfo const& textureInfo,
         std::uint64_t mipLevelIndex,
-        std::uint64_t arrayLayerIndex);
+        std::uint64_t arrayLayerIndex) noexcept;
 
     /*
         Returns the size of a single 1D, 2D or 3D texture.
