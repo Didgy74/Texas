@@ -6,8 +6,6 @@
 
 #include <cstdint>
 
-#include "vulkan/vulkan.h"
-
 namespace Texas
 {
     [[nodiscard]] inline std::uint32_t toVkImageType(TextureType type) noexcept
@@ -28,18 +26,5 @@ namespace Texas
     [[nodiscard]] inline std::uint32_t toVkFormat(TextureInfo const& metaData) noexcept
     {
         return static_cast<std::uint32_t>(toVkFormat(metaData.pixelFormat, metaData.colorSpace, metaData.channelType));
-    }
-
-    [[nodiscard]] inline VkExtent3D toVkExtent3D(Dimensions dimensions)
-    {
-        TEXAS_DETAIL_EXCEPTION(dimensions.width <= detail::maxValue<std::uint32_t>(), );
-        TEXAS_DETAIL_EXCEPTION(dimensions.height <= detail::maxValue<std::uint32_t>(), );
-        TEXAS_DETAIL_EXCEPTION(dimensions.depth <= detail::maxValue<std::uint32_t>(), );
-
-        VkExtent3D temp{};
-        temp.width = static_cast<std::uint32_t>(dimensions.width);
-        temp.height = static_cast<std::uint32_t>(dimensions.height);
-        temp.depth = static_cast<std::uint32_t>(dimensions.depth);
-        return temp;
     }
 }

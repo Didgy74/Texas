@@ -4,7 +4,7 @@
 
 To do list for 0.1v
 [ ] - Make documentation explaining the memory type distinction, how mips are defined etc...
-[ ] - Change features to be opt-out by default
+[x] - Change features to be opt-out by default
 [ ] - Test that all feature-configurations work as intended
 [x] - Add ReadStream loading paths
 [x] - Add "load from file path" loading paths
@@ -17,6 +17,7 @@ To do list for 0.1v
 [x] - Maybe use C runtime FILE for "load from file path"?
 [ ] - Define the Texas::ResultValue copy constructor.
 [ ] - Setup proper comments for the public interface.
+[ ] - Fix the loading paths that are divived in 2 parts, no allocator involved.
 
 After 0.1v
 [-] - Better support for reading PNG
