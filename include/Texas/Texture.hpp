@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Texas/TextureInfo.hpp"
-#include "Texas/Optional.hpp"
 #include "Texas/Allocator.hpp"
 #include "Texas/ByteSpan.hpp"
 
