@@ -20,8 +20,8 @@ namespace Texas
         PixelFormat pixelFormat = {};
         ChannelType channelType = {};
         ColorSpace colorSpace = {};
-        std::uint64_t mipLevelCount = 0;
-        std::uint64_t arrayLayerCount = 0;
+        std::uint8_t mipCount = 0;
+        std::uint64_t layerCount = 0;
     };
 }
 

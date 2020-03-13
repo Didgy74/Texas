@@ -71,42 +71,42 @@ Texas::Dimensions Texas::Texture::baseDimensions() const
 	return m_textureInfo.baseDimensions;
 }
 
-std::uint64_t Texas::Texture::mipLevelCount() const
+std::uint8_t Texas::Texture::mipCount() const
 {
-	return m_textureInfo.mipLevelCount;
+	return m_textureInfo.mipCount;
 }
 
-std::uint64_t Texas::Texture::arrayLayerCount() const
+std::uint64_t Texas::Texture::layerCount() const
 {
-	return m_textureInfo.arrayLayerCount;
+	return m_textureInfo.layerCount;
 }
 
-std::uint64_t Texas::Texture::mipOffset(std::uint64_t mipLevelIndex) const
+std::uint64_t Texas::Texture::mipOffset(std::uint8_t mipIndex) const
 {
-	return Texas::calcMipOffset(m_textureInfo, mipLevelIndex);
+	return Texas::calcMipOffset(m_textureInfo, mipIndex);
 }
 
-std::uint64_t Texas::Texture::mipSize(std::uint64_t mipLevelIndex) const
+std::uint64_t Texas::Texture::mipSize(std::uint8_t mipIndex) const
 {
-	return layerSize(mipLevelIndex) * m_textureInfo.arrayLayerCount;
+	return layerSize(mipIndex) * m_textureInfo.layerCount;
 }
 
-std::byte const* Texas::Texture::mipData(std::uint64_t mipLevelIndex) const
+std::byte const* Texas::Texture::mipData(std::uint8_t mipIndex) const
 {
-	return m_buffer.data() + mipOffset(mipLevelIndex);;
+	return m_buffer.data() + mipOffset(mipIndex);;
 }
 
-Texas::ConstByteSpan Texas::Texture::mipSpan(std::uint64_t mipLevelIndex) const
+Texas::ConstByteSpan Texas::Texture::mipSpan(std::uint8_t mipIndex) const
 {
-	return { mipData(mipLevelIndex), static_cast<std::size_t>(mipSize(mipLevelIndex)) };
+	return { mipData(mipIndex), mipSize(mipIndex) };
 }
 
-std::uint64_t Texas::Texture::layerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const
+std::uint64_t Texas::Texture::layerOffset(std::uint8_t mipIndex, std::uint64_t layerIndex) const
 {
-	return Texas::calcLayerOffset(m_textureInfo, mipLevelIndex, arrayLayerIndex);
+	return Texas::calcLayerOffset(m_textureInfo, mipIndex, layerIndex);
 }
 
-std::uint64_t Texas::Texture::layerSize(std::uint64_t mipIndex) const
+std::uint64_t Texas::Texture::layerSize(std::uint8_t mipIndex) const
 {
 	return Texas::calcSingleImageSize(
 		Texas::calcMipDimensions(
@@ -115,15 +115,15 @@ std::uint64_t Texas::Texture::layerSize(std::uint64_t mipIndex) const
 		m_textureInfo.pixelFormat);
 }
 
-std::byte const* Texas::Texture::layerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const
+std::byte const* Texas::Texture::layerData(std::uint8_t mipIndex, std::uint64_t layerIndex) const
 {
-	return m_buffer.data() + layerOffset(mipLevelIndex, arrayLayerIndex);
+	return m_buffer.data() + layerOffset(mipIndex, layerIndex);
 }
 
-Texas::ConstByteSpan Texas::Texture::layerSpan(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const
+Texas::ConstByteSpan Texas::Texture::layerSpan(std::uint64_t mipIndex, std::uint64_t layerIndex) const
 {
-	return { layerData(mipLevelIndex, arrayLayerIndex), 
-			 static_cast<std::size_t>(layerSize(mipLevelIndex)) };
+	return { layerData(mipIndex, layerIndex), 
+			 static_cast<std::size_t>(layerSize(mipIndex)) };
 }
 
 std::byte const* Texas::Texture::rawBufferData() const

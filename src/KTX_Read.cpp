@@ -148,17 +148,17 @@ Texas::Result Texas::detail::KTX::loadFromStream(
     if (textureInfo.baseDimensions.depth == 0)
         textureInfo.baseDimensions.depth = 1;
     // Grab amount of array layers
-    textureInfo.arrayLayerCount = origArrayLayerCount;
-    if (textureInfo.arrayLayerCount == 0)
-        textureInfo.arrayLayerCount = 1;
+    textureInfo.layerCount = origArrayLayerCount;
+    if (textureInfo.layerCount == 0)
+        textureInfo.layerCount = 1;
     // Grab amount of mip levels
     // Usually, mipCount = 0 means a mipmap pyramid should be generated at loadtime. But we ignore it.
-    textureInfo.mipLevelCount = KTX::toU32(headerBuffer + Header::numberOfMipmapLevels_Offset);
+    textureInfo.mipCount = KTX::toU32(headerBuffer + Header::numberOfMipmapLevels_Offset);
     // KTX supports 32 mip levels maximally
-    if (textureInfo.mipLevelCount > 32)
+    if (textureInfo.mipCount > 32)
         return { ResultType::Success, "KTX specification doesn't allow mip-level count higher than 32." };
-    if (textureInfo.mipLevelCount == 0)
-        textureInfo.mipLevelCount = 1;
+    if (textureInfo.mipCount == 0)
+        textureInfo.mipCount = 1;
 
 
     // For now we don't do anything with the key-value data.
@@ -184,7 +184,7 @@ Texas::Result Texas::detail::KTX::loadImageData(
     }
     else
     {
-        for (std::uint32_t mipIndex = 0; mipIndex < textureInfo.mipLevelCount; mipIndex += 1)
+        for (std::uint32_t mipIndex = 0; mipIndex < textureInfo.mipCount; mipIndex += 1)
         {
             // Contains the amount of data from all array images of this mip level
             std::uint32_t mipDataSize = 0;

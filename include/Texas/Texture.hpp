@@ -22,101 +22,57 @@ namespace Texas
     {
     public:
         Texture() = default;
-        Texture(const Texture&) = delete;
+        Texture(Texture const&) = delete;
         Texture(Texture&&) noexcept;
 
-        Texture& operator=(const Texture&) = delete;
+        Texture& operator=(Texture const&) = delete;
         Texture& operator=(Texture&&) noexcept;
 
         ~Texture();
 
-        [[nodiscard]] const TextureInfo& textureInfo() const;
+        [[nodiscard]] TextureInfo const& textureInfo() const;
         [[nodiscard]] FileFormat fileFormat() const;
         [[nodiscard]] TextureType textureType() const;
         [[nodiscard]] PixelFormat pixelFormat() const;
         [[nodiscard]] ChannelType channelType() const;
         [[nodiscard]] ColorSpace colorSpace() const;
         [[nodiscard]] Dimensions baseDimensions() const;
-        [[nodiscard]] std::uint64_t mipLevelCount() const;
-        [[nodiscard]] std::uint64_t arrayLayerCount() const;
+        [[nodiscard]] std::uint8_t mipCount() const;
+        [[nodiscard]] std::uint64_t layerCount() const;
 
         /*
-            Returns the offset from the start the imagedata to the specified mip level index.
+            Returns the offset from the start of the imagedata to the specified mip index.
 
             Causes undefined behavior if: 
-             - If mipLevelIndex is equal to or higher than .mipLevelCount().
+             - If mipIndex is equal to or higher than .mipCount().
         */
-        [[nodiscard]] std::uint64_t mipOffset(std::uint64_t mipLevelIndex) const;
+        [[nodiscard]] std::uint64_t mipOffset(std::uint8_t mipIndex) const;
 
         /*
-            Returns the size of the all the image-data at the specified mip level index.
+            Returns a span to the imagedata of the specified mip index.
 
             Causes undefined behavior if: 
-             - If mipLevelIndex is equal to or higher than .mipLevelCount().
+            - If mipIndex is equal to or higher than .mipCount().
         */
-        [[nodiscard]] std::uint64_t mipSize(std::uint64_t mipLevelIndex) const;
+        [[nodiscard]] ConstByteSpan mipSpan(std::uint8_t mipIndex) const;
 
         /*
-            Returns a pointer to the image-data at the specified mip level index.
+            Returns the offset from the start the imagedata to the specified layer.
 
             Causes undefined behavior if: 
-             - If mipLevelIndex is equal to or higher than .mipLevelCount().
+            - If mipIndex is equal to or higher than .mipCount().
+            - If layerIndex is equal to or higher than .layerCount().
         */
-        [[nodiscard]] const std::byte* mipData(std::uint64_t mipLevelIndex) const;
+        [[nodiscard]] std::uint64_t layerOffset(std::uint8_t mipIndex, std::uint64_t layerIndex) const;
 
         /*
-            Returns a span to the image-data of the specified mip level index.
+            Returns a span to the image-data of the specified layer at the specified mip.
 
             Causes undefined behavior if: 
-            - If mipLevelIndex is equal to or higher than .mipLevelCount().
+            - If mipIndex is equal to or higher than .mipCount().
+            - If layerIndex is equal to or higher than .layerCount().
         */
-        [[nodiscard]] ConstByteSpan mipSpan(std::uint64_t mipLevelIndex) const;
-
-        /*
-            Returns the offset from the start the imagedata to the specified array layer.
-
-            Causes undefined behavior if: 
-            - If mipLevelIndex is equal to or higher than .mipLevelCount().
-            - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
-        */
-        [[nodiscard]] std::uint64_t layerOffset(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
-
-        /*
-            Returns the size of the specified array layer at the specified mip level.
-
-            Causes undefined behavior if: 
-            - If mipLevelIndex is equal to or higher than .mipLevelCount().
-            - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
-        */
-        [[nodiscard]] std::uint64_t layerSize(std::uint64_t mipLevelIndex) const;
-
-        /*
-            Returns a pointer to the image-data at the specified array layer at the specified mip level.
-
-            Causes undefined behavior if: 
-             - If mipLevelIndex is equal to or higher than .mipLevelCount().
-             - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
-        */
-        [[nodiscard]] const std::byte* layerData(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
-
-        /*
-            Returns a span to the image-data of the specified array layer at the specified mip level.
-
-            Causes undefined behavior if: 
-            - If mipLevelIndex is equal to or higher than .mipLevelCount().
-            - If arrayLayerIndex is equal to or higher than .arrayLayerCount().
-        */
-        [[nodiscard]] ConstByteSpan layerSpan(std::uint64_t mipLevelIndex, std::uint64_t arrayLayerIndex) const;
-
-        /*
-            Returns the pointer to the internal buffer of the Texture object.
-        */
-        [[nodiscard]] const std::byte* rawBufferData() const;
-
-        /*
-            Returns the size of the internal buffer of the Texture object.
-        */
-        [[nodiscard]] std::uint64_t totalDataSize() const;
+        [[nodiscard]] ConstByteSpan layerSpan(std::uint64_t mipIndex, std::uint64_t layerIndex) const;
 
         /*
             Returns a span to the internal buffer of the Texture object.
@@ -124,6 +80,13 @@ namespace Texas
         [[nodiscard]] ConstByteSpan rawBufferSpan() const;
 
     private:
+        [[nodiscard]] std::uint64_t mipSize(std::uint8_t mipIndex) const;
+        [[nodiscard]] std::byte const* mipData(std::uint8_t mipIndex) const;
+        [[nodiscard]] std::uint64_t layerSize(std::uint8_t mipIndex) const;
+        [[nodiscard]] std::byte const* layerData(std::uint8_t mipIndex, std::uint64_t layerIndex) const;
+        [[nodiscard]] std::byte const* rawBufferData() const;
+        [[nodiscard]] std::uint64_t totalDataSize() const;
+
         void deallocateInternalBuffer();
 
         TextureInfo m_textureInfo{};

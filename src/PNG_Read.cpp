@@ -403,8 +403,8 @@ Texas::Result Texas::detail::PNG::parseStream(
     textureInfo.fileFormat = FileFormat::PNG;
     textureInfo.textureType = TextureType::Texture2D;
     textureInfo.baseDimensions.depth = 1;
-    textureInfo.arrayLayerCount = 1;
-    textureInfo.mipLevelCount = 1;
+    textureInfo.layerCount = 1;
+    textureInfo.mipCount = 1;
     textureInfo.colorSpace = ColorSpace::Linear;
     textureInfo.channelType = ChannelType::UnsignedNormalized;
 

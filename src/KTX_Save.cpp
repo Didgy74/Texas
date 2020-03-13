@@ -76,10 +76,10 @@ namespace Texas::detail::KTX
 			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'height' equal to 0 as KTX format." };
 		if (texInfo.baseDimensions.depth == 0)
 			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'depth' equal to 0 as KTX format." };
-		if (texInfo.arrayLayerCount == 0)
+		if (texInfo.layerCount == 0)
 			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'arrayLayerCount' equal to 0 as KTX format." };
-		if (texInfo.mipLevelCount == 0)
-			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipLevelCount' equal to 0 as KTX format." };
+		if (texInfo.mipCount == 0)
+			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipCount' equal to 0 as KTX format." };
 
 		if (texInfo.baseDimensions.width > detail::maxValue<std::uint32_t>())
 			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'width' higher than uint32 max value as KTX format." };
@@ -87,13 +87,13 @@ namespace Texas::detail::KTX
 			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'height' higher than uint32 max value as KTX format." };
 		if (texInfo.baseDimensions.depth > detail::maxValue<std::uint32_t>())
 			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'depth' higher than uint32 max value as KTX format." };
-		if (texInfo.arrayLayerCount > detail::maxValue<std::uint32_t>())
+		if (texInfo.layerCount > detail::maxValue<std::uint32_t>())
 			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'arrayLayerCount' higher than uint32 max value as KTX format." };
-		if (texInfo.mipLevelCount > 32)
-			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipLevelCount' higher than 32 as KTX format." };
+		if (texInfo.mipCount > 32)
+			return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipCount' higher than 32 as KTX format." };
 
-		if (texInfo.mipLevelCount > calcMaxMipCount(texInfo.baseDimensions))
-			return { ResultType::InvalidInputParameter, "Passed in texture-info with 'mipLevelCount' higher than 'baseDimensions' can hold." };
+		if (texInfo.mipCount > calcMaxMipCount(texInfo.baseDimensions))
+			return { ResultType::InvalidInputParameter, "Passed in texture-info with 'mipCount' higher than 'baseDimensions' can hold." };
 
 		return { ResultType::Success, nullptr };
 	}
@@ -110,10 +110,10 @@ Texas::Result Texas::KTX::canSave(TextureInfo const& texInfo) noexcept
 		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'height' equal to 0 as KTX format." };
 	if (texInfo.baseDimensions.depth == 0)
 		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'depth' equal to 0 as KTX format." };
-	if (texInfo.arrayLayerCount == 0)
+	if (texInfo.layerCount == 0)
 		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'arrayLayerCount' equal to 0 as KTX format." };
-	if (texInfo.mipLevelCount == 0)
-		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipLevelCount' equal to 0 as KTX format." };
+	if (texInfo.mipCount == 0)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipCount' equal to 0 as KTX format." };
 
 	if (texInfo.baseDimensions.width > detail::maxValue<std::uint32_t>())
 		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'width' higher than uint32 max value as KTX format." };
@@ -121,13 +121,13 @@ Texas::Result Texas::KTX::canSave(TextureInfo const& texInfo) noexcept
 		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'height' higher than uint32 max value as KTX format." };
 	if (texInfo.baseDimensions.depth > detail::maxValue<std::uint32_t>())
 		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'depth' higher than uint32 max value as KTX format." };
-	if (texInfo.arrayLayerCount > detail::maxValue<std::uint32_t>())
+	if (texInfo.layerCount > detail::maxValue<std::uint32_t>())
 		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'arrayLayerCount' higher than uint32 max value as KTX format." };
-	if (texInfo.mipLevelCount > 32)
-		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipLevelCount' higher than 32 as KTX format." };
+	if (texInfo.mipCount > 32)
+		return { ResultType::InvalidInputParameter, "Cannot export texture with field 'mipCount' higher than 32 as KTX format." };
 
-	if (texInfo.mipLevelCount > calcMaxMipCount(texInfo.baseDimensions))
-		return { ResultType::InvalidInputParameter, "Passed in texture-info with 'mipLevelCount' higher than 'baseDimensions' can hold." };
+	if (texInfo.mipCount > calcMaxMipCount(texInfo.baseDimensions))
+		return { ResultType::InvalidInputParameter, "Passed in texture-info with 'mipCount' higher than 'baseDimensions' can hold." };
 
 	return { ResultType::Success, nullptr };
 }
@@ -144,14 +144,14 @@ Texas::ResultValue<std::uint64_t> Texas::detail::PrivateAccessor::KTX_calcFileSi
 
 	// TODO: Add keyValueData-stuff
 
-	for (std::uint_least32_t mipLevel = 0; mipLevel < texInfo.mipLevelCount; mipLevel += 1)
+	for (std::uint_least32_t mipLevel = 0; mipLevel < texInfo.mipCount; mipLevel += 1)
 	{
 		// Add the size of the `imageSize` field.
 		totalSize += 4;
 
 		// Add the total size of this mip-level. Includes 3D depth, array-layers, 
 		Dimensions mipDims = calcMipDimensions(texInfo.baseDimensions, mipLevel);
-		totalSize += calcTotalSize(texInfo.baseDimensions, texInfo.pixelFormat, 1, texInfo.arrayLayerCount);
+		totalSize += calcTotalSize(texInfo.baseDimensions, texInfo.pixelFormat, 1, texInfo.layerCount);
 
 		// Align to 4 bytes
 		totalSize += totalSize % 4;
@@ -196,9 +196,9 @@ Texas::Result Texas::KTX::saveToFile(char const* path, Texas::TextureInfo const&
 {
 	// KTX doesn't support more than 32 miplevels.
 	ConstByteSpan mipLevelSpans[32] = {};
-	for (std::uint32_t mipLevelIndex = 0; mipLevelIndex < static_cast<std::uint32_t>(texture.mipLevelCount()); mipLevelIndex += 1)
+	for (std::uint32_t mipLevelIndex = 0; mipLevelIndex < static_cast<std::uint32_t>(texture.mipCount()); mipLevelIndex += 1)
 		mipLevelSpans[mipLevelIndex] = { texture.mipSpan(mipLevelIndex) };
-	Span<ConstByteSpan const> mipLevels = { mipLevelSpans, texture.mipLevelCount() };
+	Span<ConstByteSpan const> mipLevels = { mipLevelSpans, texture.mipCount() };
 
 	return saveToFile(path, texture.textureInfo(), mipLevels);
 }
@@ -213,13 +213,13 @@ Texas::Result Texas::KTX::saveToStream(Texas::TextureInfo const& texInfo, Span<C
 		return { ResultType::InvalidInputParameter, "Passed in nullptr for mip-level data." };
 	if (mipLevels.size() == 0)
 		return { ResultType::InvalidInputParameter, "Passed in no mip-levels of imagedata." };
-	if (mipLevels.size() != texInfo.mipLevelCount)
-		return { ResultType::InvalidInputParameter, "mipLevels.size() does not match texInfo.mipLevelCount." };
-	for (decltype(mipLevels.size()) mipLevel = 0; mipLevel < mipLevels.size(); mipLevel += 1)
+	if (mipLevels.size() != texInfo.mipCount)
+		return { ResultType::InvalidInputParameter, "mipLevels.size() does not match texInfo.mipCount." };
+	for (std::uint8_t mipLevel = 0; mipLevel < mipLevels.size(); mipLevel += 1)
 	{
 		if (mipLevels.data()[mipLevel].data() == nullptr)
 			return { ResultType::InvalidInputParameter, "Passed in nullptr for one of the mip-levels." };
-		if (mipLevels.data()[mipLevel].size() < calcTotalSize(calcMipDimensions(texInfo.baseDimensions, mipLevel), texInfo.pixelFormat, 1, texInfo.arrayLayerCount))
+		if (mipLevels.data()[mipLevel].size() < calcTotalSize(calcMipDimensions(texInfo.baseDimensions, mipLevel), texInfo.pixelFormat, 1, texInfo.layerCount))
 			return { ResultType::InvalidInputParameter, "One of the mip-levels size is too small to hold the image-data." };
 	}
 
@@ -278,7 +278,7 @@ Texas::Result Texas::KTX::saveToStream(Texas::TextureInfo const& texInfo, Span<C
 	memOffsetTracker += sizeof(pixelDepth);
 
 	// Set the 'numberOfArrayElements' field
-	std::uint32_t const numberOfArrayElements = detail::KTX::isArrayType(texInfo.textureType) ? static_cast<std::uint32_t>(texInfo.arrayLayerCount) : 0;
+	std::uint32_t const numberOfArrayElements = detail::KTX::isArrayType(texInfo.textureType) ? static_cast<std::uint32_t>(texInfo.layerCount) : 0;
 	stream.write(reinterpret_cast<char const*>(&numberOfArrayElements), sizeof(numberOfArrayElements));
 	memOffsetTracker += sizeof(numberOfArrayElements);
 
@@ -288,7 +288,7 @@ Texas::Result Texas::KTX::saveToStream(Texas::TextureInfo const& texInfo, Span<C
 	memOffsetTracker += sizeof(numberOfFaces);
 
 	// Set the 'numberOfMipmapLevels' field
-	std::uint32_t const numberOfMipmapLevels = static_cast<std::uint32_t>(texInfo.mipLevelCount);
+	std::uint32_t const numberOfMipmapLevels = static_cast<std::uint32_t>(texInfo.mipCount);
 	stream.write(reinterpret_cast<char const*>(&numberOfMipmapLevels), sizeof(numberOfMipmapLevels));
 	memOffsetTracker += sizeof(numberOfMipmapLevels);
 
@@ -300,7 +300,7 @@ Texas::Result Texas::KTX::saveToStream(Texas::TextureInfo const& texInfo, Span<C
 	for (std::uint32_t mipLevelIndex = 0; mipLevelIndex < static_cast<std::uint32_t>(mipLevels.size()); mipLevelIndex += 1)
 	{
 		Dimensions mipDims = calcMipDimensions(texInfo.baseDimensions, mipLevelIndex);
-		std::uint32_t imageSize = static_cast<std::uint32_t>(calcTotalSize(mipDims, texInfo.pixelFormat, 1, texInfo.arrayLayerCount));
+		std::uint32_t imageSize = static_cast<std::uint32_t>(calcTotalSize(mipDims, texInfo.pixelFormat, 1, texInfo.layerCount));
 
 		// Write the 'imageSize' 
 		stream.write(reinterpret_cast<char const*>(&imageSize), sizeof(imageSize));
@@ -324,9 +324,9 @@ Texas::Result Texas::KTX::saveToStream(Texture const& texture, WriteStream& stre
 {
 	// KTX doesn't support more than 32 miplevels.
 	ConstByteSpan mipLevelSpans[32] = {};
-	for (std::uint32_t mipLevelIndex = 0; mipLevelIndex < static_cast<std::uint32_t>(texture.mipLevelCount()); mipLevelIndex += 1)
+	for (std::uint32_t mipLevelIndex = 0; mipLevelIndex < static_cast<std::uint32_t>(texture.mipCount()); mipLevelIndex += 1)
 		mipLevelSpans[mipLevelIndex] = { texture.mipSpan(mipLevelIndex) };
-	Span<ConstByteSpan const> mipLevels = { mipLevelSpans, texture.mipLevelCount() };
+	Span<ConstByteSpan const> mipLevels = { mipLevelSpans, texture.mipCount() };
 
 	return saveToStream(texture.textureInfo(), mipLevels, stream);
 }
