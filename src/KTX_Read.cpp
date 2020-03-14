@@ -1,6 +1,6 @@
 #include "KTX.hpp"
 
-#include "Texas/ByteSpan.hpp"
+#include "Texas/Span.hpp"
 #include "PrivateAccessor.hpp"
 
 #include "Texas/detail/GLTools.hpp"

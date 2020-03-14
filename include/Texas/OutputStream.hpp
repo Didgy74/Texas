@@ -4,7 +4,7 @@
 
 namespace Texas
 {
-	class WriteStream
+	class OutputStream
 	{
 	public:
 		virtual void write(char const* data, std::uint64_t size) noexcept = 0;

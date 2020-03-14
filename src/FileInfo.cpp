@@ -5,11 +5,6 @@ const Texas::TextureInfo& Texas::FileInfo::textureInfo() const noexcept
     return m_textureInfo;
 }
 
-Texas::Dimensions Texas::FileInfo::baseDimensions() const noexcept
-{
-    return m_textureInfo.baseDimensions;
-}
-
 std::uint64_t Texas::FileInfo::memoryRequired() const noexcept
 {
     return m_memoryRequired;

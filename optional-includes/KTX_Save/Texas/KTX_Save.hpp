@@ -3,13 +3,8 @@
 #include "Texas/Texture.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/ResultValue.hpp"
-#include "Texas/ByteSpan.hpp"
-#include "Texas/WriteStream.hpp"
-
-namespace Texas
-{
-	[[nodiscard]] Result saveToBuffer(ByteSpan dstBuffer, TextureInfo const& texInfo, Span<ConstByteSpan const> mipLevels) noexcept;
-}
+#include "Texas/Span.hpp"
+#include "Texas/OutputStream.hpp"
 
 namespace Texas::KTX
 {
@@ -25,7 +20,10 @@ namespace Texas::KTX
 		TextureType cannot be Array3D.
 		mipLevels.size() must have the same length as texInfo.length
 	*/
-	[[nodiscard]] Result saveToStream(TextureInfo const& texInfo, Span<ConstByteSpan const> mipLevels, WriteStream& stream) noexcept;
+	[[nodiscard]] Result saveToStream(
+		TextureInfo const& texInfo, 
+		Span<ConstByteSpan const> mipLevels, 
+		OutputStream& stream) noexcept;
 	/*
 		Writes a KTX to polymorphic stream.
 
@@ -34,7 +32,7 @@ namespace Texas::KTX
 		TextureType cannot be Array3D.
 		mipLevels.size() must have the same length as texInfo.length
 	*/
-	[[nodiscard]] Result saveToStream(Texture const& texture, WriteStream& stream) noexcept;
+	[[nodiscard]] Result saveToStream(Texture const& texture, OutputStream& stream) noexcept;
 
 	/*
 		Writes a KTX to file.

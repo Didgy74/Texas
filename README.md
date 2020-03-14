@@ -98,7 +98,7 @@ ETC and ASTC support is planned.
 	 - zLib gets linked when you enable PNG support, otherwise it's not compiled at all.
 
 ### Contribution and Feedback
-I will very much welcome feedback or any suggestions. Please open issues or pull requests to show me what can be improved.
+Feedback is very much appreciated.
+Open an issue if you have a feature request. Open one even if it's already on the list of planned features, that way it's easier to gauge how to prioritize development.
 
 Sincerely, Nils Petter Skålerud aka "Didgy"
-

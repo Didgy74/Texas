@@ -13,18 +13,16 @@
 namespace Texas
 {
     /*
-        Contains info on an image parsed from a buffer.
-        This includes metadata and some fileformat-specific data for 
-        loading imagedata from said fileformat.
+        Contains info on a parsed file
+        This includes texture-inf and some hidden 
+        fileformat-specific data for loading imagedata later.
     */
     class FileInfo
     {
     public:
         FileInfo() noexcept = default;
 
-        [[nodiscard]] TextureInfo const & textureInfo() const noexcept;
-
-        [[nodiscard]] Dimensions baseDimensions() const noexcept;
+        [[nodiscard]] TextureInfo const& textureInfo() const noexcept;
 
         [[nodiscard]] std::uint64_t memoryRequired() const noexcept;
 

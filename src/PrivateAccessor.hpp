@@ -4,7 +4,7 @@
 #include "Texas/ResultValue.hpp"
 #include "Texas/InputStream.hpp"
 #include "Texas/FileInfo.hpp"
-#include "Texas/ByteSpan.hpp"
+#include "Texas/Span.hpp"
 #include "Texas/Texture.hpp"
 
 #if defined(TEXAS_ENABLE_KTX_SAVE)

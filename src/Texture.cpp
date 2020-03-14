@@ -120,7 +120,7 @@ std::byte const* Texas::Texture::layerData(std::uint8_t mipIndex, std::uint64_t 
 	return m_buffer.data() + layerOffset(mipIndex, layerIndex);
 }
 
-Texas::ConstByteSpan Texas::Texture::layerSpan(std::uint64_t mipIndex, std::uint64_t layerIndex) const
+Texas::ConstByteSpan Texas::Texture::layerSpan(std::uint8_t mipIndex, std::uint64_t layerIndex) const
 {
 	return { layerData(mipIndex, layerIndex), 
 			 static_cast<std::size_t>(layerSize(mipIndex)) };

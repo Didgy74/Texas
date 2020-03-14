@@ -4,7 +4,7 @@
 #include "Texas/ResultValue.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/TextureInfo.hpp"
-#include "Texas/ByteSpan.hpp"
+#include "Texas/Span.hpp"
 #include "Texas/FileInfo.hpp"
 
 namespace Texas::detail::KTX

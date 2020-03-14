@@ -2,7 +2,7 @@
 
 #include "Texas/TextureInfo.hpp"
 #include "Texas/Allocator.hpp"
-#include "Texas/ByteSpan.hpp"
+#include "Texas/Span.hpp"
 
 // Include detail headers
 #include "Texas/detail/PrivateAccessor_Declaration.hpp"
@@ -72,7 +72,7 @@ namespace Texas
             - If mipIndex is equal to or higher than .mipCount().
             - If layerIndex is equal to or higher than .layerCount().
         */
-        [[nodiscard]] ConstByteSpan layerSpan(std::uint64_t mipIndex, std::uint64_t layerIndex) const;
+        [[nodiscard]] ConstByteSpan layerSpan(std::uint8_t mipIndex, std::uint64_t layerIndex) const;
 
         /*
             Returns a span to the internal buffer of the Texture object.

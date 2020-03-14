@@ -3,7 +3,7 @@
 [o] = Cancelled
 
 To do list for 0.1v
-[ ] - Make documentation explaining the memory type distinction, how mips are defined etc...
+[o] - Make documentation explaining the memory type distinction, how mips are defined etc...
 [x] - Change features to be opt-out by default
 [ ] - Test that all feature-configurations work as intended
 [x] - Add ReadStream loading paths
@@ -17,7 +17,8 @@ To do list for 0.1v
 [x] - Maybe use C runtime FILE for "load from file path"?
 [ ] - Define the Texas::ResultValue copy constructor.
 [ ] - Setup proper comments for the public interface.
-[ ] - Fix the loading paths that are divived in 2 parts, no allocator involved.
+[ ] - Fix the loading paths that are divived in 2 parts, the no allocator involved stuff.
+[ ] - Fix license
 
 After 0.1v
 [-] - Better support for reading PNG
@@ -33,3 +34,6 @@ After 0.1v
 [ ] - When the implementation is in the header, like templated types, maybe move implementation into it's own header under detail?
 [ ] - Investigate whether the library should have a TextureLoader struct that stores settings for loading a file, and also a method to actually load it.
 [ ] - Get started on some CI. Compilation tests, compare loaded files to other libs...
+[ ] - Maybe add operator*, operator-> and operator bool to ResultValue<T>?
+[ ] - Maybe find a better name for Dimensions and "baseDimensions"? Alternatives: Size (dataSize for internalbuffer size), Extent
+

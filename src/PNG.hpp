@@ -3,7 +3,7 @@
 #include "Texas/InputStream.hpp"
 #include "Texas/Result.hpp"
 #include "Texas/TextureInfo.hpp"
-#include "Texas/ByteSpan.hpp"
+#include "Texas/Span.hpp"
 #include "Texas/FileInfo.hpp"
 
 #include <cstdint>
