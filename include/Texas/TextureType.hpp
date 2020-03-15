@@ -1,10 +1,8 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Texas
 {
-    enum class TextureType : std::uint_least8_t
+    enum class TextureType : char
     {
         Invalid,
 

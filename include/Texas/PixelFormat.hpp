@@ -1,14 +1,12 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Texas
 {
     /*
         Describes a pixel's layout of channels,
         and the bit-depth of each channel
     */
-    enum class PixelFormat : uint8_t
+    enum class PixelFormat : char
     {
         Invalid,
 

@@ -15,5 +15,7 @@ namespace Texas
 
 		[[nodiscard]] virtual std::size_t tell() noexcept = 0;
 		virtual void seek(std::size_t pos) noexcept = 0;
+
+		inline virtual ~InputStream() {}
 	};
 }

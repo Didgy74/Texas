@@ -2,7 +2,6 @@
 
 #include "Texas/PixelFormat.hpp"
 #include "Texas/Dimensions.hpp"
-#include "Texas/TextureType.hpp"
 #include "Texas/TextureInfo.hpp"
 
 #include <cstdint>

@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#	define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "Texas/KTX_Save.hpp"
 #include "KTX.hpp"
 #include "PrivateAccessor.hpp"
@@ -5,7 +9,10 @@
 #include "Texas/detail/GLTools.hpp"
 #include "Texas/Tools.hpp"
 
+// For memcpy and memcmp
 #include <cstring>
+// For std::FILE
+#include <cstdio>
 
 Texas::ResultValue<std::uint64_t> Texas::KTX::calcFileSize(Texas::TextureInfo const& texInfo) noexcept
 {
@@ -25,6 +32,17 @@ namespace Texas::detail::KTX
 			return true;
 		}
 
+		return false;
+	}
+
+	[[nodiscard]] static inline bool isCubemapType(TextureType type) noexcept
+	{
+		switch (type)
+		{
+		case TextureType::Cubemap:
+		case TextureType::ArrayCubemap:
+			return true;
+		}
 		return false;
 	}
 
@@ -69,6 +87,9 @@ namespace Texas::detail::KTX
 	{
 		if (texInfo.textureType == TextureType::Array3D)
 			return { ResultType::InvalidLibraryUsage, "KTX format does not support 3D arrays." };
+
+		if (toGLInternalFormat(texInfo.pixelFormat, texInfo.colorSpace, texInfo.channelType) == GLEnum(0))
+			return { ResultType::FileNotSupported, "Unable to match this pixel format to one supported by KTX." };
 
 		if (texInfo.baseDimensions.width == 0)
 			return { ResultType::InvalidLibraryUsage, 
@@ -182,30 +203,36 @@ Texas::ResultValue<std::uint64_t> Texas::detail::PrivateAccessor::KTX_calcFileSi
 	return totalSize;
 }
 
-#include <fstream>
 Texas::Result Texas::KTX::saveToFile(
 	char const* path, 
 	Texas::TextureInfo const& texInfo, 
 	Span<ConstByteSpan const> mipLevels) noexcept
 {
-	struct StdIfstream : OutputStream
+	struct FileIOWrapper : OutputStream
 	{
-		std::ofstream stream{};
-		char const* path = nullptr;
-
-		virtual void write(char const* data, std::uint64_t size) noexcept override
+		std::FILE* file = nullptr;
+		virtual Result write(char const* data, std::uint64_t size) noexcept override
 		{
-			stream.write(data, size);
+			 std::size_t objectsWritten = fwrite(data, 1, static_cast<std::size_t>(size), file);
+			 if (objectsWritten < size)
+				 return { ResultType::PrematureEndOfFile, "Writing to file was not successful." };
+			 return { ResultType::Success, nullptr };
+		}
+		virtual ~FileIOWrapper()
+		{
+			if (file != nullptr)
+			{
+				int error = std::fclose(file);
+			}
 		}
 	};
 
-	StdIfstream streamObject{};
-	streamObject.path = path;
-	streamObject.stream.open(path, std::ofstream::binary);
-	if (!streamObject.stream.is_open())
+	FileIOWrapper temp{};
+	temp.file = std::fopen(path, "wb");
+	if (temp.file == nullptr)
 		return { ResultType::CouldNotOpenFile, "Could not open file." };
 
-	Result saveResult = saveToStream(texInfo, mipLevels, streamObject);
+	Result saveResult = saveToStream(texInfo, mipLevels, temp);
 	if (!saveResult.isSuccessful())
 		return saveResult;
 
@@ -228,9 +255,11 @@ Texas::Result Texas::KTX::saveToStream(
 	Span<ConstByteSpan const> mipLevels, 
 	OutputStream& stream) noexcept
 {
-	Result isValidResult = detail::KTX::isValid(texInfo);
-	if (!isValidResult.isSuccessful())
-		return isValidResult;
+	Result result{};
+
+	result = detail::KTX::isValid(texInfo);
+	if (!result.isSuccessful())
+		return result;
 
 	if (mipLevels.data() == nullptr)
 		return { ResultType::InvalidLibraryUsage, "Passed in nullptr for mip-level data." };
@@ -252,96 +281,121 @@ Texas::Result Texas::KTX::saveToStream(
 	}
 
 	std::uint64_t memOffsetTracker = 0;
+	unsigned char headerBuffer[detail::KTX::Header::totalSize] = {};
 
 	// Set the file identifer field
-	stream.write(reinterpret_cast<char const*>(detail::KTX::identifier), sizeof(detail::KTX::identifier));
-	memOffsetTracker += sizeof(detail::KTX::identifier);
+	std::memcpy(headerBuffer, detail::KTX::identifier, sizeof(detail::KTX::identifier));
 
 	// Set the 'endianness' field
-	stream.write(reinterpret_cast<char const*>(&detail::KTX::Header::correctEndian), sizeof(detail::KTX::Header::correctEndian));
-	memOffsetTracker += sizeof(detail::KTX::Header::correctEndian);
+	std::memcpy(
+		headerBuffer + detail::KTX::Header::endianness_Offset,
+		&detail::KTX::Header::correctEndian,
+		sizeof(detail::KTX::Header::correctEndian));
 
 	// Set the 'glType' field
 	detail::GLEnum const glType = detail::toGLType(texInfo.pixelFormat, texInfo.channelType);
-	stream.write(reinterpret_cast<char const*>(&glType), sizeof(glType));
-	memOffsetTracker += sizeof(glType);
+	std::memcpy(headerBuffer + detail::KTX::Header::glType_Offset, &glType, sizeof(glType));
 
 	// Set the 'glTypeSize' field
 	std::uint32_t const glTypeSize = detail::toGLTypeSize(texInfo.pixelFormat);
-	stream.write(reinterpret_cast<char const*>(&glTypeSize), sizeof(glTypeSize));
-	memOffsetTracker += sizeof(glTypeSize);
+	std::memcpy(headerBuffer + detail::KTX::Header::glTypeSize_Offset, &glTypeSize, sizeof(glTypeSize));
 
 	// Set the 'glFormat' field
 	detail::GLEnum const glFormat = detail::toGLFormat(texInfo.pixelFormat);
-	stream.write(reinterpret_cast<char const*>(&glFormat), sizeof(glFormat));
-	memOffsetTracker += sizeof(glFormat);
+	std::memcpy(headerBuffer + detail::KTX::Header::glFormat_Offset, &glFormat, sizeof(glFormat));
 
 	// Set the 'glInternalFormat' field
-	detail::GLEnum const glInternalFormat = detail::toGLInternalFormat(texInfo.pixelFormat, texInfo.colorSpace, texInfo.channelType);
-	stream.write(reinterpret_cast<char const*>(&glInternalFormat), sizeof(glInternalFormat));
-	memOffsetTracker += sizeof(glInternalFormat);
+	detail::GLEnum const glInternalFormat = detail::toGLInternalFormat(
+		texInfo.pixelFormat, 
+		texInfo.colorSpace, 
+		texInfo.channelType);
+	std::memcpy(
+		headerBuffer + detail::KTX::Header::glInternalFormat_Offset, 
+		&glInternalFormat,
+		sizeof(glInternalFormat));
 
 	// Set the 'glBaseInternalFormat' field
 	detail::GLEnum const glBaseInternalFormat = (detail::GLEnum)0;
-	stream.write(reinterpret_cast<char const*>(&glBaseInternalFormat), sizeof(glBaseInternalFormat));
-	memOffsetTracker += sizeof(glBaseInternalFormat);
+	std::memcpy(
+		headerBuffer + detail::KTX::Header::glBaseInternalFormat_Offset,
+		&glBaseInternalFormat,
+		sizeof(glBaseInternalFormat));
 
 	// Set the 'pixelWidth' field
 	std::uint32_t const pixelWidth = static_cast<std::uint32_t>(texInfo.baseDimensions.width);
-	stream.write(reinterpret_cast<char const*>(&pixelWidth), sizeof(pixelWidth));
-	memOffsetTracker += sizeof(pixelWidth);
+	std::memcpy(headerBuffer + detail::KTX::Header::pixelWidth_Offset, &pixelWidth, sizeof(pixelWidth));
 
 	// Set the 'pixelHeight' field
 	std::uint32_t pixelHeight = static_cast<std::uint32_t>(texInfo.baseDimensions.height);
 	if (detail::KTX::is1DType(texInfo.textureType))
 		pixelHeight = 0;
-	stream.write(reinterpret_cast<char const*>(&pixelHeight), sizeof(pixelHeight));
-	memOffsetTracker += sizeof(pixelHeight);
+	std::memcpy(headerBuffer + detail::KTX::Header::pixelHeight_Offset, &pixelHeight, sizeof(pixelHeight));
 
 	// Set the 'pixelDepth' field
 	std::uint32_t pixelDepth = static_cast<std::uint32_t>(texInfo.baseDimensions.depth);
 	if (detail::KTX::is1DType(texInfo.textureType) || detail::KTX::is2DType(texInfo.textureType))
 		pixelDepth = 0;
-	stream.write(reinterpret_cast<char const*>(&pixelDepth), sizeof(pixelDepth));
-	memOffsetTracker += sizeof(pixelDepth);
+	std::memcpy(headerBuffer + detail::KTX::Header::pixelDepth_Offset, &pixelDepth, sizeof(pixelDepth));
 
 	// Set the 'numberOfArrayElements' field
-	std::uint32_t const numberOfArrayElements = detail::KTX::isArrayType(texInfo.textureType) ? static_cast<std::uint32_t>(texInfo.layerCount) : 0;
-	stream.write(reinterpret_cast<char const*>(&numberOfArrayElements), sizeof(numberOfArrayElements));
-	memOffsetTracker += sizeof(numberOfArrayElements);
+	std::uint32_t const numberOfArrayElements = detail::KTX::isArrayType(texInfo.textureType) ? 
+			static_cast<std::uint32_t>(texInfo.layerCount) : 0;
+	std::memcpy(
+		headerBuffer + detail::KTX::Header::numberOfArrayElements_Offset, 
+		&numberOfArrayElements, 
+		sizeof(numberOfArrayElements));
 
 	// Set the 'numberOfFaces' field
-	std::uint32_t numberOfFaces = (texInfo.textureType == Texas::TextureType::Cubemap || texInfo.textureType == Texas::TextureType::ArrayCubemap) ? 6 : 1;
-	stream.write(reinterpret_cast<char const*>(&numberOfFaces), sizeof(numberOfFaces));
-	memOffsetTracker += sizeof(numberOfFaces);
+	std::uint32_t const numberOfFaces = detail::KTX::isCubemapType(texInfo.textureType) ? 6 : 1;
+	std::memcpy(headerBuffer + detail::KTX::Header::numberOfFaces_Offset, &numberOfFaces, sizeof(numberOfFaces));
 
 	// Set the 'numberOfMipmapLevels' field
 	std::uint32_t const numberOfMipmapLevels = static_cast<std::uint32_t>(texInfo.mipCount);
-	stream.write(reinterpret_cast<char const*>(&numberOfMipmapLevels), sizeof(numberOfMipmapLevels));
-	memOffsetTracker += sizeof(numberOfMipmapLevels);
+	std::memcpy(
+		headerBuffer + detail::KTX::Header::numberOfMipmapLevels_Offset, 
+		&numberOfMipmapLevels, 
+		sizeof(numberOfMipmapLevels));
 
 	// Set the 'bytesOfKeyValueData' field
 	std::uint32_t const bytesOfKeyValueData = 0;
-	stream.write(reinterpret_cast<char const*>(&bytesOfKeyValueData), sizeof(bytesOfKeyValueData));
-	memOffsetTracker += sizeof(bytesOfKeyValueData);
+	std::memcpy(
+		headerBuffer + detail::KTX::Header::bytesOfKeyValueData_Offset, 
+		&bytesOfKeyValueData, 
+		sizeof(bytesOfKeyValueData));
+
+	// Write the header to the stream
+	result = stream.write(reinterpret_cast<char const*>(headerBuffer), sizeof(headerBuffer));
+	if (!result.isSuccessful())
+		return result;
+	memOffsetTracker += sizeof(headerBuffer);
 
 	for (std::uint32_t mipLevelIndex = 0; mipLevelIndex < static_cast<std::uint32_t>(mipLevels.size()); mipLevelIndex += 1)
 	{
 		Dimensions mipDims = calculateMipDimensions(texInfo.baseDimensions, mipLevelIndex);
-		std::uint32_t const imageSize = static_cast<std::uint32_t>(calculateTotalSize(mipDims, texInfo.pixelFormat, 1, texInfo.layerCount));
+		std::uint32_t const imageSize = static_cast<std::uint32_t>(calculateTotalSize(
+			mipDims, 
+			texInfo.pixelFormat, 
+			1, 
+			texInfo.layerCount));
 
 		// Write the 'imageSize' 
-		stream.write(reinterpret_cast<char const*>(&imageSize), sizeof(imageSize));
+		result = stream.write(reinterpret_cast<char const*>(&imageSize), sizeof(imageSize));
+		if (!result.isSuccessful())
+			return result;
 		memOffsetTracker += sizeof(imageSize);
 
 		// Write the actual image-data
-		stream.write(reinterpret_cast<char const*>(mipLevels.data()[mipLevelIndex].data()), imageSize);
+		result = stream.write(reinterpret_cast<char const*>(mipLevels.data()[mipLevelIndex].data()), imageSize);
+		if (!result.isSuccessful())
+			return result;
 		memOffsetTracker += imageSize;
 
 		constexpr char const paddingBuffer[3] = {};
 		std::uint_least8_t paddingAmount = memOffsetTracker % 4;
 		// Add padding to align to 4 bytes
-		stream.write(paddingBuffer, paddingAmount);
+		result = stream.write(paddingBuffer, paddingAmount);
+		if (!result.isSuccessful())
+			return result;
 		memOffsetTracker += paddingAmount;
 	}
 

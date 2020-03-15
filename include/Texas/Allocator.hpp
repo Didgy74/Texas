@@ -19,7 +19,9 @@ namespace Texas
 			WorkingData
 		};
 
-		virtual std::byte* allocate(std::size_t amount, MemoryType memType) = 0;
+		[[nodiscard]] virtual std::byte* allocate(std::size_t amount, MemoryType memType) = 0;
 		virtual void deallocate(std::byte* ptr, MemoryType memType) = 0;
+
+		inline virtual ~Allocator() {}
 	};
 }

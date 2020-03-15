@@ -2,8 +2,8 @@
 [-] = In Progress
 [o] = Cancelled
 
-To do list for 0.1v
-[o] - Make documentation explaining the memory type distinction, how mips are defined etc...
+To do list for v0.1
+[-] - Make documentation explaining the memory type distinction, how mips are defined etc...
 [x] - Change features to be opt-out by default
 [ ] - Test that all feature-configurations work as intended
 [x] - Add ReadStream loading paths
@@ -12,15 +12,15 @@ To do list for 0.1v
 [ ] - Revise GL enum -> Texas enum conversions
 [ ] - Revise Vulkan enum -> Texas enum conversions
 [x] - (?) Add memory-type enum for Allocator interface to differentiate between image-data memory and working memory.
-[ ] - Revise KTX writing code
+[x] - Revise KTX writing code
 [ ] - Fix the error-handling made by Texture class.
 [x] - Maybe use C runtime FILE for "load from file path"?
 [x] - Define the Texas::ResultValue copy constructor.
 [ ] - Setup proper comments for the public interface.
-[ ] - Fix the loading paths that are divived in 2 parts, the no allocator involved stuff.
+[x] - Fix the loading paths that are divived in 2 parts, the no allocator involved stuff.
 [ ] - Fix license
 
-After 0.1v
+After v0.1
 [-] - Better support for reading PNG
 	Add support for interlaced images
 	Add support for 16-bit color channels

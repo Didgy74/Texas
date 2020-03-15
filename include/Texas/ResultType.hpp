@@ -5,7 +5,7 @@ namespace Texas
     /*
         An enum for categorizing errors.
     */
-    enum class ResultType : unsigned char
+    enum class ResultType : char
     {
         Success,
         UnknownError,

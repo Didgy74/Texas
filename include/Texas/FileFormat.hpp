@@ -1,10 +1,8 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Texas
 {
-    enum class FileFormat : std::uint8_t
+    enum class FileFormat : char
     {
         Invalid,
 

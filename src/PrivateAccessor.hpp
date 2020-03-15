@@ -7,11 +7,7 @@
 #include "Texas/Span.hpp"
 #include "Texas/Texture.hpp"
 
-#if defined(TEXAS_ENABLE_KTX_SAVE)
-#include "Texas/KTX/TextureInfo.hpp"
-#endif
-
-#include <cstddef>
+#include <cstdint>
 
 namespace Texas::detail
 {

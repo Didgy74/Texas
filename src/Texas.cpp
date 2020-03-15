@@ -29,7 +29,7 @@ namespace Texas::detail
         {
             if (filestream != nullptr)
             {
-                std::fclose(filestream);
+                int error = std::fclose(filestream);
                 // Handle error??
             }
         }

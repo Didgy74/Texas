@@ -7,6 +7,8 @@
 #include "Texas/ChannelType.hpp"
 #include "Texas/Colorspace.hpp"
 
+#include <cstdint>
+
 namespace Texas
 {
     /*

@@ -2,8 +2,6 @@
 
 #include "Texas/Result.hpp"
 
-#include <cstdint>
-
 namespace Texas
 {
     /*

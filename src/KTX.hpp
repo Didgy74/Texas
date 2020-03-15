@@ -7,6 +7,9 @@
 #include "Texas/Span.hpp"
 #include "Texas/FileInfo.hpp"
 
+#include <cstdint>
+#include <cstddef>
+
 namespace Texas::detail::KTX
 {
     constexpr std::uint8_t identifier[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };

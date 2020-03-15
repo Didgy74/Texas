@@ -7,7 +7,6 @@
 #include "Texas/detail/FileInfo_BackendData.hpp"
 #include "Texas/detail/PrivateAccessor_Declaration.hpp"
 
-#include <cstdint>
 #include <cstddef>
 
 namespace Texas

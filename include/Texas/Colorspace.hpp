@@ -1,10 +1,8 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Texas
 {
-    enum class ColorSpace : std::uint8_t
+    enum class ColorSpace : char
     {
         Invalid,
 

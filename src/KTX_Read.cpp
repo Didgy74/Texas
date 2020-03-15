@@ -12,7 +12,7 @@
 
 namespace Texas::detail::KTX
 {
-    [[nodiscard]] static std::uint32_t toU32(const std::byte* ptr)
+    [[nodiscard]] static std::uint32_t toU32(std::byte const* ptr)
     {
         std::uint32_t temp = 0;
         std::memcpy(&temp, ptr, sizeof(std::uint32_t));

@@ -2,19 +2,14 @@
 
 #include "Texas/InputStream.hpp"
 #include "Texas/ResultValue.hpp"
-#include "Texas/Result.hpp"
 #include "Texas/Span.hpp"
 #include "Texas/FileInfo.hpp"
-#include "Texas/TextureInfo.hpp"
 #include "Texas/Texture.hpp"
-#include "Texas/LoadSettings.hpp"
 #include "Texas/Allocator.hpp"
+
 #if defined(TEXAS_ENABLE_KTX_SAVE)
 #   include "Texas/KTX_Save.hpp"
 #endif
-
-#include <cstddef>
-#include <cstdint>
 
 namespace Texas
 {

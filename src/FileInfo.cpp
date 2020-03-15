@@ -1,6 +1,6 @@
 #include "Texas/FileInfo.hpp"
 
-const Texas::TextureInfo& Texas::FileInfo::textureInfo() const noexcept
+Texas::TextureInfo const& Texas::FileInfo::textureInfo() const noexcept
 {
     return m_textureInfo;
 }
