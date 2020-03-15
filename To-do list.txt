@@ -15,7 +15,7 @@ To do list for 0.1v
 [ ] - Revise KTX writing code
 [ ] - Fix the error-handling made by Texture class.
 [x] - Maybe use C runtime FILE for "load from file path"?
-[ ] - Define the Texas::ResultValue copy constructor.
+[x] - Define the Texas::ResultValue copy constructor.
 [ ] - Setup proper comments for the public interface.
 [ ] - Fix the loading paths that are divived in 2 parts, the no allocator involved stuff.
 [ ] - Fix license

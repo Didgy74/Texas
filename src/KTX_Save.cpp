@@ -68,42 +68,42 @@ namespace Texas::detail::KTX
 	[[nodiscard]] static inline Result isValid(TextureInfo const& texInfo) noexcept
 	{
 		if (texInfo.textureType == TextureType::Array3D)
-			return { ResultType::InvalidInputParameter, "KTX format does not support 3D arrays." };
+			return { ResultType::InvalidLibraryUsage, "KTX format does not support 3D arrays." };
 
 		if (texInfo.baseDimensions.width == 0)
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'width' equal to 0 as KTX format." };
 		if (texInfo.baseDimensions.height == 0)
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'height' equal to 0 as KTX format." };
 		if (texInfo.baseDimensions.depth == 0)
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'depth' equal to 0 as KTX format." };
 		if (texInfo.layerCount == 0)
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'arrayLayerCount' equal to 0 as KTX format." };
 		if (texInfo.mipCount == 0)
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'mipCount' equal to 0 as KTX format." };
 
 		if (texInfo.baseDimensions.width > detail::maxValue<std::uint32_t>())
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'width' higher than uint32 max value as KTX format." };
 		if (texInfo.baseDimensions.height > detail::maxValue<std::uint32_t>())
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'height' higher than uint32 max value as KTX format." };
 		if (texInfo.baseDimensions.depth > detail::maxValue<std::uint32_t>())
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'depth' higher than uint32 max value as KTX format." };
 		if (texInfo.layerCount > detail::maxValue<std::uint32_t>())
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'arrayLayerCount' higher than uint32 max value as KTX format." };
 		if (texInfo.mipCount > 32)
-			return { ResultType::InvalidInputParameter, 
+			return { ResultType::InvalidLibraryUsage, 
 					 "Cannot export texture with field 'mipCount' higher than 32 as KTX format." };
 
-		if (texInfo.mipCount > calcMaxMipCount(texInfo.baseDimensions))
-			return { ResultType::InvalidInputParameter, 
+		if (texInfo.mipCount > calculateMaxMipCount(texInfo.baseDimensions))
+			return { ResultType::InvalidLibraryUsage, 
 					 "Passed in texture-info with 'mipCount' higher than 'baseDimensions' can hold." };
 
 		return { ResultType::Success, nullptr };
@@ -113,42 +113,42 @@ namespace Texas::detail::KTX
 Texas::Result Texas::KTX::canSave(TextureInfo const& texInfo) noexcept
 {
 	if (texInfo.textureType == TextureType::Array3D)
-		return { ResultType::InvalidInputParameter, "KTX format does not support 3D arrays." };
+		return { ResultType::InvalidLibraryUsage, "KTX format does not support 3D arrays." };
 
 	if (texInfo.baseDimensions.width == 0)
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'width' equal to 0 as KTX format." };
 	if (texInfo.baseDimensions.height == 0)
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'height' equal to 0 as KTX format." };
 	if (texInfo.baseDimensions.depth == 0)
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'depth' equal to 0 as KTX format." };
 	if (texInfo.layerCount == 0)
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'arrayLayerCount' equal to 0 as KTX format." };
 	if (texInfo.mipCount == 0)
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'mipCount' equal to 0 as KTX format." };
 
 	if (texInfo.baseDimensions.width > detail::maxValue<std::uint32_t>())
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'width' higher than uint32 max value as KTX format." };
 	if (texInfo.baseDimensions.height > detail::maxValue<std::uint32_t>())
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'height' higher than uint32 max value as KTX format." };
 	if (texInfo.baseDimensions.depth > detail::maxValue<std::uint32_t>())
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'depth' higher than uint32 max value as KTX format." };
 	if (texInfo.layerCount > detail::maxValue<std::uint32_t>())
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'arrayLayerCount' higher than uint32 max value as KTX format." };
 	if (texInfo.mipCount > 32)
-		return { ResultType::InvalidInputParameter, 
+		return { ResultType::InvalidLibraryUsage, 
 				 "Cannot export texture with field 'mipCount' higher than 32 as KTX format." };
 
-	if (texInfo.mipCount > calcMaxMipCount(texInfo.baseDimensions))
-		return { ResultType::InvalidInputParameter, 
+	if (texInfo.mipCount > calculateMaxMipCount(texInfo.baseDimensions))
+		return { ResultType::InvalidLibraryUsage, 
 				 "Passed in texture-info with 'mipCount' higher than 'baseDimensions' can hold." };
 
 	return { ResultType::Success, nullptr };
@@ -172,8 +172,8 @@ Texas::ResultValue<std::uint64_t> Texas::detail::PrivateAccessor::KTX_calcFileSi
 		totalSize += 4;
 
 		// Add the total size of this mip-level. Includes 3D depth, array-layers, 
-		Dimensions mipDims = calcMipDimensions(texInfo.baseDimensions, mipLevel);
-		totalSize += calcTotalSize(texInfo.baseDimensions, texInfo.pixelFormat, 1, texInfo.layerCount);
+		Dimensions mipDims = calculateMipDimensions(texInfo.baseDimensions, mipLevel);
+		totalSize += calculateTotalSize(texInfo.baseDimensions, texInfo.pixelFormat, 1, texInfo.layerCount);
 
 		// Align to 4 bytes
 		totalSize += totalSize % 4;
@@ -233,22 +233,22 @@ Texas::Result Texas::KTX::saveToStream(
 		return isValidResult;
 
 	if (mipLevels.data() == nullptr)
-		return { ResultType::InvalidInputParameter, "Passed in nullptr for mip-level data." };
+		return { ResultType::InvalidLibraryUsage, "Passed in nullptr for mip-level data." };
 	if (mipLevels.size() == 0)
-		return { ResultType::InvalidInputParameter, "Passed in no mip-levels of imagedata." };
+		return { ResultType::InvalidLibraryUsage, "Passed in no mip-levels of imagedata." };
 	if (mipLevels.size() != texInfo.mipCount)
-		return { ResultType::InvalidInputParameter, "mipLevels.size() does not match texInfo.mipCount." };
+		return { ResultType::InvalidLibraryUsage, "mipLevels.size() does not match texInfo.mipCount." };
 	for (std::uint8_t mipLevel = 0; mipLevel < mipLevels.size(); mipLevel += 1)
 	{
 		if (mipLevels.data()[mipLevel].data() == nullptr)
-			return { ResultType::InvalidInputParameter, "Passed in nullptr for one of the mip-levels." };
-		std::uint64_t const totalSize = calcTotalSize(
-			calcMipDimensions(texInfo.baseDimensions, mipLevel), 
+			return { ResultType::InvalidLibraryUsage, "Passed in nullptr for one of the mip-levels." };
+		std::uint64_t const totalSize = calculateTotalSize(
+			calculateMipDimensions(texInfo.baseDimensions, mipLevel), 
 			texInfo.pixelFormat, 
 			1, 
 			texInfo.layerCount);
 		if (mipLevels.data()[mipLevel].size() < totalSize)
-			return { ResultType::InvalidInputParameter, "One of the mip-levels size is too small to hold the image-data." };
+			return { ResultType::InvalidLibraryUsage, "One of the mip-levels size is too small to hold the image-data." };
 	}
 
 	std::uint64_t memOffsetTracker = 0;
@@ -327,8 +327,8 @@ Texas::Result Texas::KTX::saveToStream(
 
 	for (std::uint32_t mipLevelIndex = 0; mipLevelIndex < static_cast<std::uint32_t>(mipLevels.size()); mipLevelIndex += 1)
 	{
-		Dimensions mipDims = calcMipDimensions(texInfo.baseDimensions, mipLevelIndex);
-		std::uint32_t const imageSize = static_cast<std::uint32_t>(calcTotalSize(mipDims, texInfo.pixelFormat, 1, texInfo.layerCount));
+		Dimensions mipDims = calculateMipDimensions(texInfo.baseDimensions, mipLevelIndex);
+		std::uint32_t const imageSize = static_cast<std::uint32_t>(calculateTotalSize(mipDims, texInfo.pixelFormat, 1, texInfo.layerCount));
 
 		// Write the 'imageSize' 
 		stream.write(reinterpret_cast<char const*>(&imageSize), sizeof(imageSize));

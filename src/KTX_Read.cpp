@@ -100,7 +100,7 @@ Texas::Result Texas::detail::KTX::loadFromStream(
     textureInfo.pixelFormat = detail::toPixelFormat(fileGLInternalFormat, fileGLType);
     textureInfo.channelType = detail::toChannelType(fileGLInternalFormat, fileGLType);
     if (textureInfo.pixelFormat == PixelFormat::Invalid || textureInfo.colorSpace == ColorSpace::Invalid || textureInfo.channelType == ChannelType::Invalid)
-        return { ResultType::PixelFormatNotSupported, "KTX pixel-format not supported." };;
+        return { ResultType::FileNotSupported, "KTX pixel-format not supported." };
 
 
     // Grab dimensions

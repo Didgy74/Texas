@@ -1,23 +1,19 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Texas
 {
     /*
         An enum for categorizing errors.
     */
-    enum class ResultType : std::uint8_t
+    enum class ResultType : unsigned char
     {
         Success,
+        UnknownError,
 
         CouldNotOpenFile,
         CorruptFileData,
         FileNotSupported,
         InvalidLibraryUsage,
-        InvalidInputParameter,
-        PixelFormatNotSupported,
         PrematureEndOfFile,
     };
 }
-

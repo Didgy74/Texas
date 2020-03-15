@@ -13,14 +13,14 @@ namespace Texas
         inline constexpr Result() = default;
 
         inline constexpr Result(ResultType resultType, char const* errorMessage) :
-            m_resultType(resultType),
+            m_type(resultType),
             m_errorMessage(errorMessage)
         {
         }
 
-        [[nodiscard]] inline constexpr ResultType resultType() const noexcept
+        [[nodiscard]] inline constexpr ResultType type() const noexcept
         {
-            return m_resultType;
+            return m_type;
         }
 
         [[nodiscard]] inline constexpr char const* errorMessage() const noexcept
@@ -30,16 +30,16 @@ namespace Texas
 
         [[nodiscard]] inline constexpr bool isSuccessful() const noexcept
         {
-            return m_resultType == ResultType::Success;
+            return m_type == ResultType::Success;
         }
 
         inline constexpr operator bool() const noexcept
         {
-            return m_resultType == ResultType::Success;
+            return m_type == ResultType::Success;
         }
 
     private:
-        ResultType m_resultType = ResultType::Success;
+        ResultType m_type = ResultType::UnknownError;
         char const* m_errorMessage = nullptr;
     };
 }

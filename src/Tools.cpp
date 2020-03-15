@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-std::uint64_t Texas::calcMaxMipCount(Dimensions baseDims) noexcept
+std::uint64_t Texas::calculateMaxMipCount(Dimensions baseDims) noexcept
 {
     if (baseDims.width == 0 || baseDims.height == 0 || baseDims.depth == 0)
         return 0;
@@ -18,7 +18,7 @@ std::uint64_t Texas::calcMaxMipCount(Dimensions baseDims) noexcept
     return static_cast<std::uint64_t>(std::log2(max)) + 1;
 }
 
-Texas::Dimensions Texas::calcMipDimensions(Dimensions baseDims, std::uint8_t mipIndex) noexcept
+Texas::Dimensions Texas::calculateMipDimensions(Dimensions baseDims, std::uint8_t mipIndex) noexcept
 {
     if (baseDims.width == 0 || baseDims.height == 0 || baseDims.depth == 0)
         return {};
@@ -39,7 +39,7 @@ Texas::Dimensions Texas::calcMipDimensions(Dimensions baseDims, std::uint8_t mip
     return returnValue;
 }
 
-std::uint64_t Texas::calcTotalSize(
+std::uint64_t Texas::calculateTotalSize(
     Dimensions baseDims, 
     PixelFormat pFormat, 
     std::uint8_t mipCount, 
@@ -49,17 +49,17 @@ std::uint64_t Texas::calcTotalSize(
         return 0;
 
     std::uint64_t sum = 0;
-    for (std::uint64_t i = 0; i < mipCount; i++)
-        sum += calcSingleImageSize(calcMipDimensions(baseDims, i), pFormat);
+    for (std::uint8_t i = 0; i < mipCount; i++)
+        sum += calculateSingleImageSize(calculateMipDimensions(baseDims, i), pFormat);
     return sum * arrayCount;
 }
 
-std::uint64_t Texas::calcTotalSize(TextureInfo const& meta) noexcept
+std::uint64_t Texas::calculateTotalSize(TextureInfo const& meta) noexcept
 {
-    return calcTotalSize(meta.baseDimensions, meta.pixelFormat, meta.mipCount, meta.layerCount);
+    return calculateTotalSize(meta.baseDimensions, meta.pixelFormat, meta.mipCount, meta.layerCount);
 }
 
-std::uint64_t Texas::calcMipOffset(
+std::uint64_t Texas::calculateMipOffset(
     Dimensions baseDims, 
     PixelFormat pFormat, 
     std::uint64_t arrayCount,
@@ -67,17 +67,17 @@ std::uint64_t Texas::calcMipOffset(
 {
     if (mipIndex == 0)
         return 0;
-    return { calcTotalSize(baseDims, pFormat, mipIndex, arrayCount) };
+    return { calculateTotalSize(baseDims, pFormat, mipIndex, arrayCount) };
 }
 
-std::uint64_t Texas::calcMipOffset(
+std::uint64_t Texas::calculateMipOffset(
     TextureInfo const& meta, 
     std::uint8_t mipIndex) noexcept
 {
-    return calcMipOffset(meta.baseDimensions, meta.pixelFormat, meta.layerCount, mipIndex);
+    return calculateMipOffset(meta.baseDimensions, meta.pixelFormat, meta.layerCount, mipIndex);
 }
 
-std::uint64_t Texas::calcLayerOffset(
+std::uint64_t Texas::calculateLayerOffset(
     Dimensions baseDimensions,
     PixelFormat pixelFormat,
     std::uint8_t mipIndex,
@@ -88,18 +88,18 @@ std::uint64_t Texas::calcLayerOffset(
         return 0;
 
     // Calculates size of all mip except the one we want to index into
-    std::uint64_t sum = calcTotalSize(baseDimensions, pixelFormat, mipIndex, layerCount);
+    std::uint64_t sum = calculateTotalSize(baseDimensions, pixelFormat, mipIndex, layerCount);
     // Then calculates the size of every individiual array-layer up until our wanted index.
-    sum += calcSingleImageSize(calcMipDimensions(baseDimensions, mipIndex), pixelFormat) * layerIndex;
+    sum += calculateSingleImageSize(calculateMipDimensions(baseDimensions, mipIndex), pixelFormat) * layerIndex;
     return sum;
 }
 
-std::uint64_t Texas::calcLayerOffset(
+std::uint64_t Texas::calculateLayerOffset(
     TextureInfo const& textureInfo,
     std::uint8_t mipIndex,
     std::uint64_t layerIndex) noexcept
 {
-    return calcLayerOffset(
+    return calculateLayerOffset(
         textureInfo.baseDimensions, 
         textureInfo.pixelFormat, 
         mipIndex, 
@@ -148,7 +148,7 @@ namespace Texas::detail
     }
 }
 
-std::uint64_t Texas::calcSingleImageSize(Dimensions dims, PixelFormat pFormat) noexcept
+std::uint64_t Texas::calculateSingleImageSize(Dimensions dims, PixelFormat pFormat) noexcept
 {
     detail::BlockInfo const blockInfo = detail::getBlockInfo(pFormat);
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Texas/ResultType.hpp"
 #include "Texas/Result.hpp"
 
 #include <cstdint>
@@ -16,63 +15,82 @@ namespace Texas
     class ResultValue
     {
     public:
-        ResultValue();
+        ResultValue() noexcept = default;
+        ResultValue(ResultValue<T> const&) noexcept;
+        ResultValue(ResultValue<T>&&) noexcept;
         ResultValue(T const&) noexcept;
         ResultValue(T&& data) noexcept;
-
         /*
             Passing in a Result with ResultType equal to Result::Success
             is undefined behavior.
         */
         ResultValue(Result result) noexcept;
-
         /*
-            Note! The parameter "result" cannot be ResultType::Success.
-            Passing ResultType::Success will mean either UB or will call abort through the Texas assert.
+            Passing in ResultType with value equal to Result::Success
+            is undefined behavior.
         */
         ResultValue(ResultType resultType, char const* errorMessage) noexcept;
-
         ~ResultValue() noexcept;
 
-        ResultType resultType() const noexcept;
-        char const* errorMessage() const noexcept;
+        [[nodiscard]] ResultType resultType() const noexcept;
+        [[nodiscard]] char const* errorMessage() const noexcept;
 
         /*
             Returns the loaded struct.
 
             Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
         */
-        T& value() noexcept;
+        [[nodiscard]] T& value() noexcept;
 
         /*
             Returns the loaded struct.
 
             Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
         */
-        T const& value() const noexcept;
+        [[nodiscard]] T const& value() const noexcept;
 
         /*
-            Returns true if .resultType() returns ResultType::Success.
+            Returns true if .ResultType() returns ResultType::Success.
         */
-        bool isSuccessful() const noexcept;
+        [[nodiscard]] bool isSuccessful() const noexcept;
 
         /*
             Does the same as isSuccessful().
         */
-        operator bool() const noexcept;
+        [[nodiscard]] operator bool() const noexcept;
 
-        Result toResult() const noexcept;
+        [[nodiscard]] Result toResult() const noexcept;
 
-        operator Result() const noexcept;
+        [[nodiscard]] operator Result() const noexcept;
 
     private:
-        Result m_result{ ResultType::Success, nullptr };
+        Result m_result{ ResultType::UnknownError, nullptr };
         union
         {
             alignas(T) unsigned char m_valueBuffer[sizeof(T)] = {};
             T m_value;
         };
     };
+
+    template<typename T>
+    ResultValue<T>::ResultValue(ResultValue<T> const& other) noexcept
+    {
+        m_result = other.m_result;
+        if (m_result.isSuccessful())
+        {
+            new(m_value) T(other);
+        }
+    }
+
+    template<typename T>
+    ResultValue<T>::ResultValue(ResultValue<T>&& other) noexcept
+    {
+        m_result = other.m_result;
+        if (other.m_result.isSuccessful())
+        {
+            new(m_value) T(static_cast<T&&>(other.m_value));
+        }
+    }
 
     template<typename T>
     ResultValue<T>::ResultValue(Result in) noexcept :
@@ -105,7 +123,7 @@ namespace Texas
     template<typename T>
     ResultType ResultValue<T>::resultType() const noexcept
     {
-        return m_result.resultType();
+        return m_result.type();
     }
 
     template<typename T>

@@ -1,3 +1,8 @@
+// Stops the warnings made by MSVC when using "unsafe" CRT fopen functions.
+#ifdef _MSC_VER
+#   define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "Texas/Texas.hpp"
 #include "PrivateAccessor.hpp"
 #include "Texas/Tools.hpp"
@@ -97,18 +102,12 @@ Texas::ResultValue<Texas::Texture> Texas::loadFromStream(InputStream& stream, Al
     return detail::PrivateAccessor::loadFromStream(stream, &allocator);
 }
 
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer, Allocator& allocator) noexcept
-{
-    detail::BufferStreamWrapper temp{};
-    temp.inputBuffer = inputBuffer;
-    return loadFromStream(temp, allocator);
-}
-
 Texas::ResultValue<Texas::Texture> Texas::loadFromPath(char const* path, Allocator& allocator) noexcept
 {
     detail::FileIOStreamWrapper temp{};
-    errno_t error = fopen_s(&temp.filestream, path, "rb");
-    if (error != 0 || temp.filestream == nullptr)
+
+    temp.filestream = std::fopen(path, "rb");
+    if (temp.filestream == nullptr)
         return { ResultType::CouldNotOpenFile, "Failed to open this file for reading." };
     return loadFromStream(temp, allocator);
 }
@@ -116,6 +115,15 @@ Texas::ResultValue<Texas::Texture> Texas::loadFromPath(char const* path, Allocat
 Texas::ResultValue<Texas::FileInfo> Texas::parseStream(InputStream& stream) noexcept
 {
     return detail::PrivateAccessor::parseStream(stream);
+}
+
+Texas::Result Texas::loadImageData(
+    InputStream& stream,
+    FileInfo const& file,
+    ByteSpan dstBuffer,
+    ByteSpan workingMemory) noexcept
+{
+    return detail::PrivateAccessor::loadImageData(stream, file, dstBuffer, workingMemory);
 }
 
 #ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
@@ -127,16 +135,9 @@ Texas::ResultValue<Texas::Texture> Texas::loadFromStream(InputStream& stream) no
 Texas::ResultValue<Texas::Texture> Texas::loadFromPath(char const* path) noexcept
 {    
     detail::FileIOStreamWrapper temp{};
-    errno_t error = fopen_s(&temp.filestream, path, "rb");
-    if (error != 0 || temp.filestream == nullptr)
+    temp.filestream = std::fopen(path, "rb");
+    if (temp.filestream == nullptr)
         return { ResultType::CouldNotOpenFile, "Failed to open this file for reading." };
-    return loadFromStream(temp);
-}
-
-Texas::ResultValue<Texas::Texture> Texas::loadFromBuffer(ConstByteSpan inputBuffer) noexcept
-{
-    detail::BufferStreamWrapper temp{};
-    temp.inputBuffer = inputBuffer;
     return loadFromStream(temp);
 }
 #endif // End ifdef TEXAS_ENABLE_DYNAMIC_ALLOCATIONS
@@ -165,7 +166,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
         Result result = KTX::loadFromStream(stream, memReqs.m_textureInfo);
         if (result.isSuccessful())
         {
-            memReqs.m_memoryRequired = calcTotalSize(memReqs.textureInfo());
+            memReqs.m_memoryRequired = calculateTotalSize(memReqs.textureInfo());
             return { static_cast<FileInfo&&>(memReqs) };
         }
         else
@@ -189,26 +190,20 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
             memReqs.m_backendData.png);
         if (result.isSuccessful())
         {
-            memReqs.m_memoryRequired = calcTotalSize(memReqs.textureInfo());
+            memReqs.m_memoryRequired = calculateTotalSize(memReqs.textureInfo());
             return { static_cast<FileInfo&&>(memReqs) };
         }
         else
             return { result };
 #else
-        return { ResultType::FileNotSupported, "Encountered a PNG-file. PNG support has not been enabled in this configuration." };
+        return { ResultType::FileNotSupported, "Encountered a PNG-file. "
+                 "PNG support has not been enabled in this configuration." };
 #endif
     }
     
     return { ResultType::FileNotSupported, 
              "Could not identify file-format of input "
              "or file-format is not supported." };
-}
-
-Texas::ResultValue<Texas::FileInfo> Texas::parseBuffer(ConstByteSpan inputBuffer) noexcept
-{
-    detail::BufferStreamWrapper temp{};
-    temp.inputBuffer = inputBuffer;
-    return parseStream(temp);
 }
 
 Texas::Result Texas::detail::PrivateAccessor::loadImageData(
