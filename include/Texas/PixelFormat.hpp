@@ -11,7 +11,6 @@ namespace Texas
         Invalid,
 
         R_8,
-        RA_8,
         RG_8,
         RGB_8,
         BGR_8,
@@ -19,7 +18,6 @@ namespace Texas
         BGRA_8,
 
         R_16,
-        RA_16,
         RG_16,
         RGB_16,
         BGR_16,
@@ -28,7 +26,6 @@ namespace Texas
 
         R_32,
         RG_32,
-        RA_32,
         RGB_32,
         BGR_32,
         RGBA_32,

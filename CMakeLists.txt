@@ -29,7 +29,9 @@ project(Texas)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/TextureInfo.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/GLTools.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/VulkanTools.cpp")
     add_library(${LIB_NAME} STATIC ${TEXAS_SRC_FILES})
 #
 # END

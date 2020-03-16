@@ -284,9 +284,9 @@ static Texas::PixelFormat Texas::detail::PNG::toPixelFormat(
         switch (bitDepth)
         {
         case 8:
-            return PixelFormat::RA_8;
+            return PixelFormat::RG_8;
         case 16:
-            return PixelFormat::RA_16;
+            return PixelFormat::RG_16;
         }
         break;
     case ColorType::Truecolour:
@@ -357,7 +357,7 @@ static std::uint8_t Texas::detail::PNG::getPixelWidth(PixelFormat pixelFormat) n
     {
     case PixelFormat::R_8:
         return 1;
-    case PixelFormat::RA_8:
+    case PixelFormat::RG_8:
         return 2;
     case PixelFormat::RGB_8:
         return 3;

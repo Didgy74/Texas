@@ -116,7 +116,6 @@ namespace Texas::detail
         case PixelFormat::R_8:
             return 1;
         case PixelFormat::RG_8:
-        case PixelFormat::RA_8:
         case PixelFormat::R_16:
             return 2;
         case PixelFormat::RGB_8:
@@ -125,7 +124,6 @@ namespace Texas::detail
         case PixelFormat::RGBA_8:
         case PixelFormat::BGRA_8:
         case PixelFormat::RG_16:
-        case PixelFormat::RA_16:
         case PixelFormat::R_32:
             return 4;
         case PixelFormat::RGB_16:
@@ -134,7 +132,6 @@ namespace Texas::detail
         case PixelFormat::RGBA_16:
         case PixelFormat::BGRA_16:
         case PixelFormat::RG_32:
-        case PixelFormat::RA_32:
             return 8;
         case PixelFormat::RGB_32:
         case PixelFormat::BGR_32:

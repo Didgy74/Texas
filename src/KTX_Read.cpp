@@ -3,7 +3,7 @@
 #include "Texas/Span.hpp"
 #include "PrivateAccessor.hpp"
 
-#include "Texas/detail/GLTools.hpp"
+#include "detail_GLTools.hpp"
 
 #include "Texas/Tools.hpp"
 
@@ -96,10 +96,12 @@ Texas::Result Texas::detail::KTX::loadFromStream(
     detail::GLEnum const fileGLFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glFormat_Offset));
     detail::GLEnum const fileGLInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glInternalFormat_Offset));
     detail::GLEnum const fileGLBaseInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glBaseInternalFormat_Offset));
-    textureInfo.colorSpace = detail::toColorSpace(fileGLInternalFormat, fileGLType);
-    textureInfo.pixelFormat = detail::toPixelFormat(fileGLInternalFormat, fileGLType);
-    textureInfo.channelType = detail::toChannelType(fileGLInternalFormat, fileGLType);
-    if (textureInfo.pixelFormat == PixelFormat::Invalid || textureInfo.colorSpace == ColorSpace::Invalid || textureInfo.channelType == ChannelType::Invalid)
+    textureInfo.colorSpace = detail::GLToColorSpace(fileGLInternalFormat);
+    textureInfo.pixelFormat = detail::GLToPixelFormat(fileGLInternalFormat);
+    textureInfo.channelType = detail::GLToChannelType(fileGLInternalFormat);
+    if (textureInfo.pixelFormat == PixelFormat::Invalid || 
+        textureInfo.colorSpace == ColorSpace::Invalid || 
+        textureInfo.channelType == ChannelType::Invalid)
         return { ResultType::FileNotSupported, "KTX pixel-format not supported." };
 
 

@@ -9,11 +9,11 @@ To do list for v0.1
 [x] - Add ReadStream loading paths
 [x] - Add "load from file path" loading paths
 [x] - Repair buffer loading paths to be a wrapper for the stream-based one
-[ ] - Revise GL enum -> Texas enum conversions
+[x] - Revise GL enum -> Texas enum conversions
 [ ] - Revise Vulkan enum -> Texas enum conversions
 [x] - (?) Add memory-type enum for Allocator interface to differentiate between image-data memory and working memory.
 [x] - Revise KTX writing code
-[ ] - Fix the error-handling made by Texture class.
+[x] - Fix the error-handling made by Texture class.
 [x] - Maybe use C runtime FILE for "load from file path"?
 [x] - Define the Texas::ResultValue copy constructor.
 [ ] - Setup proper comments for the public interface.

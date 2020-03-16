@@ -31,6 +31,8 @@ namespace Texas::detail
 
     enum class VkFormat : std::uint32_t
     {
+        VK_FORMAT_UNDEFINED = 0,
+
         VK_FORMAT_R8_UNORM = 9,
         VK_FORMAT_R8_SNORM = 10,
         VK_FORMAT_R8_USCALED = 11,
