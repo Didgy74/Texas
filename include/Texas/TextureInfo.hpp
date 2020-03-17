@@ -5,7 +5,7 @@
 #include "Texas/PixelFormat.hpp"
 #include "Texas/TextureType.hpp"
 #include "Texas/ChannelType.hpp"
-#include "Texas/Colorspace.hpp"
+#include "Texas/ColorSpace.hpp"
 
 #include <cstdint>
 

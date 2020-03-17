@@ -1,5 +1,20 @@
 #include "detail_VulkanTools.hpp"
-#include "detail_VulkanTools.hpp"
+#include "Texas/VkTools.hpp"
+
+std::uint32_t Texas::toVkImageType(TextureType type) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toVkImageType(type));
+}
+
+std::uint32_t Texas::toVkImageViewType(TextureType type) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toVkImageViewType(type));
+}
+
+std::uint32_t Texas::toVkFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toVkFormat(pFormat, cSpace, chType));
+}
 
 Texas::detail::VkImageType Texas::detail::toVkImageType(TextureType const type) noexcept
 {
@@ -73,6 +88,52 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         return VkFormat::VK_FORMAT_UNDEFINED; \
     } \
 
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_16_BIT(vkname) \
+    switch (cSpace) \
+    { \
+    case ColorSpace::Linear: \
+        switch (chType) \
+        { \
+        case ChannelType::UnsignedNormalized: \
+            return VkFormat::VK_FORMAT_## vkname ##_UNORM; \
+        case ChannelType::SignedNormalized: \
+            return VkFormat::VK_FORMAT_## vkname ##_SNORM; \
+        case ChannelType::UnsignedInteger: \
+            return VkFormat::VK_FORMAT_## vkname ##_UINT; \
+        case ChannelType::SignedInteger: \
+            return VkFormat::VK_FORMAT_## vkname ##_SINT; \
+        case ChannelType::UnsignedScaled: \
+            return VkFormat::VK_FORMAT_## vkname ##_USCALED; \
+        case ChannelType::SignedScaled: \
+            return VkFormat::VK_FORMAT_## vkname ##_USCALED; \
+        case ChannelType::SignedFloat: \
+             return VkFormat::VK_FORMAT_## vkname ##_SFLOAT; \
+        default: \
+            return VkFormat::VK_FORMAT_UNDEFINED; \
+        } \
+    default: \
+        return VkFormat::VK_FORMAT_UNDEFINED; \
+    } \
+
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_32_BIT(vkname) \
+    switch (cSpace) \
+    { \
+    case ColorSpace::Linear: \
+        switch (chType) \
+        { \
+        case ChannelType::UnsignedInteger: \
+            return VkFormat::VK_FORMAT_## vkname ##_UINT; \
+        case ChannelType::SignedInteger: \
+            return VkFormat::VK_FORMAT_## vkname ##_SINT; \
+        case ChannelType::SignedFloat: \
+             return VkFormat::VK_FORMAT_## vkname ##_SFLOAT; \
+        default: \
+            return VkFormat::VK_FORMAT_UNDEFINED; \
+        } \
+    default: \
+        return VkFormat::VK_FORMAT_UNDEFINED; \
+    } \
+
 #define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC1(layout) \
     switch (cSpace) \
     { \
@@ -131,7 +192,6 @@ Texas::detail::VkFormat Texas::detail::toVkFormat(
 {
     switch (pFormat)
     {
-        // Standard 8 bit
     case PixelFormat::R_8:
         TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_8_BIT(R8)
     case PixelFormat::RG_8:
@@ -144,6 +204,22 @@ Texas::detail::VkFormat Texas::detail::toVkFormat(
         TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_8_BIT(R8G8B8A8)
     case PixelFormat::BGRA_8:
         TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_8_BIT(B8G8R8A8)
+    case PixelFormat::R_16:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_16_BIT(R16)
+    case PixelFormat::RG_16:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_16_BIT(R16G16)
+    case PixelFormat::RGB_16:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_16_BIT(R16G16B16)
+    case PixelFormat::RGBA_16:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_16_BIT(R16G16B16A16)
+    case PixelFormat::R_32:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_32_BIT(R32)
+    case PixelFormat::RG_32:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_32_BIT(R32G32)
+    case PixelFormat::RGB_32:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_32_BIT(R32G32B32)
+    case PixelFormat::RGBA_32:
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_32_BIT(R32G32B32A32)
 
 
     // BCn

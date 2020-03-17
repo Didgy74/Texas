@@ -1,6 +1,51 @@
 #include "Texas/GLTools.hpp"
 #include "detail_GLTools.hpp"
 
+Texas::PixelFormat Texas::GLToPixelFormat(std::uint32_t GLInternalFormat) noexcept
+{
+    return detail::GLToPixelFormat(static_cast<detail::GLEnum>(GLInternalFormat));
+}
+
+Texas::ColorSpace Texas::GLToColorSpace(std::uint32_t GLInternalFormat) noexcept
+{
+    return detail::GLToColorSpace(static_cast<detail::GLEnum>(GLInternalFormat));
+}
+
+Texas::ChannelType Texas::GLToChannelType(std::uint32_t GLInternalFormat) noexcept
+{
+    return detail::GLToChannelType(static_cast<detail::GLEnum>(GLInternalFormat));
+}
+
+std::uint32_t Texas::toGLTarget(TextureType texType) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toGLTarget(texType));
+}
+
+std::uint32_t Texas::toGLType(PixelFormat pFormat, ChannelType chType) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toGLType(pFormat, chType));
+}
+
+std::uint32_t Texas::toGLTypeSize(PixelFormat pFormat) noexcept
+{
+    return detail::toGLTypeSize(pFormat);
+}
+
+std::uint32_t Texas::toGLFormat(PixelFormat pFormat) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toGLFormat(pFormat));
+}
+
+std::uint32_t Texas::toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toGLInternalFormat(pFormat, cSpace, chType));
+}
+
+std::uint32_t Texas::toGLBaseInternalFormat(PixelFormat pFormat) noexcept
+{
+    return static_cast<std::uint32_t>(detail::toGLBaseInternalFormat(pFormat));
+}
+
 Texas::PixelFormat Texas::detail::GLToPixelFormat(GLEnum GLInternalFormat) noexcept
 {
     switch (GLInternalFormat)
@@ -321,9 +366,7 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
     case PixelFormat::R_16:
     case PixelFormat::RG_16:
     case PixelFormat::RGB_16:
-    case PixelFormat::BGR_16:
     case PixelFormat::RGBA_16:
-    case PixelFormat::BGRA_16:
         switch (chType)
         {
         case ChannelType::UnsignedInteger:
@@ -337,9 +380,7 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
     case PixelFormat::R_32:
     case PixelFormat::RG_32:
     case PixelFormat::RGB_32:
-    case PixelFormat::BGR_32:
     case PixelFormat::RGBA_32:
-    case PixelFormat::BGRA_32:
         switch (chType)
         {
         case ChannelType::UnsignedInteger:
@@ -372,16 +413,12 @@ std::uint32_t Texas::detail::toGLTypeSize(PixelFormat pFormat) noexcept
     case PixelFormat::R_16:
     case PixelFormat::RG_16:
     case PixelFormat::RGB_16:
-    case PixelFormat::BGR_16:
     case PixelFormat::RGBA_16:
-    case PixelFormat::BGRA_16:
         return 2;
     case PixelFormat::R_32:
     case PixelFormat::RG_32:
     case PixelFormat::RGB_32:
-    case PixelFormat::BGR_32:
     case PixelFormat::RGBA_32:
-    case PixelFormat::BGRA_32:
         return 4;
     }
 
@@ -409,16 +446,12 @@ Texas::detail::GLEnum Texas::detail::toGLFormat(PixelFormat pFormat) noexcept
     case PixelFormat::RGB_32:
         return GLEnum::RGB;
     case PixelFormat::BGR_8:
-    case PixelFormat::BGR_16:
-    case PixelFormat::BGR_32:
         return GLEnum::BGR;
     case PixelFormat::RGBA_8:
     case PixelFormat::RGBA_16:
     case PixelFormat::RGBA_32:
         return GLEnum::RGBA;
     case PixelFormat::BGRA_8:
-    case PixelFormat::BGRA_16:
-    case PixelFormat::BGRA_32:
         return GLEnum::BGRA;
     }
 
@@ -623,49 +656,4 @@ Texas::detail::GLEnum Texas::detail::toGLBaseInternalFormat(PixelFormat pFormat)
     }
 
     return GLEnum::Invalid;
-}
-
-Texas::PixelFormat Texas::GLToPixelFormat(std::uint32_t GLInternalFormat) noexcept
-{
-    return detail::GLToPixelFormat(static_cast<detail::GLEnum>(GLInternalFormat));
-}
-
-Texas::ColorSpace Texas::GLToColorSpace(std::uint32_t GLInternalFormat) noexcept
-{
-    return detail::GLToColorSpace(static_cast<detail::GLEnum>(GLInternalFormat));
-}
-
-Texas::ChannelType Texas::GLToChannelType(std::uint32_t GLInternalFormat) noexcept
-{
-    return detail::GLToChannelType(static_cast<detail::GLEnum>(GLInternalFormat));
-}
-
-std::uint32_t Texas::toGLTarget(TextureType texType) noexcept
-{
-    return static_cast<std::uint32_t>(detail::toGLTarget(texType));
-}
-
-std::uint32_t Texas::toGLType(PixelFormat pFormat, ChannelType chType) noexcept
-{
-    return static_cast<std::uint32_t>(detail::toGLType(pFormat, chType));
-}
-
-std::uint32_t Texas::toGLTypeSize(PixelFormat pFormat) noexcept
-{
-    return detail::toGLTypeSize(pFormat);
-}
-
-std::uint32_t Texas::toGLFormat(PixelFormat pFormat) noexcept
-{
-    return static_cast<std::uint32_t>(detail::toGLFormat(pFormat));
-}
-
-std::uint32_t Texas::toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept
-{
-    return static_cast<std::uint32_t>(detail::toGLInternalFormat(pFormat, cSpace, chType));
-}
-
-std::uint32_t Texas::toGLBaseInternalFormat(PixelFormat pFormat) noexcept
-{
-    return static_cast<std::uint32_t>(detail::toGLBaseInternalFormat(pFormat));
 }

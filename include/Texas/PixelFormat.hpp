@@ -20,16 +20,12 @@ namespace Texas
         R_16,
         RG_16,
         RGB_16,
-        BGR_16,
         RGBA_16,
-        BGRA_16,
 
         R_32,
         RG_32,
         RGB_32,
-        BGR_32,
         RGBA_32,
-        BGRA_32,
 
         BC1_RGB,
         BC1_RGBA,

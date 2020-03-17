@@ -127,17 +127,13 @@ namespace Texas::detail
         case PixelFormat::R_32:
             return 4;
         case PixelFormat::RGB_16:
-        case PixelFormat::BGR_16:
             return 6;
         case PixelFormat::RGBA_16:
-        case PixelFormat::BGRA_16:
         case PixelFormat::RG_32:
             return 8;
         case PixelFormat::RGB_32:
-        case PixelFormat::BGR_32:
             return 12;
         case PixelFormat::RGBA_32:
-        case PixelFormat::BGRA_32:
             return 16;
         default:
             return 0;

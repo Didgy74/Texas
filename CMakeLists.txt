@@ -9,7 +9,6 @@ project(Texas)
     option(TEXAS_ENABLE_KTX_SAVE "Enables saving KTX files" ON)
     option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" ON)
     option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
-    
 #
 # END
 #
@@ -31,7 +30,7 @@ project(Texas)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/TextureInfo.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/GLTools.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/VulkanTools.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/VkTools.cpp")
     add_library(${LIB_NAME} STATIC ${TEXAS_SRC_FILES})
 #
 # END
@@ -42,6 +41,7 @@ project(Texas)
 # ----------------------
 # START
     set(INCLUDE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_FOLDER})
     target_include_directories(
         ${LIB_NAME}
         PUBLIC
