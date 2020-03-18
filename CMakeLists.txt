@@ -1,51 +1,108 @@
 cmake_minimum_required(VERSION 3.12)
-project(DTex)
+project(Texas)
 
-set(CMAKE_CXX_STANDARD 17)
+# --------------------------
+# Create Texas CMake options
+# --------------------------
+# START
+    option(TEXAS_ENABLE_KTX_READ "Enables loading KTX files" ON)
+    option(TEXAS_ENABLE_KTX_SAVE "Enables saving KTX files" ON)
+    option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" ON)
+    option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
+#
+# END
+#
 
-set(LIB_NAME ${PROJECT_NAME})
-add_library(${LIB_NAME} INTERFACE)
-add_library(${LIB_NAME}::${LIB_NAME} ALIAS ${LIB_NAME})
+# --------------------
+# Create CMake library
+# --------------------
+# START
+    set(LIB_NAME ${PROJECT_NAME})
 
-set(INCLUDE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_include_directories(
-    ${LIB_NAME}
-    INTERFACE
-    $<BUILD_INTERFACE:${INCLUDE_FOLDER}>
-    $<INSTALL_INTERFACE:include>
-)
+    # Link .cpp files
+    set(TEXAS_SRC_FILES 
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/FileInfo.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/PrivateAccessor.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/Texas.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/TextureInfo.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/GLTools.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/VkTools.cpp")
+    add_library(${LIB_NAME} STATIC ${TEXAS_SRC_FILES})
+#
+# END
+#
 
-file(GLOB_RECURSE SOURCE_FILES 
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-"${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-)
+# ----------------------
+# Link include directory
+# ----------------------
+# START
+    set(INCLUDE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_FOLDER})
+    target_include_directories(
+        ${LIB_NAME}
+        PUBLIC
+        $<BUILD_INTERFACE:${INCLUDE_FOLDER}>
+        $<INSTALL_INTERFACE:include>
+    )
+#
+# END
+#
 
-target_sources(${LIB_NAME} INTERFACE ${SOURCE_FILES})
+# --------------------------
+# Handle Texas CMake options
+# --------------------------
+# START
+    # Check that atleast one file format has been enabled
+    if(NOT(
+        TEXAS_ENABLE_KTX_READ OR
+        TEXAS_ENABLE_PNG_READ
+    ))
+        message(FATAL_ERROR "FATAL ERROR: To use Texas you must enable atleast one file-format.")
+    endif()
 
-# Compile example
-#set(COMPILE_EXAMPLES 1)
-if (${COMPILE_EXAMPLES})
-	set(EXAMPLE1_NAME "Example")
-	add_executable(${EXAMPLE1_NAME} "examples/example.cpp")
-	
-	target_link_libraries(${EXAMPLE1_NAME} ${LIB_NAME}::${LIB_NAME})
+    if (TEXAS_ENABLE_KTX_READ)
+        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_KTX_READ)
+        target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Read.cpp")
+    endif()
 
-	# Add custom command to copy example resources directory to build directory
-	# Remove example resources directory in build directory if present
-	add_custom_command(
-		TARGET ${EXAMPLE1_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E remove_directory
-		$<TARGET_FILE_DIR:${EXAMPLE1_NAME}>/resources
-		)
+    if (TEXAS_ENABLE_KTX_SAVE)
+        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_KTX_SAVE)
+        target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/KTX_Save")
+        target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Save.cpp")
+    endif()
 
-	# Copy directory from source folder to build folder
-	add_custom_command(
-		TARGET ${EXAMPLE1_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory
-		${PROJECT_SOURCE_DIR}/examples/resources
-		$<TARGET_FILE_DIR:${EXAMPLE1_NAME}>/resources
-		)
-endif()
+    if (TEXAS_ENABLE_PNG_READ)
+        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_PNG_READ)
+        target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_Read.cpp")
+        set(TEXAS_LINK_ZLIB 1)
+    endif()
+
+    if(${TEXAS_LINK_ZLIB})
+        set(TEXAS_ZLIB_SRC_FILES 
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/adler32.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/crc32.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/deflate.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzclose.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzlib.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzread.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/gzwrite.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/infback.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/inffast.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/inflate.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/inftrees.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/trees.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/uncompr.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/zutil.c")
+        target_sources(${LIB_NAME} INTERFACE ${TEXAS_ZLIB_SRC_FILES})
+    endif()
+
+    if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
+        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
+    endif()
+#
+# END
+#

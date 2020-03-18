@@ -1,0 +1,39 @@
+[x] = Done
+[-] = In Progress
+[o] = Cancelled
+
+To do list for v0.1
+[-] - Make documentation explaining the memory type distinction, how mips are defined etc...
+[x] - Change features to be opt-out by default
+[x] - Test that all feature-configurations work as intended
+[x] - Add ReadStream loading paths
+[x] - Add "load from file path" loading paths
+[x] - Repair buffer loading paths to be a wrapper for the stream-based one
+[x] - Revise GL enum -> Texas enum conversions
+[x] - Revise Vulkan enum -> Texas enum conversions
+[x] - (?) Add memory-type enum for Allocator interface to differentiate between image-data memory and working memory.
+[x] - Revise KTX writing code
+[x] - Fix the error-handling made by Texture class.
+[x] - Maybe use C runtime FILE for "load from file path"?
+[x] - Define the Texas::ResultValue copy constructor.
+[x] - Setup proper comments for the public interface.
+[x] - Fix the loading paths that are divived in 2 parts, the no allocator involved stuff.
+[x] - Fix license
+
+After v0.1
+[-] - Better support for reading PNG
+	Add support for interlaced images
+	Add support for 16-bit color channels
+[ ] - Find better name for Texas::OpenFile, maybe UnclosedFile? Maybe something with the word "Temp"?
+[ ] - Add support for texture streaming 
+[ ] - Add opt-out functionality for STL -> Texas type conversions
+[ ] - Move examples into it's own Git repo
+[ ] - Find out how small a file could possibly be and still be valid. Helps with early validation.
+[ ] - Flesh out how validation should work, exceptions vs. asserts
+[ ] - Investigate if there is any point to somehow undef'ing the assert in public headers
+[ ] - When the implementation is in the header, like templated types, maybe move implementation into it's own header under detail?
+[ ] - Investigate whether the library should have a TextureLoader struct that stores settings for loading a file, and also a method to actually load it.
+[ ] - Get started on some CI. Compilation tests, compare loaded files to other libs...
+[ ] - Maybe add operator*, operator-> and operator bool to ResultValue<T>?
+[ ] - Maybe find a better name for Dimensions and "baseDimensions"? Alternatives: Size (dataSize for internalbuffer size), Extent
+

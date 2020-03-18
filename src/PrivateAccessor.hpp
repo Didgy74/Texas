@@ -1,29 +1,33 @@
 #pragma once
 
-#include "DTex/LoadInfo.hpp"
-#include "DTex/MetaData.hpp"
-#include "DTex/OpenFile.hpp"
-#include <DTex/TextureDocument.hpp>
+#include "Texas/Result.hpp"
+#include "Texas/ResultValue.hpp"
+#include "Texas/InputStream.hpp"
+#include "Texas/FileInfo.hpp"
+#include "Texas/Span.hpp"
+#include "Texas/Texture.hpp"
 
-#include <cstddef>
-#include <filesystem>
+#include <cstdint>
 
-namespace DTex::detail
+namespace Texas::detail
 {
-	class PrivateAccessor final
-	{
-	private:
-		PrivateAccessor() = delete;
-		virtual ~PrivateAccessor() = 0;
+    class PrivateAccessor final
+    {
+    private:
+        virtual ~PrivateAccessor() = 0;
 
-	public:
-		static LoadInfo<TextureDocument> LoadFromFile(const std::filesystem::path& path);
+    public:
+        [[nodiscard]] static ResultValue<Texture> loadFromStream(InputStream& stream, Allocator* allocator) noexcept;
+        [[nodiscard]] static ResultValue<FileInfo> parseStream(InputStream& stream) noexcept;
 
-		static LoadInfo<OpenFile> LoadFile_CustomBuffer(const std::filesystem::path& path);
-		static void LoadImageData(const OpenFile& file, uint8_t* dstBuffer);
+        [[nodiscard]] static Result loadImageData(
+            InputStream& stream,
+            FileInfo const& file,
+            ByteSpan dstBuffer,
+            ByteSpan workingMem) noexcept;
 
-		static void KTX_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer);
-
-		static void PNG_LoadImageData(std::ifstream& fstream, const MetaData& metaData, uint8_t* dstBuffer);
-	};
+#if defined(TEXAS_ENABLE_KTX_SAVE)
+        [[nodiscard]] static ResultValue<std::uint64_t> KTX_calcFileSize(TextureInfo const& texInfo) noexcept;
+#endif
+    };
 }

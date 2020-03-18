@@ -3,10 +3,6 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-#if defined( _MSC_VER )
-#	define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "gzguts.h"
 
 /* Local functions */
@@ -36,11 +32,7 @@ local int gz_load(state, buf, len, have)
         get = len - *have;
         if (get > max)
             get = max;
-#if defined( _MSC_VER )
-        ret = _read(state->fd, buf + *have, get);
-#else
-		ret = read(state->fd, buf + *have, get);
-#endif
+        ret = read(state->fd, buf + *have, get);
         if (ret <= 0)
             break;
         *have += (unsigned)ret;
@@ -324,7 +316,7 @@ local z_size_t gz_read(state, buf, len)
         /* set n to the maximum amount of len that fits in an unsigned int */
         n = -1;
         if (n > len)
-            n = (unsigned int)len;
+            n = len;
 
         /* first just try copying data from the output buffer */
         if (state->x.have) {
@@ -405,7 +397,7 @@ int ZEXPORT gzread(file, buf, len)
     }
 
     /* read len or fewer bytes to buf */
-    len = (unsigned int)gz_read(state, buf, len);
+    len = gz_read(state, buf, len);
 
     /* check for an error */
     if (len == 0 && state->err != Z_OK && state->err != Z_BUF_ERROR)
@@ -477,7 +469,7 @@ int ZEXPORT gzgetc(file)
     }
 
     /* nothing there -- try gz_read() */
-    ret = (int)gz_read(state, buf, 1);
+    ret = gz_read(state, buf, 1);
     return ret < 1 ? -1 : buf[0];
 }
 
@@ -656,11 +648,7 @@ int ZEXPORT gzclose_r(file)
     err = state->err == Z_BUF_ERROR ? Z_BUF_ERROR : Z_OK;
     gz_error(state, Z_OK, NULL);
     free(state->path);
-#if defined( _MSC_VER )
-    ret = _close(state->fd);
-#else
-	ret = close(state->fd);
-#endif
+    ret = close(state->fd);
     free(state);
     return ret ? Z_ERRNO : err;
 }

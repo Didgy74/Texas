@@ -1,52 +1,46 @@
 #pragma once
 
-#include "DTex/LoadInfo.hpp"
-#include "DTex/TextureDocument.hpp"
-#include "DTex/OpenFile.hpp"
-#include "DTex/MetaData.hpp"
+#include "Texas/InputStream.hpp"
+#include "Texas/ResultValue.hpp"
+#include "Texas/Result.hpp"
+#include "Texas/TextureInfo.hpp"
+#include "Texas/Span.hpp"
+#include "Texas/FileInfo.hpp"
 
-#include <fstream>
-#include <string_view>
+#include <cstdint>
+#include <cstddef>
 
-namespace DTex::detail::KTX
+namespace Texas::detail::KTX
 {
-	struct Header
-	{
-		static constexpr size_t totalSize = sizeof(uint8_t) * 64;
+    constexpr std::uint8_t identifier[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
 
-		using Member_T = uint32_t;
+    [[nodiscard]] Result loadFromStream(
+        InputStream& stream,
+        TextureInfo& textureInfo);
 
-		using Identifier_T = uint8_t[12];
-		static constexpr size_t identifierOffset = 0;
-		static constexpr Identifier_T correctIdentifier = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
+    [[nodiscard]] Result loadImageData(
+        InputStream& stream,
+        ByteSpan dstBuffer,
+        TextureInfo const& textureInfo,
+        FileInfo_KTX_BackendData const& backendData);
 
-		static constexpr uint32_t correctEndian = 0x04030201;
-		static constexpr size_t endianOffset = identifierOffset + sizeof(Identifier_T);
-
-		static constexpr size_t glTypeOffset = endianOffset + sizeof(Member_T);
-
-		static constexpr size_t glTypeSizeOffset = glTypeOffset + sizeof(Member_T);
-
-		static constexpr size_t glFormatOffset = glTypeSizeOffset + sizeof(Member_T);
-
-		static constexpr size_t glInternalFormatOffset = glFormatOffset + sizeof(Member_T);
-
-		static constexpr size_t glBaseInternalFormatOffset = glInternalFormatOffset + sizeof(Member_T);
-
-		static constexpr size_t pixelWidthOffset = glBaseInternalFormatOffset + sizeof(Member_T);
-
-		static constexpr size_t pixelHeightOffset = pixelWidthOffset + sizeof(Member_T);
-
-		static constexpr size_t pixelDepthOffset = pixelHeightOffset + sizeof(Member_T);
-
-		static constexpr size_t numberOfArrayElementsOffset = pixelDepthOffset + sizeof(Member_T);
-
-		static constexpr size_t numberOfFacesOffset = numberOfArrayElementsOffset + sizeof(Member_T);
-
-		static constexpr size_t numberOfMipmapLevelsOffset = numberOfFacesOffset + sizeof(Member_T);
-
-		static constexpr size_t bytesOfKeyValueDataOffset = numberOfMipmapLevelsOffset + sizeof(Member_T);
-	};
-
-	bool LoadHeader_Backend(MetaData& metaData, std::ifstream& fstream, ResultInfo& resultInfo, std::string_view& errorMessage);
+    namespace Header
+    {
+        constexpr std::uint32_t correctEndian = 0x04030201;
+        constexpr std::size_t totalSize = 64;
+        constexpr std::size_t identifier_Offset = 0;
+        constexpr std::size_t endianness_Offset = 12;
+        constexpr std::size_t glType_Offset = 16;
+        constexpr std::size_t glTypeSize_Offset = 20;
+        constexpr std::size_t glFormat_Offset = 24;
+        constexpr std::size_t glInternalFormat_Offset = 28;
+        constexpr std::size_t glBaseInternalFormat_Offset = 32;
+        constexpr std::size_t pixelWidth_Offset = 36;
+        constexpr std::size_t pixelHeight_Offset = 40;
+        constexpr std::size_t pixelDepth_Offset = 44;
+        constexpr std::size_t numberOfArrayElements_Offset = 48;
+        constexpr std::size_t numberOfFaces_Offset = 52;
+        constexpr std::size_t numberOfMipmapLevels_Offset = 56;
+        constexpr std::size_t bytesOfKeyValueData_Offset = 60;
+    }
 }
