@@ -2,6 +2,9 @@
 
 namespace Texas
 {
+    /*
+        Enum for categorizing textures.
+    */
     enum class TextureType : char
     {
         Invalid,

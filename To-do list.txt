@@ -16,7 +16,7 @@ To do list for v0.1
 [x] - Fix the error-handling made by Texture class.
 [x] - Maybe use C runtime FILE for "load from file path"?
 [x] - Define the Texas::ResultValue copy constructor.
-[ ] - Setup proper comments for the public interface.
+[x] - Setup proper comments for the public interface.
 [x] - Fix the loading paths that are divived in 2 parts, the no allocator involved stuff.
 [x] - Fix license
 

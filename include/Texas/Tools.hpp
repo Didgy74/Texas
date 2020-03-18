@@ -17,7 +17,7 @@ namespace Texas
         Returns the dimensions of a mip-level based on the baseDimensions.
 
         Causes undefined behavior if:
-            mipIndex is equal to or higher than the maximum mip count baseDimensions can support.
+         - mipIndex is equal to or higher than the maximum mip count baseDimensions can support.
     */
     [[nodiscard]] Dimensions calculateMipDimensions(Dimensions baseDimensions, std::uint8_t mipIndex) noexcept;
 
@@ -36,7 +36,7 @@ namespace Texas
     [[nodiscard]] std::uint64_t calculateTotalSize(TextureInfo const& textureInfo) noexcept;
 
     /*
-        Returns the offset from the start of a buffer to a mip level.
+        Returns the offset from the start of image-data to a mip level.
     */
     [[nodiscard]] std::uint64_t calculateMipOffset(
         Dimensions baseDimensions,
@@ -45,12 +45,12 @@ namespace Texas
         std::uint8_t mipIndex) noexcept;
 
     /*
-        Returns the offset from the start of a buffer to a mip level.
+        Returns the offset from the start of imagedata to a mip level.
     */
     [[nodiscard]] std::uint64_t calculateMipOffset(TextureInfo const& textureInfo, std::uint8_t mipIndex) noexcept;
 
     /*
-        Returns the offset from the start of a buffer to an layer.
+        Returns the offset from the start of imagedata to a layer.
     */
     [[nodiscard]] std::uint64_t calculateLayerOffset(
         Dimensions baseDimensions,
@@ -60,7 +60,7 @@ namespace Texas
         std::uint64_t layerIndex) noexcept;
 
     /*
-        Returns the offset from the start of a buffer to an layer.
+        Returns the offset from the start of imagedata to a layer.
     */
     [[nodiscard]] std::uint64_t calculateLayerOffset(
         TextureInfo const& textureInfo,

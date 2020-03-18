@@ -6,7 +6,8 @@ namespace Texas
 {
     /*
         Holds a Texas::Result, and an optional value.
-        If .resultType() equals ResultType::Successful, the struct has a valid value.
+        If .isSuccessful() returns true, the struct has a valid value.
+
         Accessing .value() is UB when .resultType() does not equal ResultType::Success.
     */
     template<typename T>
@@ -34,26 +35,28 @@ namespace Texas
         [[nodiscard]] char const* errorMessage() const noexcept;
 
         /*
-            Returns the loaded struct.
+            Returns the stored value.
 
-            Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
+            Causes undefined behavior if:
+             - .isSuccessful() returns false
         */
         [[nodiscard]] T& value() noexcept;
 
         /*
-            Returns the loaded struct.
+            Returns the stored value.
 
-            Warning! Using this method when isSuccessful() returns false will result in undefined behavior.
+            Causes undefined behavior if:
+             - .isSuccessful() returns false
         */
         [[nodiscard]] T const& value() const noexcept;
 
         /*
-            Returns true if .ResultType() returns ResultType::Success.
+            Returns true if .resultType() returns ResultType::Success.
         */
         [[nodiscard]] bool isSuccessful() const noexcept;
 
         /*
-            Does the same as isSuccessful().
+            Does the same as .isSuccessful()
         */
         [[nodiscard]] operator bool() const noexcept;
 
@@ -65,7 +68,7 @@ namespace Texas
         Result m_result{ ResultType::UnknownError, nullptr };
         union
         {
-            alignas(T) unsigned char m_valueBuffer[sizeof(T)] = {};
+            unsigned char m_valueBuffer = {};
             T m_value;
         };
     };

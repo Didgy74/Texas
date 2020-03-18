@@ -3,7 +3,7 @@
 namespace Texas
 {
     /*
-        An enum for categorizing errors.
+        Enum for categorizing errors.
     */
     enum class ResultType : char
     {

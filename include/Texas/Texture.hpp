@@ -13,8 +13,8 @@
 namespace Texas
 {
     /*
-        Represents the entirety of a file loaded with Texas.
-        Contains both metadata and the actual imagedata.
+        Represents a loaded texture in it's entirety.
+        This includes both the actual imagedata and texture-info.
 
         Running any methods on a Texture whose contents have been extracted through move-semantics is UB.
     */
@@ -41,34 +41,38 @@ namespace Texas
         [[nodiscard]] std::uint64_t layerCount() const;
 
         /*
-            Returns the offset from the start of the imagedata to the specified mip index.
+            Returns the offset from the start of the imagedata to the specified mip level.
 
             Causes undefined behavior if: 
-             - If mipIndex is equal to or higher than .mipCount().
+             - The texture's contents have been moved through move-semantics.
+             - mipIndex is equal to or higher than .mipCount().
         */
         [[nodiscard]] std::uint64_t mipOffset(std::uint8_t mipIndex) const;
 
         /*
-            Returns a span to the imagedata of the specified mip index.
+            Returns a span to the imagedata of the specified mip level.
 
             Causes undefined behavior if: 
-            - If mipIndex is equal to or higher than .mipCount().
+            - The texture's contents have been moved through move-semantics.
+            - mipIndex is equal to or higher than .mipCount().
         */
         [[nodiscard]] ConstByteSpan mipSpan(std::uint8_t mipIndex) const;
 
         /*
-            Returns the offset from the start the imagedata to the specified layer.
+            Returns the offset from the start the imagedata to the specified layer at the specified mip level.
 
             Causes undefined behavior if: 
+            - The texture's contents have been moved through move-semantics.
             - If mipIndex is equal to or higher than .mipCount().
             - If layerIndex is equal to or higher than .layerCount().
         */
         [[nodiscard]] std::uint64_t layerOffset(std::uint8_t mipIndex, std::uint64_t layerIndex) const;
 
         /*
-            Returns a span to the image-data of the specified layer at the specified mip.
+            Returns a span to the image-data of the specified layer at the specified mip level.
 
             Causes undefined behavior if: 
+            - The texture's contents have been moved through move-semantics.
             - If mipIndex is equal to or higher than .mipCount().
             - If layerIndex is equal to or higher than .layerCount().
         */

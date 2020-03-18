@@ -5,7 +5,9 @@
 namespace Texas
 {
     /*
-        Small struct that contains a ResultType and an error message.
+        Struct that contains a ResultType and an error message.
+
+        Primarily used for error-handling.
     */
     class Result
     {

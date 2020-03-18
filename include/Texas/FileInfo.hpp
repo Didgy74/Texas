@@ -13,7 +13,7 @@ namespace Texas
 {
     /*
         Contains info on a parsed file
-        This includes texture-inf and some hidden 
+        This includes texture-info and some hidden 
         fileformat-specific data for loading imagedata later.
     */
     class FileInfo
