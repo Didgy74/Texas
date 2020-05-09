@@ -363,9 +363,9 @@ static std::uint8_t Texas::detail::PNG::getPixelWidth(PixelFormat pixelFormat) n
         return 3;
     case PixelFormat::RGBA_8:
         return 4;
+    default:
+        return 0;
     }
-
-    return 0;
 }
 
 static std::uint8_t Texas::detail::PNG::paethPredictor(
@@ -490,7 +490,6 @@ Texas::Result Texas::detail::PNG::parseStream(
         switch (chunkType)
         {
         case ChunkType::IDAT:
-        {
             if (previousChunkType != ChunkType::IDAT && chunkTypeCounts[(std::size_t)PNG::ChunkType::IDAT] > 1)
                 return { ResultType::CorruptFileData, 
                          "PNG IDAT chunk appeared when a chain of IDAT chunk(s) has already been found. "
@@ -504,10 +503,9 @@ Texas::Result Texas::detail::PNG::parseStream(
                 backendData.firstIdatChunkStreamPos = stream.tell() - 8;
             if (chunkDataLength > backendData.maxIdatChunkDataLength)
                 backendData.maxIdatChunkDataLength = chunkDataLength;
-        }
-        break;
+            break;
+
         case ChunkType::IEND:
-        {
             if (chunkTypeCounts[(std::size_t)PNG::ChunkType::IDAT] == 0)
                 return { ResultType::CorruptFileData, 
                          "PNG IEND chunk appears before any IDAT chunk. "
@@ -516,10 +514,9 @@ Texas::Result Texas::detail::PNG::parseStream(
                 return { ResultType::CorruptFileData , 
                          "PNG IEND chunk's data field is non-zero. "
                          "PNG specification requires IEND chunk's field 'Data length' to be 0."};
-        }
-        break;
+            break;
+
         case ChunkType::PLTE:
-        {
             if (chunkTypeCounts[(std::size_t)PNG::ChunkType::PLTE] > 0)
                 return { ResultType::CorruptFileData, 
                          "Encountered a second PLTE chunk in PNG file. "
@@ -544,10 +541,9 @@ Texas::Result Texas::detail::PNG::parseStream(
             // We subtract 8 bytes to get back to the start of the chunk
             backendData.plteChunkStreamPos = stream.tell() - 8;
             backendData.plteChunkDataLength = chunkDataLength;
-        }
-        break;
+            break;
+
         case ChunkType::sRGB:
-        {
             if (chunkTypeCounts[(std::size_t)PNG::ChunkType::sRGB] > 0)
                 return { ResultType::CorruptFileData, 
                          "Encountered a second sRGB chunk in PNG file. "
@@ -571,10 +567,9 @@ Texas::Result Texas::detail::PNG::parseStream(
                          "PNG specification requires sRGB chunk's field 'Data length' to be 1." };
 
             textureInfo.colorSpace = ColorSpace::sRGB;
-        }
-        break;
+            break;
+
         case ChunkType::gAMA:
-        {
             if (chunkTypeCounts[(std::size_t)PNG::ChunkType::gAMA] > 0)
                 return { ResultType::CorruptFileData, 
                          "Encountered a second gAMA chunk in PNG file. "
@@ -586,16 +581,17 @@ Texas::Result Texas::detail::PNG::parseStream(
                          "PLTE chunk when IHDR field 'Colour type' equals 'Indexed colour'." };
             if (chunkTypeCounts[(std::size_t)PNG::ChunkType::IDAT] > 0)
                 return { ResultType::CorruptFileData, "PNG gAMA chunk appeared after IDAT chunk(s). "
-                "PNG specification requires gAMA chunk to appear before any IDAT chunk." };
+                         "PNG specification requires gAMA chunk to appear before any IDAT chunk." };
             if (chunkDataLength != 4)
                 return { ResultType::CorruptFileData, "Chunk data length of PNG gAMA chunk is not equal to 4. "
-                "PNG specification demands that chunk data length of gAMA chunk is equal to 4." };
+                         "PNG specification demands that chunk data length of gAMA chunk is equal to 4." };
 
             // TODO: At some point, TextureInfo might contain gamma. Catch it here
 
+            break;
 
-        }
-        break;
+        default:
+            break;
         };
 
         

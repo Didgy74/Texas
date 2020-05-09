@@ -27,6 +27,9 @@ namespace Texas::detail
         case PixelFormat::BC6H:
         case PixelFormat::BC7_RGBA:
             return BlockInfo{ 4, 4, 1, sizeof(uint8_t) * 16 };
+
+        default:
+            break;
         }
 
         return {};

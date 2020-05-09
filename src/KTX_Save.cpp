@@ -30,9 +30,9 @@ namespace Texas::detail::KTX
         case TextureType::Array3D:
         case TextureType::ArrayCubemap:
             return true;
+        default:
+            return false;
         }
-
-        return false;
     }
 
     [[nodiscard]] static inline bool isCubemapType(TextureType type) noexcept
@@ -42,8 +42,9 @@ namespace Texas::detail::KTX
         case TextureType::Cubemap:
         case TextureType::ArrayCubemap:
             return true;
+        default:
+            return false;
         }
-        return false;
     }
 
     [[nodiscard]] static inline bool is1DType(TextureType type) noexcept
@@ -53,9 +54,9 @@ namespace Texas::detail::KTX
         case TextureType::Texture1D:
         case TextureType::Array1D:
             return true;
+        default:
+            return false;
         }
-
-        return false;
     }
 
     [[nodiscard]] static inline bool is2DType(TextureType type) noexcept
@@ -67,9 +68,9 @@ namespace Texas::detail::KTX
         case TextureType::Cubemap:
         case TextureType::ArrayCubemap:
             return true;
+        default:
+            return false;
         }
-
-        return false;
     }
 
     [[nodiscard]] static inline bool is3DType(TextureType type) noexcept
@@ -79,8 +80,9 @@ namespace Texas::detail::KTX
         case TextureType::Texture3D:
         case TextureType::Array3D:
             return true;
+        default:
+            return false;
         }
-        return false;
     }
 
     [[nodiscard]] static inline Result isValid(TextureInfo const& texInfo) noexcept
@@ -200,13 +202,13 @@ Texas::ResultValue<std::uint64_t> Texas::detail::PrivateAccessor::KTX_calcFileSi
 
     // TODO: Add keyValueData-stuff
 
-    for (std::uint_least32_t mipLevel = 0; mipLevel < texInfo.mipCount; mipLevel += 1)
+    for (std::uint32_t mipLevel = 0; mipLevel < texInfo.mipCount; mipLevel += 1)
     {
         // Add the size of the `imageSize` field.
         totalSize += 4;
 
         // Add the total size of this mip-level. Includes 3D depth, array-layers, 
-        Dimensions mipDims = calculateMipDimensions(texInfo.baseDimensions, mipLevel);
+        //Dimensions mipDims = calculateMipDimensions(texInfo.baseDimensions, mipLevel);
         totalSize += calculateTotalSize(texInfo.baseDimensions, texInfo.pixelFormat, 1, texInfo.layerCount);
 
         // Align to 4 bytes
@@ -235,7 +237,7 @@ Texas::Result Texas::KTX::saveToFile(
         {
             if (file != nullptr)
             {
-                int error = std::fclose(file);
+                std::fclose(file);
             }
         }
     };
@@ -404,7 +406,7 @@ Texas::Result Texas::KTX::saveToStream(
         memOffsetTracker += imageSize;
 
         constexpr char const paddingBuffer[3] = {};
-        std::uint_least8_t paddingAmount = memOffsetTracker % 4;
+        std::uint8_t paddingAmount = memOffsetTracker % 4;
         // Add padding to align to 4 bytes
         result = stream.write(paddingBuffer, paddingAmount);
         if (!result.isSuccessful())

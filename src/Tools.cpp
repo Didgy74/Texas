@@ -67,7 +67,7 @@ std::uint64_t Texas::calculateMipOffset(
 {
     if (mipIndex == 0)
         return 0;
-    return { calculateTotalSize(baseDims, pFormat, mipIndex, arrayCount) };
+    return calculateTotalSize(baseDims, pFormat, mipIndex, arrayCount);
 }
 
 std::uint64_t Texas::calculateMipOffset(

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 project(Texas)
 
 # --------------------------
@@ -30,6 +30,9 @@ project(Texas)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/GLTools.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/VkTools.cpp")
     add_library(Texas STATIC ${TEXAS_SRC_FILES})
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+        target_compile_options(Texas PRIVATE -Wall)
+    endif()
 #
 # END
 #
@@ -103,6 +106,8 @@ project(Texas)
         if(MSVC)
             target_compile_definitions(zlib PRIVATE _CRT_SECURE_NO_WARNINGS)
             target_compile_options(zlib PRIVATE /wd4996 /wd4267 /wd6297 /wd26451)
+        elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+            target_compile_options(zlib PRIVATE -Wno-everything)
         endif()
         target_link_libraries(Texas PRIVATE zlib)
 

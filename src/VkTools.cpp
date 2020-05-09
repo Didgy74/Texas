@@ -1,6 +1,31 @@
 #include "detail_VulkanTools.hpp"
 #include "Texas/VkTools.hpp"
 
+struct VkExtent3D
+{
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+};
+
+VkExtent3D Texas::toVkExtent3D(Dimensions dimensions) noexcept
+{
+    return VkExtent3D{
+        static_cast<std::uint32_t>(dimensions.width),
+        static_cast<std::uint32_t>(dimensions.height),
+        static_cast<std::uint32_t>(dimensions.depth) };
+}
+
+VkExtent3D Texas::toVkExtent3D(TextureInfo const& texInfo) noexcept
+{
+    return toVkExtent3D(texInfo.baseDimensions);
+}
+
+VkExtent3D Texas::toVkExtent3D(Texture const& texInfo) noexcept
+{
+    return toVkExtent3D(texInfo.baseDimensions());
+}
+
 std::uint32_t Texas::toVkImageType(TextureType type) noexcept
 {
     return static_cast<std::uint32_t>(detail::toVkImageType(type));
@@ -14,6 +39,16 @@ std::uint32_t Texas::toVkImageViewType(TextureType type) noexcept
 std::uint32_t Texas::toVkFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept
 {
     return static_cast<std::uint32_t>(detail::toVkFormat(pFormat, cSpace, chType));
+}
+
+std::uint32_t Texas::toVkFormat(TextureInfo const& texInfo) noexcept
+{
+    return toVkFormat(texInfo.pixelFormat, texInfo.colorSpace, texInfo.channelType);
+}
+
+std::uint32_t Texas::toVkFormat(Texture const& texture) noexcept
+{
+    return toVkFormat(texture.textureInfo());
 }
 
 Texas::detail::VkImageType Texas::detail::toVkImageType(TextureType const type) noexcept
@@ -31,6 +66,8 @@ Texas::detail::VkImageType Texas::detail::toVkImageType(TextureType const type) 
     case TextureType::Texture3D:
     case TextureType::Array3D:
         return VkImageType::VK_IMAGE_TYPE_3D;
+    default:
+        break;
     }
 
     return VkImageType::VK_IMAGE_TYPE_MAX_ENUM;
@@ -56,6 +93,9 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE;
     case TextureType::ArrayCubemap:
         return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+
+    default:
+        break;
     }
 
     return VkImageViewType::VK_IMAGE_VIEW_TYPE_MAX_ENUM;

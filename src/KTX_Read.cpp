@@ -88,14 +88,21 @@ Texas::Result Texas::detail::KTX::loadFromStream(
     // Check if file endianness matches system's
     if (KTX::toU32(headerBuffer + Header::endianness_Offset) != Header::correctEndian)
         return { ResultType::FileNotSupported, 
-        "KTX-file's endianness does not match system endianness. \
-                     Texas not capable of converting." };
+                 "KTX-file's endianness does not match system endianness. "
+                 "Texas not capable of converting." };
 
     // Grab pixel format
-    detail::GLEnum const fileGLType = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glType_Offset));
-    detail::GLEnum const fileGLFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glFormat_Offset));
-    detail::GLEnum const fileGLInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glInternalFormat_Offset));
-    detail::GLEnum const fileGLBaseInternalFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glBaseInternalFormat_Offset));
+    // TODO: Implement validation around these OpenGL enums.
+    //detail::GLEnum const fileGLType = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glType_Offset));
+    //detail::GLEnum const fileGLFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glFormat_Offset));
+    detail::GLEnum const fileGLInternalFormat = static_cast<detail::GLEnum>(
+        KTX::toU32(
+            headerBuffer + Header::glInternalFormat_Offset));
+    //detail::GLEnum const fileGLBaseInternalFormat = static_cast<detail::GLEnum>(
+    //    KTX::toU32(
+    //        headerBuffer + Header::glBaseInternalFormat_Offset));
+
+    
     textureInfo.colorSpace = detail::GLToColorSpace(fileGLInternalFormat);
     textureInfo.pixelFormat = detail::GLToPixelFormat(fileGLInternalFormat);
     textureInfo.channelType = detail::GLToChannelType(fileGLInternalFormat);
@@ -168,7 +175,7 @@ Texas::Result Texas::detail::KTX::loadFromStream(
 
     stream.ignore(totalKeyValueDataSize);
 
-    return { ResultType::Success, nullptr };
+    return Texas::successResult;
 }
 
 Texas::Result Texas::detail::KTX::loadImageData(
@@ -208,5 +215,5 @@ Texas::Result Texas::detail::KTX::loadImageData(
         }
     }
 
-    return { ResultType::Success, nullptr };
+    return Texas::successResult;
 }

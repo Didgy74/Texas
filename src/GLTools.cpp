@@ -143,6 +143,9 @@ Texas::PixelFormat Texas::detail::GLToPixelFormat(GLEnum GLInternalFormat) noexc
     case GLEnum::COMPRESSED_RGBA_BPTC_UNORM:
     case GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
         return PixelFormat::BC7_RGBA;
+
+    default:
+        break;
     }
 
     return PixelFormat::Invalid;
@@ -231,6 +234,9 @@ Texas::ColorSpace Texas::detail::GLToColorSpace(GLEnum GLInternalFormat) noexcep
         return ColorSpace::Linear;
     case GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
         return ColorSpace::sRGB;
+
+    default:
+        break;
     };
 
     return ColorSpace::Invalid;
@@ -318,6 +324,9 @@ Texas::ChannelType Texas::detail::GLToChannelType(GLEnum GLInternalFormat) noexc
     case GLEnum::COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
     case GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
         return ChannelType::sRGB;
+
+    default:
+        break;
     }
 
     return ChannelType::Invalid;
@@ -337,6 +346,9 @@ Texas::detail::GLEnum Texas::detail::toGLTarget(TextureType texType) noexcept
         return GLEnum::TEXTURE_1D_ARRAY;
     case TextureType::Array2D:
         return GLEnum::TEXTURE_2D_ARRAY;
+
+    default:
+        break;
     }
 
     return GLEnum::Invalid;
@@ -361,6 +373,8 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
             return GLEnum::UNSIGNED_BYTE;
         case ChannelType::SignedNormalized:
             return GLEnum::BYTE;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::R_16:
@@ -375,6 +389,8 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
             return GLEnum::SHORT;
         case ChannelType::SignedFloat:
             return GLEnum::HALF_FLOAT;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::R_32:
@@ -389,7 +405,12 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
             return GLEnum::INT;
         case ChannelType::SignedFloat:
             return GLEnum::FLOAT;
+        default:
+            return GLEnum::Invalid;
         }
+        break;
+
+    default:
         break;
     }
 
@@ -420,6 +441,9 @@ std::uint32_t Texas::detail::toGLTypeSize(PixelFormat pFormat) noexcept
     case PixelFormat::RGB_32:
     case PixelFormat::RGBA_32:
         return 4;
+
+    default:
+        break;
     }
 
     return 0;
@@ -453,6 +477,9 @@ Texas::detail::GLEnum Texas::detail::toGLFormat(PixelFormat pFormat) noexcept
         return GLEnum::RGBA;
     case PixelFormat::BGRA_8:
         return GLEnum::BGRA;
+
+    default:
+        break;
     }
 
     return GLEnum::Invalid;
@@ -476,6 +503,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::R8UI;
         case ChannelType::SignedInteger:
             return GLEnum::R8I;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::R_16:
@@ -491,6 +520,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::R16I;
         case ChannelType::SignedFloat:
             return GLEnum::R16F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::R_32:
@@ -502,6 +533,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::R32I;
         case ChannelType::SignedFloat:
             return GLEnum::R32F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RG_8:
@@ -515,6 +548,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RG8UI;
         case ChannelType::SignedInteger:
             return GLEnum::RG8I;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RG_16:
@@ -530,6 +565,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RG16I;
         case ChannelType::SignedFloat:
             return GLEnum::RG16F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RG_32:
@@ -541,6 +578,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RG32I;
         case ChannelType::SignedFloat:
             return GLEnum::RG32F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RGB_8:
@@ -556,6 +595,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGB8I;
         case ChannelType::sRGB:
             return GLEnum::SRGB8;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RGB_16:
@@ -571,6 +612,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGB16I;
         case ChannelType::SignedFloat:
             return GLEnum::RGB16F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RGB_32:
@@ -582,6 +625,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGB32UI;
         case ChannelType::SignedFloat:
             return GLEnum::RGB32F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RGBA_8:
@@ -597,6 +642,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGBA8I;
         case ChannelType::sRGB:
             return GLEnum::SRGB8_ALPHA8;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RGBA_16:
@@ -612,6 +659,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGBA16I;
         case ChannelType::SignedFloat:
             return GLEnum::RGBA16F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::RGBA_32:
@@ -623,6 +672,8 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGBA32I;
         case ChannelType::SignedFloat:
             return GLEnum::RGBA32F;
+        default:
+            return GLEnum::Invalid;
         }
         break;
 
@@ -633,7 +684,12 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::COMPRESSED_RGBA_BPTC_UNORM;
         case ColorSpace::sRGB:
             return GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
+        default:
+            return GLEnum::Invalid;
         }
+        break;
+
+    default:
         break;
     }
 
@@ -653,7 +709,7 @@ Texas::detail::GLEnum Texas::detail::toGLBaseInternalFormat(PixelFormat pFormat)
         return GLEnum::RGBA;
     case PixelFormat::BC7_RGBA:
         return GLEnum::RGBA;
+    default:
+        return GLEnum::Invalid;
     }
-
-    return GLEnum::Invalid;
 }
