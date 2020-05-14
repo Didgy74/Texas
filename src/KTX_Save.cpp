@@ -73,6 +73,7 @@ namespace Texas::detail::KTX
         }
     }
 
+    /*
     [[nodiscard]] static inline bool is3DType(TextureType type) noexcept
     {
         switch (type)
@@ -84,6 +85,7 @@ namespace Texas::detail::KTX
             return false;
         }
     }
+    */
 
     [[nodiscard]] static inline Result isValid(TextureInfo const& texInfo) noexcept
     {
