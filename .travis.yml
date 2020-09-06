@@ -1,1 +1,4 @@
 language: cpp
+
+script:
+    cmake . -DTEXAS_BUILD_TESTS=ON
