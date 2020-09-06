@@ -90,7 +90,8 @@ std::uint64_t Texas::calculateLayerOffset(
     // Calculates size of all mip except the one we want to index into
     std::uint64_t sum = calculateTotalSize(baseDimensions, pixelFormat, mipIndex, layerCount);
     // Then calculates the size of every individiual array-layer up until our wanted index.
-    sum += calculateSingleImageSize(calculateMipDimensions(baseDimensions, mipIndex), pixelFormat) * layerIndex;
+	if (layerCount > 0)
+		sum += calculateSingleImageSize(calculateMipDimensions(baseDimensions, mipIndex), pixelFormat) * layerIndex;
     return sum;
 }
 
