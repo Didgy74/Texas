@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(Texas)
 
+
 # --------------------------
 # Create Texas CMake options
 # --------------------------
@@ -9,6 +10,9 @@ project(Texas)
     option(TEXAS_ENABLE_KTX_SAVE "Enables saving KTX files" ON)
     option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" ON)
     option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
+
+    # Mainly for Texas development
+    option(TEXAS_BUILD_TESTS "Build test executables." OFF)
 #
 # END
 #
@@ -30,6 +34,7 @@ project(Texas)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/GLTools.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/VkTools.cpp")
     add_library(Texas STATIC ${TEXAS_SRC_FILES})
+    target_compile_features(Texas PUBLIC cxx_std_17)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         target_compile_options(Texas PRIVATE -Wall)
     endif()
@@ -112,6 +117,20 @@ project(Texas)
         target_link_libraries(Texas PRIVATE zlib)
 
     endif()
+#
+# END
+#
+
+
+# --------------------------
+# Build Texas tests
+# --------------------------
+# START
+if (TEXAS_BUILD_TESTS)
+    add_executable(compiletest "${CMAKE_CURRENT_SOURCE_DIR}/tests/compiletest.cpp")
+    target_link_libraries(compiletest PRIVATE Texas)
+endif()
+
 #
 # END
 #
