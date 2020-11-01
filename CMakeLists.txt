@@ -32,6 +32,7 @@ project(Texas)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/GLTools.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/VkTools.cpp")
     add_library(${LIB_NAME} STATIC ${TEXAS_SRC_FILES})
+    set_target_properties(${LIB_NAME} PROPERTIES CXX_STANDARD 17)
 #
 # END
 #
