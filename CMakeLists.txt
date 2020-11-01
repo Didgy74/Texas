@@ -9,6 +9,9 @@ project(Texas)
     option(TEXAS_ENABLE_KTX_SAVE "Enables saving KTX files" ON)
     option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" ON)
     option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
+
+    # Mainly for Texas development	#
+    option(TEXAS_BUILD_TESTS "Build test executables." ON)
 #
 # END
 #
@@ -113,4 +116,17 @@ project(Texas)
 #
 # END
 #
-==== BASE ====
+
+# --------------------------	
+# Build Texas tests	
+# --------------------------	
+# START	
+if (TEXAS_BUILD_TESTS)	
+    add_executable(compiletest "${CMAKE_CURRENT_SOURCE_DIR}/tests/compiletest.cpp")	
+    set_target_properties(compiletest PROPERTIES CXX_STANDARD 17)
+    target_link_libraries(compiletest PRIVATE Texas)	
+endif()	
+
+#	
+# END	
+# 
