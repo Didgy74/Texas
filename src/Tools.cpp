@@ -67,7 +67,7 @@ std::uint64_t Texas::calculateMipOffset(
 {
     if (mipIndex == 0)
         return 0;
-    return { calculateTotalSize(baseDims, pFormat, mipIndex, arrayCount) };
+    return calculateTotalSize(baseDims, pFormat, mipIndex, arrayCount);
 }
 
 std::uint64_t Texas::calculateMipOffset(
@@ -90,7 +90,8 @@ std::uint64_t Texas::calculateLayerOffset(
     // Calculates size of all mip except the one we want to index into
     std::uint64_t sum = calculateTotalSize(baseDimensions, pixelFormat, mipIndex, layerCount);
     // Then calculates the size of every individiual array-layer up until our wanted index.
-    sum += calculateSingleImageSize(calculateMipDimensions(baseDimensions, mipIndex), pixelFormat) * layerIndex;
+	if (layerCount > 0)
+		sum += calculateSingleImageSize(calculateMipDimensions(baseDimensions, mipIndex), pixelFormat) * layerIndex;
     return sum;
 }
 
@@ -145,7 +146,7 @@ std::uint64_t Texas::calculateSingleImageSize(Dimensions dims, PixelFormat pForm
 {
     detail::BlockInfo const blockInfo = detail::getBlockInfo(pFormat);
 
-    if (isBCnCompressed(pFormat))
+    if (isBCnCompressed(pFormat) || isASTCCompressed(pFormat))
     {
         std::uint64_t blockCountX = static_cast<std::uint64_t>(std::ceil(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
         if (blockCountX == 0)

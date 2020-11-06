@@ -1,9 +1,11 @@
 #pragma once
 
-#include "Texas/PixelFormat.hpp"
-#include "Texas/ColorSpace.hpp"
-#include "Texas/ChannelType.hpp"
-#include "Texas/TextureType.hpp"
+
+#include <Texas/ChannelType.hpp>
+#include <Texas/ColorSpace.hpp>
+#include <Texas/TextureInfo.hpp>
+#include <Texas/TextureType.hpp>
+#include <Texas/PixelFormat.hpp>
 
 #include <cstdint>
 
@@ -17,6 +19,10 @@ namespace Texas
     [[nodiscard]] std::uint32_t toGLType(PixelFormat pFormat, ChannelType chType) noexcept;
     [[nodiscard]] std::uint32_t toGLTypeSize(PixelFormat pFormat) noexcept;
     [[nodiscard]] std::uint32_t toGLFormat(PixelFormat pFormat) noexcept;
-    [[nodiscard]] std::uint32_t toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept;
+    [[nodiscard]] std::uint32_t toGLInternalFormat(
+      PixelFormat pFormat, 
+      ColorSpace cSpace, 
+      ChannelType chType) noexcept;
+    [[nodiscard]] std::uint32_t toGLInternalFormat(TextureInfo const& texInfo) noexcept;
     [[nodiscard]] std::uint32_t toGLBaseInternalFormat(PixelFormat pFormat) noexcept;
 }

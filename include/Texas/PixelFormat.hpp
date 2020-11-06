@@ -35,9 +35,26 @@ namespace Texas
         BC5,
         BC6H,
         BC7_RGBA,
+
+        ASTC_4x4,
+        ASTC_5x4,
+        ASTC_5x5,
+        ASTC_6x5,
+        ASTC_6x6,
+        ASTC_8x5,
+        ASTC_8x6,
+        ASTC_8x8,
+        ASTC_10x5,
+        ASTC_10x6,
+        ASTC_10x8,
+        ASTC_10x10,
+        ASTC_12x10,
+        ASTC_12x12,
     };
 
     [[nodiscard]] constexpr bool isBCnCompressed(PixelFormat pixelFormat) noexcept;
+
+    [[nodiscard]] constexpr bool isASTCCompressed(PixelFormat pixelFormat) noexcept;
 
     [[nodiscard]] constexpr bool isCompressed(PixelFormat pixelFormat) noexcept;
 }
@@ -62,8 +79,31 @@ constexpr bool Texas::isBCnCompressed(PixelFormat pixelFormat) noexcept
     default:
         return false;
     }
+}
 
-    return false;
+[[nodiscard]] constexpr bool Texas::isASTCCompressed(PixelFormat pixelFormat) noexcept
+{
+    switch (pixelFormat)
+    {
+    case PixelFormat::ASTC_4x4:
+    case PixelFormat::ASTC_5x4:
+    case PixelFormat::ASTC_5x5:
+    case PixelFormat::ASTC_6x5:
+    case PixelFormat::ASTC_6x6:
+    case PixelFormat::ASTC_8x5:
+    case PixelFormat::ASTC_8x6:
+    case PixelFormat::ASTC_8x8:
+    case PixelFormat::ASTC_10x5:
+    case PixelFormat::ASTC_10x6:
+    case PixelFormat::ASTC_10x8:
+    case PixelFormat::ASTC_10x10:
+    case PixelFormat::ASTC_12x10:
+    case PixelFormat::ASTC_12x12:
+        return true;
+
+    default:
+        return false;
+    }
 }
 
 /*
@@ -71,5 +111,5 @@ constexpr bool Texas::isBCnCompressed(PixelFormat pixelFormat) noexcept
 */
 constexpr bool Texas::isCompressed(PixelFormat pixelFormat) noexcept
 {
-    return isBCnCompressed(pixelFormat);
+    return isBCnCompressed(pixelFormat) || isASTCCompressed(pixelFormat);
 }

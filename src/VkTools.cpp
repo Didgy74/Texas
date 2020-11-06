@@ -1,6 +1,31 @@
 #include "detail_VulkanTools.hpp"
 #include "Texas/VkTools.hpp"
 
+struct VkExtent3D
+{
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+};
+
+VkExtent3D Texas::toVkExtent3D(Dimensions dimensions) noexcept
+{
+    return VkExtent3D{
+        static_cast<std::uint32_t>(dimensions.width),
+        static_cast<std::uint32_t>(dimensions.height),
+        static_cast<std::uint32_t>(dimensions.depth) };
+}
+
+VkExtent3D Texas::toVkExtent3D(TextureInfo const& texInfo) noexcept
+{
+    return toVkExtent3D(texInfo.baseDimensions);
+}
+
+VkExtent3D Texas::toVkExtent3D(Texture const& texInfo) noexcept
+{
+    return toVkExtent3D(texInfo.baseDimensions());
+}
+
 std::uint32_t Texas::toVkImageType(TextureType type) noexcept
 {
     return static_cast<std::uint32_t>(detail::toVkImageType(type));
@@ -14,6 +39,16 @@ std::uint32_t Texas::toVkImageViewType(TextureType type) noexcept
 std::uint32_t Texas::toVkFormat(PixelFormat pFormat, ColorSpace cSpace, ChannelType chType) noexcept
 {
     return static_cast<std::uint32_t>(detail::toVkFormat(pFormat, cSpace, chType));
+}
+
+std::uint32_t Texas::toVkFormat(TextureInfo const& texInfo) noexcept
+{
+    return toVkFormat(texInfo.pixelFormat, texInfo.colorSpace, texInfo.channelType);
+}
+
+std::uint32_t Texas::toVkFormat(Texture const& texture) noexcept
+{
+    return toVkFormat(texture.textureInfo());
 }
 
 Texas::detail::VkImageType Texas::detail::toVkImageType(TextureType const type) noexcept
@@ -31,6 +66,8 @@ Texas::detail::VkImageType Texas::detail::toVkImageType(TextureType const type) 
     case TextureType::Texture3D:
     case TextureType::Array3D:
         return VkImageType::VK_IMAGE_TYPE_3D;
+    default:
+        break;
     }
 
     return VkImageType::VK_IMAGE_TYPE_MAX_ENUM;
@@ -56,6 +93,9 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE;
     case TextureType::ArrayCubemap:
         return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+
+    default:
+        break;
     }
 
     return VkImageViewType::VK_IMAGE_VIEW_TYPE_MAX_ENUM;
@@ -151,7 +191,7 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         return VkFormat::VK_FORMAT_UNDEFINED; \
     } \
 
-#define TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(bcn) \
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(bcn) \
     switch (cSpace) \
     { \
     case ColorSpace::sRGB: \
@@ -168,7 +208,7 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         return VkFormat::VK_FORMAT_UNDEFINED; \
     } \
 
-#define TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(bcn) \
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(bcn) \
     switch (cSpace) \
     { \
     case ColorSpace::Linear: \
@@ -183,6 +223,17 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         } \
     default: \
         return VkFormat::VK_FORMAT_UNDEFINED; \
+    } \
+
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(dimensions) \
+    switch (cSpace) \
+    { \
+    case ColorSpace::sRGB: \
+      return VkFormat::VK_FORMAT_ASTC_## dimensions ##_SRGB_BLOCK; \
+    case ColorSpace::Linear: \
+      return VkFormat::VK_FORMAT_ASTC_## dimensions ##_UNORM_BLOCK; \
+    default: \
+      return VkFormat::VK_FORMAT_UNDEFINED; \
     } \
 
 Texas::detail::VkFormat Texas::detail::toVkFormat(
@@ -228,13 +279,13 @@ Texas::detail::VkFormat Texas::detail::toVkFormat(
     case PixelFormat::BC1_RGBA:
         TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC1(RGBA)
     case PixelFormat::BC2_RGBA:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC2)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC2)
     case PixelFormat::BC3_RGBA:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC3)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC3)
     case PixelFormat::BC4:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC4)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC4)
     case PixelFormat::BC5:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC5)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC5)
     case PixelFormat::BC6H:
         switch (cSpace)
         {
@@ -261,6 +312,37 @@ Texas::detail::VkFormat Texas::detail::toVkFormat(
         default:
             return VkFormat::VK_FORMAT_UNDEFINED;
         }
+
+
+    // ASTC
+    case PixelFormat::ASTC_4x4:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(4x4)
+    case PixelFormat::ASTC_5x4:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(5x4)
+    case PixelFormat::ASTC_5x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(5x5)
+    case PixelFormat::ASTC_6x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(6x5)
+    case PixelFormat::ASTC_6x6:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(6x6)
+    case PixelFormat::ASTC_8x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(8x5)
+    case PixelFormat::ASTC_8x6:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(8x6)
+    case PixelFormat::ASTC_8x8:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(8x8)
+    case PixelFormat::ASTC_10x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x5)
+    case PixelFormat::ASTC_10x6:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x6)
+    case PixelFormat::ASTC_10x8:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x8)
+    case PixelFormat::ASTC_10x10:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x10)
+    case PixelFormat::ASTC_12x10:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(12x10)
+    case PixelFormat::ASTC_12x12:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(12x12)
 
     default:
         return VkFormat::VK_FORMAT_UNDEFINED;

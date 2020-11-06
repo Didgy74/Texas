@@ -12,36 +12,51 @@ namespace Texas
     class Result
     {
     public:
-        inline constexpr Result() = default;
+        constexpr Result() noexcept = default;
 
-        inline constexpr Result(ResultType resultType, char const* errorMessage) :
-            m_type(resultType),
-            m_errorMessage(errorMessage)
-        {
-        }
+        constexpr Result(
+            ResultType resultType, 
+            char const* errorMessage) noexcept;
 
-        [[nodiscard]] inline constexpr ResultType type() const noexcept
-        {
-            return m_type;
-        }
+        [[nodiscard]] constexpr ResultType type() const noexcept;
+        [[nodiscard]] constexpr char const* errorMessage() const noexcept;
 
-        [[nodiscard]] inline constexpr char const* errorMessage() const noexcept
-        {
-            return m_errorMessage;
-        }
+        [[nodiscard]] constexpr bool isSuccessful() const noexcept;
 
-        [[nodiscard]] inline constexpr bool isSuccessful() const noexcept
-        {
-            return m_type == ResultType::Success;
-        }
-
-        inline constexpr operator bool() const noexcept
-        {
-            return m_type == ResultType::Success;
-        }
+        constexpr operator bool() const noexcept;
 
     private:
         ResultType m_type = ResultType::UnknownError;
         char const* m_errorMessage = nullptr;
     };
+
+    constexpr Result::Result(
+        ResultType resultType, 
+        char const* errorMessage) noexcept :
+            m_type(resultType),
+            m_errorMessage(errorMessage)
+    {
+    }
+
+    constexpr ResultType Result::type() const noexcept
+    {
+        return m_type;
+    }
+
+    constexpr char const* Result::errorMessage() const noexcept
+    {
+        return m_errorMessage;
+    }
+
+    constexpr bool Result::isSuccessful() const noexcept
+    {
+        return m_type == ResultType::Success;
+    }
+
+    constexpr Result::operator bool() const noexcept
+    {
+        return m_type == ResultType::Success;
+    }
+
+    constexpr Result successResult = { ResultType::Success, nullptr };
 }

@@ -3,9 +3,9 @@
 #   define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "Texas/Texas.hpp"
+#include <Texas/Texas.hpp>
 #include "PrivateAccessor.hpp"
-#include "Texas/Tools.hpp"
+#include <Texas/Tools.hpp>
 #include "NumericLimits.hpp"
 
 #include "KTX.hpp"
@@ -29,8 +29,7 @@ namespace Texas::detail
         {
             if (filestream != nullptr)
             {
-                int error = std::fclose(filestream);
-                // Handle error??
+                std::fclose(filestream);
             }
         }
         virtual Result read(ByteSpan dst) noexcept override
@@ -324,7 +323,11 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromStrea
         }
     }
 
-    Result loadResult = loadImageData(stream, fileInfo, returnVal.m_buffer, { workingMem, workingMemSize });
+    Result loadResult = loadImageData(
+            stream,
+            fileInfo,
+            returnVal.m_buffer,
+            { workingMem, static_cast<std::size_t>(workingMemSize) });
     // Deallocate the working-memory
     if (workingMem != nullptr)
     {

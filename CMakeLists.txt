@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 project(Texas)
 
 # --------------------------
@@ -9,6 +9,9 @@ project(Texas)
     option(TEXAS_ENABLE_KTX_SAVE "Enables saving KTX files" ON)
     option(TEXAS_ENABLE_PNG_READ "Enables loading PNG files" ON)
     option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
+
+    # Mainly for Texas development	#
+    option(TEXAS_BUILD_TESTS "Build test executables." OFF)
 #
 # END
 #
@@ -17,8 +20,6 @@ project(Texas)
 # Create CMake library
 # --------------------
 # START
-    set(LIB_NAME ${PROJECT_NAME})
-
     # Link .cpp files
     set(TEXAS_SRC_FILES 
         "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX.hpp"
@@ -31,8 +32,8 @@ project(Texas)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/Tools.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/GLTools.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/VkTools.cpp")
-    add_library(${LIB_NAME} STATIC ${TEXAS_SRC_FILES})
-    set_target_properties(${LIB_NAME} PROPERTIES CXX_STANDARD 17)
+    add_library(Texas STATIC ${TEXAS_SRC_FILES})
+    set_target_properties(Texas PROPERTIES CXX_STANDARD 17)
 #
 # END
 #
@@ -41,12 +42,12 @@ project(Texas)
 # Link include directory
 # ----------------------
 # START
-    set(INCLUDE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    target_include_directories(${LIB_NAME} PUBLIC ${INCLUDE_FOLDER})
+    set(TEXAS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    target_include_directories(Texas PUBLIC ${TEXAS_INCLUDE_DIR})
     target_include_directories(
-        ${LIB_NAME}
+        Texas
         PUBLIC
-        $<BUILD_INTERFACE:${INCLUDE_FOLDER}>
+        $<BUILD_INTERFACE:${TEXAS_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include>
     )
 #
@@ -66,20 +67,24 @@ project(Texas)
     endif()
 
     if (TEXAS_ENABLE_KTX_READ)
-        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_KTX_READ)
-        target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Read.cpp")
+        target_compile_definitions(Texas PUBLIC TEXAS_ENABLE_KTX_READ)
+        target_sources(Texas PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Read.cpp")
     endif()
 
     if (TEXAS_ENABLE_KTX_SAVE)
-        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_KTX_SAVE)
-        target_include_directories(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/KTX_Save")
-        target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Save.cpp")
+        target_compile_definitions(Texas PUBLIC TEXAS_ENABLE_KTX_SAVE)
+        target_include_directories(Texas PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/optional-includes/KTX_Save")
+        target_sources(Texas PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/KTX_Save.cpp")
     endif()
 
     if (TEXAS_ENABLE_PNG_READ)
-        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_PNG_READ)
-        target_sources(${LIB_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_Read.cpp")
+        target_compile_definitions(Texas PUBLIC TEXAS_ENABLE_PNG_READ)
+        target_sources(Texas PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/PNG_Read.cpp")
         set(TEXAS_LINK_ZLIB 1)
+    endif()
+
+    if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
+        target_compile_definitions(Texas PUBLIC TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
     endif()
 
     if(${TEXAS_LINK_ZLIB})
@@ -98,12 +103,30 @@ project(Texas)
             "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/trees.c"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/uncompr.c"
             "${CMAKE_CURRENT_SOURCE_DIR}/src/zlib/zutil.c")
-        target_sources(${LIB_NAME} INTERFACE ${TEXAS_ZLIB_SRC_FILES})
-    endif()
+        add_library(zlib STATIC ${TEXAS_ZLIB_SRC_FILES})
+        if(MSVC)
+            target_compile_definitions(zlib PRIVATE _CRT_SECURE_NO_WARNINGS)
+            target_compile_options(zlib PRIVATE /wd4996 /wd4267 /wd6297 /wd26451)
+        elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+            target_compile_options(zlib PRIVATE -Wno-everything)
+        endif()
+        target_link_libraries(Texas PRIVATE zlib)
 
-    if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
-        target_compile_definitions(${LIB_NAME} PUBLIC TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
     endif()
 #
 # END
 #
+
+# --------------------------	
+# Build Texas tests	
+# --------------------------	
+# START	
+if (TEXAS_BUILD_TESTS)	
+    add_executable(compiletest "${CMAKE_CURRENT_SOURCE_DIR}/tests/compiletest.cpp")	
+    set_target_properties(compiletest PROPERTIES CXX_STANDARD 17)
+    target_link_libraries(compiletest PRIVATE Texas)	
+endif()	
+
+#	
+# END	
+# 

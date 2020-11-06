@@ -98,7 +98,7 @@ std::byte const* Texas::Texture::mipData(std::uint8_t mipIndex) const
 
 Texas::ConstByteSpan Texas::Texture::mipSpan(std::uint8_t mipIndex) const
 {
-    return { mipData(mipIndex), mipSize(mipIndex) };
+    return { mipData(mipIndex), static_cast<std::size_t>(mipSize(mipIndex)) };
 }
 
 std::uint64_t Texas::Texture::layerOffset(std::uint8_t mipIndex, std::uint64_t layerIndex) const

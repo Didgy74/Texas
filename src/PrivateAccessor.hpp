@@ -11,7 +11,7 @@
 
 namespace Texas::detail
 {
-    class PrivateAccessor final
+    class PrivateAccessor
     {
     private:
         virtual ~PrivateAccessor() = 0;

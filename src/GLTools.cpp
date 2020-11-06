@@ -41,6 +41,11 @@ std::uint32_t Texas::toGLInternalFormat(PixelFormat pFormat, ColorSpace cSpace, 
     return static_cast<std::uint32_t>(detail::toGLInternalFormat(pFormat, cSpace, chType));
 }
 
+std::uint32_t Texas::toGLInternalFormat(TextureInfo const& textureInfo) noexcept
+{
+  return static_cast<std::uint32_t>(detail::toGLInternalFormat(textureInfo.pixelFormat, textureInfo.colorSpace, textureInfo.channelType));
+}
+
 std::uint32_t Texas::toGLBaseInternalFormat(PixelFormat pFormat) noexcept
 {
     return static_cast<std::uint32_t>(detail::toGLBaseInternalFormat(pFormat));
@@ -143,6 +148,67 @@ Texas::PixelFormat Texas::detail::GLToPixelFormat(GLEnum GLInternalFormat) noexc
     case GLEnum::COMPRESSED_RGBA_BPTC_UNORM:
     case GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
         return PixelFormat::BC7_RGBA;
+
+        // ASTC
+    case GLEnum::COMPRESSED_RGBA_ASTC_4x4_KHR:
+        return PixelFormat::ASTC_4x4;
+    case GLEnum::COMPRESSED_RGBA_ASTC_5x4_KHR:
+        return PixelFormat::ASTC_5x4;
+    case GLEnum::COMPRESSED_RGBA_ASTC_5x5_KHR:
+        return PixelFormat::ASTC_5x5;
+    case GLEnum::COMPRESSED_RGBA_ASTC_6x5_KHR:
+        return PixelFormat::ASTC_6x5;
+    case GLEnum::COMPRESSED_RGBA_ASTC_6x6_KHR:
+        return PixelFormat::ASTC_6x6;
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x5_KHR:
+        return PixelFormat::ASTC_8x5;
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x6_KHR:
+        return PixelFormat::ASTC_8x6;
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x8_KHR:
+        return PixelFormat::ASTC_8x8;
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x5_KHR:
+        return PixelFormat::ASTC_10x5;
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x6_KHR:
+        return PixelFormat::ASTC_10x6;
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x8_KHR:
+        return PixelFormat::ASTC_10x8;
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x10_KHR:
+        return PixelFormat::ASTC_10x10;
+    case GLEnum::COMPRESSED_RGBA_ASTC_12x10_KHR:
+        return PixelFormat::ASTC_12x10;
+    case GLEnum::COMPRESSED_RGBA_ASTC_12x12_KHR:
+        return PixelFormat::ASTC_12x12;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
+        return PixelFormat::ASTC_4x4;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
+        return PixelFormat::ASTC_5x4;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
+        return PixelFormat::ASTC_5x5;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
+        return PixelFormat::ASTC_6x5;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
+        return PixelFormat::ASTC_6x6;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
+        return PixelFormat::ASTC_8x5;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
+        return PixelFormat::ASTC_8x6;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
+        return PixelFormat::ASTC_8x8;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
+        return PixelFormat::ASTC_10x5;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
+        return PixelFormat::ASTC_10x6;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
+        return PixelFormat::ASTC_10x8;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
+        return PixelFormat::ASTC_10x10;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
+        return PixelFormat::ASTC_12x10;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+        return PixelFormat::ASTC_12x12;
+
+    default:
+        break;
     }
 
     return PixelFormat::Invalid;
@@ -231,6 +297,41 @@ Texas::ColorSpace Texas::detail::GLToColorSpace(GLEnum GLInternalFormat) noexcep
         return ColorSpace::Linear;
     case GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
         return ColorSpace::sRGB;
+
+        // ASTC
+    case GLEnum::COMPRESSED_RGBA_ASTC_4x4_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_5x4_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_5x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_6x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_6x6_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x6_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x8_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x6_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x8_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x10_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_12x10_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_12x12_KHR:
+        return ColorSpace::Linear;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+        return ColorSpace::sRGB;
+
+    default:
+        break;
     };
 
     return ColorSpace::Invalid;
@@ -318,6 +419,41 @@ Texas::ChannelType Texas::detail::GLToChannelType(GLEnum GLInternalFormat) noexc
     case GLEnum::COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
     case GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
         return ChannelType::sRGB;
+
+        // ASTC
+    case GLEnum::COMPRESSED_RGBA_ASTC_4x4_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_5x4_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_5x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_6x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_6x6_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x6_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_8x8_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x5_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x6_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x8_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_10x10_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_12x10_KHR:
+    case GLEnum::COMPRESSED_RGBA_ASTC_12x12_KHR:
+        return ChannelType::UnsignedNormalized;
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
+    case GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+        return ChannelType::sRGB;
+
+    default:
+        break;
     }
 
     return ChannelType::Invalid;
@@ -337,6 +473,9 @@ Texas::detail::GLEnum Texas::detail::toGLTarget(TextureType texType) noexcept
         return GLEnum::TEXTURE_1D_ARRAY;
     case TextureType::Array2D:
         return GLEnum::TEXTURE_2D_ARRAY;
+
+    default:
+        break;
     }
 
     return GLEnum::Invalid;
@@ -361,6 +500,8 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
             return GLEnum::UNSIGNED_BYTE;
         case ChannelType::SignedNormalized:
             return GLEnum::BYTE;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::R_16:
@@ -375,6 +516,8 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
             return GLEnum::SHORT;
         case ChannelType::SignedFloat:
             return GLEnum::HALF_FLOAT;
+        default:
+            return GLEnum::Invalid;
         }
         break;
     case PixelFormat::R_32:
@@ -389,7 +532,12 @@ Texas::detail::GLEnum Texas::detail::toGLType(PixelFormat pFormat, ChannelType c
             return GLEnum::INT;
         case ChannelType::SignedFloat:
             return GLEnum::FLOAT;
+        default:
+            return GLEnum::Invalid;
         }
+        break;
+
+    default:
         break;
     }
 
@@ -420,6 +568,9 @@ std::uint32_t Texas::detail::toGLTypeSize(PixelFormat pFormat) noexcept
     case PixelFormat::RGB_32:
     case PixelFormat::RGBA_32:
         return 4;
+
+    default:
+        break;
     }
 
     return 0;
@@ -453,10 +604,24 @@ Texas::detail::GLEnum Texas::detail::toGLFormat(PixelFormat pFormat) noexcept
         return GLEnum::RGBA;
     case PixelFormat::BGRA_8:
         return GLEnum::BGRA;
+
+    default:
+        break;
     }
 
     return GLEnum::Invalid;
 }
+
+#define TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(dimensions) \
+    switch (cSpace) \
+    { \
+    case ColorSpace::Linear: \
+      return GLEnum::COMPRESSED_RGBA_ASTC_## dimensions ##_KHR; \
+    case ColorSpace::sRGB: \
+      return GLEnum::COMPRESSED_SRGB8_ALPHA8_ASTC_## dimensions ##_KHR; \
+    default: \
+      return GLEnum::Invalid; \
+    } \
 
 Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
     PixelFormat const pFormat, 
@@ -476,8 +641,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::R8UI;
         case ChannelType::SignedInteger:
             return GLEnum::R8I;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::R_16:
         switch (chType)
         {
@@ -491,8 +657,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::R16I;
         case ChannelType::SignedFloat:
             return GLEnum::R16F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::R_32:
         switch (chType)
         {
@@ -502,8 +669,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::R32I;
         case ChannelType::SignedFloat:
             return GLEnum::R32F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RG_8:
         switch (chType)
         {
@@ -515,8 +683,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RG8UI;
         case ChannelType::SignedInteger:
             return GLEnum::RG8I;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RG_16:
         switch (chType)
         {
@@ -530,8 +699,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RG16I;
         case ChannelType::SignedFloat:
             return GLEnum::RG16F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RG_32:
         switch (chType)
         {
@@ -541,8 +711,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RG32I;
         case ChannelType::SignedFloat:
             return GLEnum::RG32F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RGB_8:
         switch (chType)
         {
@@ -556,8 +727,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGB8I;
         case ChannelType::sRGB:
             return GLEnum::SRGB8;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RGB_16:
         switch (chType)
         {
@@ -571,8 +743,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGB16I;
         case ChannelType::SignedFloat:
             return GLEnum::RGB16F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RGB_32:
         switch (chType)
         {
@@ -582,8 +755,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGB32UI;
         case ChannelType::SignedFloat:
             return GLEnum::RGB32F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RGBA_8:
         switch (chType)
         {
@@ -597,8 +771,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGBA8I;
         case ChannelType::sRGB:
             return GLEnum::SRGB8_ALPHA8;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RGBA_16:
         switch (chType)
         {
@@ -612,8 +787,9 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGBA16I;
         case ChannelType::SignedFloat:
             return GLEnum::RGBA16F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
     case PixelFormat::RGBA_32:
         switch (chType)
         {
@@ -623,8 +799,10 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::RGBA32I;
         case ChannelType::SignedFloat:
             return GLEnum::RGBA32F;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
+
 
     case PixelFormat::BC7_RGBA:
         switch (cSpace)
@@ -633,11 +811,44 @@ Texas::detail::GLEnum Texas::detail::toGLInternalFormat(
             return GLEnum::COMPRESSED_RGBA_BPTC_UNORM;
         case ColorSpace::sRGB:
             return GLEnum::COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
+        default:
+            return GLEnum::Invalid;
         }
-        break;
-    }
 
-    return GLEnum::Invalid;
+
+        // ASTC
+    case PixelFormat::ASTC_4x4:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(4x4);
+    case PixelFormat::ASTC_5x4:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(5x4);
+    case PixelFormat::ASTC_5x5:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(5x5);
+    case PixelFormat::ASTC_6x5:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(6x5);
+    case PixelFormat::ASTC_6x6:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(6x6);
+    case PixelFormat::ASTC_8x5:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(8x5);
+    case PixelFormat::ASTC_8x6:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(8x6);
+    case PixelFormat::ASTC_8x8:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(8x8);
+    case PixelFormat::ASTC_10x5:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(10x5);
+    case PixelFormat::ASTC_10x6:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(10x6);
+    case PixelFormat::ASTC_10x8:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(10x8);
+    case PixelFormat::ASTC_10x10:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(10x10);
+    case PixelFormat::ASTC_12x10:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(12x10);
+    case PixelFormat::ASTC_12x12:
+        TEXAS_DETAIL_TOGLINTERNALFORMAT_CREATE_ASTC_CASES(12x12);
+
+    default:
+        return GLEnum::Invalid;
+    }
 }
 
 Texas::detail::GLEnum Texas::detail::toGLBaseInternalFormat(PixelFormat pFormat) noexcept
@@ -647,13 +858,38 @@ Texas::detail::GLEnum Texas::detail::toGLBaseInternalFormat(PixelFormat pFormat)
 
     switch (pFormat)
     {
+        // BCn
     case PixelFormat::BC1_RGB:
         return GLEnum::RGB;
     case PixelFormat::BC1_RGBA:
         return GLEnum::RGBA;
+    case PixelFormat::BC2_RGBA:
+        return GLEnum::RGBA;
+    case PixelFormat::BC3_RGBA:
+        return GLEnum::RGBA;
+    // TODO: Add remaining BCn cases here
     case PixelFormat::BC7_RGBA:
         return GLEnum::RGBA;
-    }
 
-    return GLEnum::Invalid;
+        // ASTC
+    case PixelFormat::ASTC_4x4:
+    case PixelFormat::ASTC_5x4:
+    case PixelFormat::ASTC_5x5:
+    case PixelFormat::ASTC_6x5:
+    case PixelFormat::ASTC_6x6:
+    case PixelFormat::ASTC_8x5:
+    case PixelFormat::ASTC_8x6:
+    case PixelFormat::ASTC_8x8:
+    case PixelFormat::ASTC_10x5:
+    case PixelFormat::ASTC_10x6:
+    case PixelFormat::ASTC_10x8:
+    case PixelFormat::ASTC_10x10:
+    case PixelFormat::ASTC_12x10:
+    case PixelFormat::ASTC_12x12:
+      return GLEnum::RGBA;
+
+
+    default:
+        return GLEnum::Invalid;
+    }
 }
