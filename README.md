@@ -41,6 +41,7 @@ KTX files will have all their mipmaps and array-layers extracted. Texas will not
  - RGB 8-bit 
  - RGBA 8-bit
  - BC7
+ - ASTC
 
 Texas does not yet support cubemaps, 1D textures or 3D textures. Nor does it yet support ETC and ASTC compressed textures.
 ETC and ASTC support is planned.
@@ -56,7 +57,6 @@ ETC and ASTC support is planned.
  - 3D textures
  - Cubemaps
  - ETC - Read only
- - ASTC - Read only
  - Color space information
  
 
