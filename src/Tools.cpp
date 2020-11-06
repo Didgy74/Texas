@@ -146,7 +146,7 @@ std::uint64_t Texas::calculateSingleImageSize(Dimensions dims, PixelFormat pForm
 {
     detail::BlockInfo const blockInfo = detail::getBlockInfo(pFormat);
 
-    if (isBCnCompressed(pFormat))
+    if (isBCnCompressed(pFormat) || isASTCCompressed(pFormat))
     {
         std::uint64_t blockCountX = static_cast<std::uint64_t>(std::ceil(static_cast<float>(dims.width) / static_cast<float>(blockInfo.width)));
         if (blockCountX == 0)

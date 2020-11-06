@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Texas/PixelFormat.hpp"
-#include "Texas/ColorSpace.hpp"
-#include "Texas/TextureType.hpp"
-#include "Texas/ChannelType.hpp"
-#include "Texas/TextureInfo.hpp"
-#include "Texas/Texture.hpp"
+#include <Texas/ChannelType.hpp>
+#include <Texas/ColorSpace.hpp>
+#include <Texas/Texture.hpp>
+#include <Texas/TextureInfo.hpp>
+#include <Texas/TextureType.hpp>
+#include <Texas/PixelFormat.hpp>
 
 #include <cstdint>
 

@@ -96,11 +96,9 @@ Texas::Result Texas::detail::KTX::loadFromStream(
     //detail::GLEnum const fileGLType = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glType_Offset));
     //detail::GLEnum const fileGLFormat = static_cast<detail::GLEnum>(KTX::toU32(headerBuffer + Header::glFormat_Offset));
     detail::GLEnum const fileGLInternalFormat = static_cast<detail::GLEnum>(
-        KTX::toU32(
-            headerBuffer + Header::glInternalFormat_Offset));
+        KTX::toU32(headerBuffer + Header::glInternalFormat_Offset));
     //detail::GLEnum const fileGLBaseInternalFormat = static_cast<detail::GLEnum>(
-    //    KTX::toU32(
-    //        headerBuffer + Header::glBaseInternalFormat_Offset));
+        //KTX::toU32(headerBuffer + Header::glBaseInternalFormat_Offset));
 
     
     textureInfo.colorSpace = detail::GLToColorSpace(fileGLInternalFormat);

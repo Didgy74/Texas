@@ -191,7 +191,7 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         return VkFormat::VK_FORMAT_UNDEFINED; \
     } \
 
-#define TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(bcn) \
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(bcn) \
     switch (cSpace) \
     { \
     case ColorSpace::sRGB: \
@@ -208,7 +208,7 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         return VkFormat::VK_FORMAT_UNDEFINED; \
     } \
 
-#define TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(bcn) \
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(bcn) \
     switch (cSpace) \
     { \
     case ColorSpace::Linear: \
@@ -223,6 +223,17 @@ Texas::detail::VkImageViewType Texas::detail::toVkImageViewType(TextureType cons
         } \
     default: \
         return VkFormat::VK_FORMAT_UNDEFINED; \
+    } \
+
+#define TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(dimensions) \
+    switch (cSpace) \
+    { \
+    case ColorSpace::sRGB: \
+      return VkFormat::VK_FORMAT_ASTC_## dimensions ##_SRGB_BLOCK; \
+    case ColorSpace::Linear: \
+      return VkFormat::VK_FORMAT_ASTC_## dimensions ##_UNORM_BLOCK; \
+    default: \
+      return VkFormat::VK_FORMAT_UNDEFINED; \
     } \
 
 Texas::detail::VkFormat Texas::detail::toVkFormat(
@@ -268,13 +279,13 @@ Texas::detail::VkFormat Texas::detail::toVkFormat(
     case PixelFormat::BC1_RGBA:
         TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC1(RGBA)
     case PixelFormat::BC2_RGBA:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC2)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC2)
     case PixelFormat::BC3_RGBA:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC3)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC2_OR_BC3(BC3)
     case PixelFormat::BC4:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC4)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC4)
     case PixelFormat::BC5:
-        TEXAS_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC5)
+        TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_BC4_OR_BC5(BC5)
     case PixelFormat::BC6H:
         switch (cSpace)
         {
@@ -301,6 +312,37 @@ Texas::detail::VkFormat Texas::detail::toVkFormat(
         default:
             return VkFormat::VK_FORMAT_UNDEFINED;
         }
+
+
+    // ASTC
+    case PixelFormat::ASTC_4x4:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(4x4)
+    case PixelFormat::ASTC_5x4:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(5x4)
+    case PixelFormat::ASTC_5x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(5x5)
+    case PixelFormat::ASTC_6x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(6x5)
+    case PixelFormat::ASTC_6x6:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(6x6)
+    case PixelFormat::ASTC_8x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(8x5)
+    case PixelFormat::ASTC_8x6:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(8x6)
+    case PixelFormat::ASTC_8x8:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(8x8)
+    case PixelFormat::ASTC_10x5:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x5)
+    case PixelFormat::ASTC_10x6:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x6)
+    case PixelFormat::ASTC_10x8:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x8)
+    case PixelFormat::ASTC_10x10:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(10x10)
+    case PixelFormat::ASTC_12x10:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(12x10)
+    case PixelFormat::ASTC_12x12:
+      TEXAS_DETAIL_VULKANTOOLS_TOVKFORMAT_GENERATE_CASES_FOR_ASTC(12x12)
 
     default:
         return VkFormat::VK_FORMAT_UNDEFINED;

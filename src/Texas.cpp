@@ -3,9 +3,9 @@
 #   define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "Texas/Texas.hpp"
+#include <Texas/Texas.hpp>
 #include "PrivateAccessor.hpp"
-#include "Texas/Tools.hpp"
+#include <Texas/Tools.hpp>
 #include "NumericLimits.hpp"
 
 #include "KTX.hpp"
