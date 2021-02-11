@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Texas/InputStream.hpp"
-#include "Texas/Result.hpp"
-#include "Texas/TextureInfo.hpp"
-#include "Texas/Span.hpp"
-#include "Texas/FileInfo.hpp"
+#include <Texas/InputStream.hpp>
+#include <Texas/Result.hpp>
+#include <Texas/TextureInfo.hpp>
+#include <Texas/Span.hpp>
+#include <Texas/FileInfo.hpp>
 
 #include <cstdint>
 

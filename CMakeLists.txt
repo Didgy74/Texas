@@ -11,7 +11,7 @@ project(Texas)
     option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
 
     # Mainly for Texas development	#
-    option(TEXAS_BUILD_TESTS "Build test executables." OFF)
+    option(TEXAS_BUILD_TESTS "Build test executables." ON)
 #
 # END
 #
