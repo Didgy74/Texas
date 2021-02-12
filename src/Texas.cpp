@@ -9,13 +9,14 @@
 #include "NumericLimits.hpp"
 
 #include "KTX.hpp"
+#include "KTX2.hpp"
 #include "PNG.hpp"
 
 #include <cstring>
 // For file IO
 #include <cstdio>
 
-#if !defined(TEXAS_ENABLE_KTX_READ) && !defined(TEXAS_ENABLE_PNG_READ)
+#if !defined(TEXAS_ENABLE_KTX_READ) && !defined(TEXAS_ENABLE_KTX2_READ) && !defined(TEXAS_ENABLE_PNG_READ)
 #error Cannot compile Texas without enabling atleast one file-format.
 #endif
 
@@ -148,7 +149,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
 	// that we know of so far. After that we go back to where
 	// we were in the stream because the loaders assume the stream 
 	// is at the start of the file.
-	std::byte identifierBuffer[12] = {};
+	std::byte identifierBuffer[12];
 	std::size_t prevPos = stream.tell();
 	result = stream.read({ identifierBuffer, 12 });
 	if (!result.isSuccessful())
@@ -161,7 +162,7 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
 	if (std::memcmp(identifierBuffer, KTX::identifier, sizeof(KTX::identifier)) == 0)
 	{
 #ifdef TEXAS_ENABLE_KTX_READ
-		Result result = KTX::loadFromStream(stream, memReqs.m_textureInfo);
+		Result result = KTX::parseStream(stream, memReqs.m_textureInfo);
 		if (result.isSuccessful())
 		{
 			memReqs.m_memoryRequired = calculateTotalSize(memReqs.textureInfo());
@@ -170,12 +171,34 @@ Texas::ResultValue<Texas::FileInfo> Texas::detail::PrivateAccessor::parseStream(
 		else
 			return { result };
 #else
-		return { ResultType::FileNotSupported,
-				"Encountered a KTX-file. "
-				"KTX support has not been enabled in this configuration." };
+		return { 
+			ResultType::FileNotSupported,
+			"Encountered a KTX-file. "
+			"KTX support has not been enabled in this configuration." };
 #endif
 	}
 
+	// Test identifier for KTX2
+	if (std::memcmp(identifierBuffer, KTX2::identifier, sizeof(KTX2::identifier)) == 0)
+	{
+#ifdef TEXAS_ENABLE_KTX2_READ
+		Result result = KTX2::parseStream(
+			stream,
+			memReqs.m_textureInfo);
+		if (result.isSuccessful())
+		{
+			memReqs.m_memoryRequired = calculateTotalSize(memReqs.textureInfo());
+			return { static_cast<FileInfo&&>(memReqs) };
+		}
+		else
+			return { result };
+#else
+		return { 
+			ResultType::FileNotSupported, 
+			"Encountered a KTX2-file. "
+			"KTX2 support has not been enabled in this configuration." };
+#endif
+	}
 
 	// Test identifier for PNG
 	if (std::memcmp(identifierBuffer, PNG::identifier, sizeof(PNG::identifier)) == 0)

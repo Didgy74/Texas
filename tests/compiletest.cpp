@@ -28,7 +28,7 @@ int main()
 	TestStream test{};
 	Texas::ResultValue<Texas::Texture> texTexture = Texas::loadFromStream(test);
 
-	Texas::ResultValue<Texas::Texture> b = Texas::loadFromPath("Test.png");
+	Texas::ResultValue<Texas::Texture> b = Texas::loadFromPath("Test.ktx2");
 
 	return 0;
 }

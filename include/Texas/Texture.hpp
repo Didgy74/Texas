@@ -83,7 +83,7 @@ namespace Texas
 		*/
 		[[nodiscard]] ConstByteSpan rawBufferSpan() const;
 
-		[[nodiscard]] void free();
+		void free();
 
 	private:
 		[[nodiscard]] std::uint64_t mipSize(std::uint8_t mipIndex) const;

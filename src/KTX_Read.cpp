@@ -66,7 +66,7 @@ namespace Texas::detail::KTX
     }
 }
 
-Texas::Result Texas::detail::KTX::loadFromStream(
+Texas::Result Texas::detail::KTX::parseStream(
     InputStream& stream, 
     TextureInfo& textureInfo)
 {

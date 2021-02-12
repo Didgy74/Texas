@@ -10,7 +10,13 @@
       "cmakeCommandArgs": "-DTEXAS_BUILD_TESTS=ON",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "variables": []
+      "variables": [
+        {
+          "name": "TEXAS_ENABLE_KTX2_READ",
+          "value": "True",
+          "type": "BOOL"
+        }
+      ]
     },
     {
       "name": "x64-Clang-Debug",

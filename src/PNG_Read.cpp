@@ -13,15 +13,6 @@ namespace Texas::detail::PNG
 	using ChunkType_T = std::uint8_t[4];
 	using ChunkCRC_T = std::uint8_t[4];
 
-	[[nodiscard]] static constexpr std::uint32_t getChunkTypeValue(char const* in)
-	{
-		return 
-			static_cast<std::uint32_t>(in[0]) << 24 |
-			static_cast<std::uint32_t>(in[1]) << 16 |
-			static_cast<std::uint32_t>(in[2]) << 8 |
-			static_cast<std::uint32_t>(in[3]);
-	}
-
 	namespace Header
 	{
 		constexpr std::size_t ihdrChunkSizeOffset = 8;
@@ -39,7 +30,6 @@ namespace Texas::detail::PNG
 		// Total size of all header data.
 		constexpr std::size_t totalSize = 33;
 	};
-
 
 	// APNG
 	namespace Chunk_acTL
@@ -85,7 +75,14 @@ namespace Texas::detail::PNG
 	enum class FilterType : char;
 
 	// Turns a 32-bit unsigned integer into correct endian, regardless of system endianness.
-	[[nodiscard]] static std::uint32_t toCorrectEndian_u32(std::byte const* ptr) noexcept;
+	[[nodiscard]] static constexpr std::uint32_t toCorrectEndian_u32(std::byte const* in) noexcept
+	{
+		return std::uint32_t(in[0]) << 24 | std::uint32_t(in[1]) << 16 | std::uint32_t(in[2]) << 8 | std::uint32_t(in[3]);
+	}
+	[[nodiscard]] static constexpr std::uint32_t toCorrectEndian_u32(char const* in) noexcept
+	{
+		return std::uint32_t(in[0]) << 24 | std::uint32_t(in[1]) << 16 | std::uint32_t(in[2]) << 8 | std::uint32_t(in[3]);
+	}
 
 	[[nodiscard]] static bool validateColorTypeAndBitDepth(ColorType colorType, std::uint8_t bitDepth) noexcept;
 
@@ -104,8 +101,8 @@ namespace Texas::detail::PNG
 		detail::FileInfo_PNG_BackendData const& backendData) noexcept;
 
 	/*
-			Defilters uncompressed data and immediately copies the result over to dstMem.
-			Should only be used when colour-type != indexed colour.
+		Defilters uncompressed data and immediately copies the result over to dstMem.
+		Should only be used when colour-type != indexed colour.
 	*/
 	[[nodiscard]] static Result defilterIntoDstBuffer(
 		TextureInfo const& textureInfo,
@@ -113,10 +110,10 @@ namespace Texas::detail::PNG
 		ByteSpan uncompressedData) noexcept;
 
 	/*
-			Defilters uncompressed data in place. Only handles when each pixel (index) is 1 byte wide.
-			This does NOT remove the byte for filter method at the start of each row.
-			The defiltering is only applied to the bytes where they are right now,
-			the rows will still be padded with +1 for storing the filtering method.
+		Defilters uncompressed data in place. Only handles when each pixel (index) is 1 byte wide.
+		This does NOT remove the byte for filter method at the start of each row.
+		The defiltering is only applied to the bytes where they are right now,
+		the rows will still be padded with +1 for storing the filtering method.
 	*/
 	[[nodiscard]] static Result defilterIndicesInPlace(
 		Dimensions baseDims,
@@ -192,17 +189,6 @@ enum class Texas::detail::PNG::FilterType : char
 	Paeth = 4,
 };
 
-static std::uint32_t Texas::detail::PNG::toCorrectEndian_u32(std::byte const* ptr)  noexcept
-{
-	std::uint32_t const temp[4] = {
-			static_cast<std::uint32_t>(ptr[0]),
-			static_cast<std::uint32_t>(ptr[1]),
-			static_cast<std::uint32_t>(ptr[2]),
-			static_cast<std::uint32_t>(ptr[3]),
-	};
-	return temp[3] | (temp[2] << 8) | (temp[1] << 16) | (temp[0] << 24);
-}
-
 static bool Texas::detail::PNG::validateColorTypeAndBitDepth(
 	ColorType colorType,
 	std::uint8_t bitDepth)  noexcept
@@ -249,27 +235,27 @@ static Texas::detail::PNG::ChunkType Texas::detail::PNG::getChunkType(std::byte 
 	std::uint32_t const value = toCorrectEndian_u32(in);
 	switch (value)
 	{
-	case getChunkTypeValue("IHDR"):
+	case toCorrectEndian_u32("IHDR"):
 		return ChunkType::IHDR;
-	case getChunkTypeValue("PLTE"):
+	case toCorrectEndian_u32("PLTE"):
 		return ChunkType::PLTE;
-	case getChunkTypeValue("IDAT"):
+	case toCorrectEndian_u32("IDAT"):
 		return ChunkType::IDAT;
-	case getChunkTypeValue("IEND"):
+	case toCorrectEndian_u32("IEND"):
 		return ChunkType::IEND;
 	
 	// Optional chunk types
-	case getChunkTypeValue("iCCP"):
+	case toCorrectEndian_u32("iCCP"):
 		return ChunkType::iCCP;
-	case getChunkTypeValue("sRGB"):
+	case toCorrectEndian_u32("sRGB"):
 		return ChunkType::sRGB;
 
 	// APNG
-	case getChunkTypeValue("acTL"):
+	case toCorrectEndian_u32("acTL"):
 		return ChunkType::acTL;
-	case getChunkTypeValue("fcTL"):
+	case toCorrectEndian_u32("fcTL"):
 		return ChunkType::fcTL;
-	case getChunkTypeValue("fdAT"):
+	case toCorrectEndian_u32("fdAT"):
 		return ChunkType::fdAT;
 
 	default:
