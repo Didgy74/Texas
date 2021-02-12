@@ -1,16 +1,18 @@
-#include "Texas/FileInfo.hpp"
+#include <Texas/FileInfo.hpp>
 
-Texas::TextureInfo const& Texas::FileInfo::textureInfo() const noexcept
+using namespace Texas;
+
+TextureInfo const& FileInfo::textureInfo() const noexcept
 {
-    return m_textureInfo;
+	return m_textureInfo;
 }
 
-std::uint64_t Texas::FileInfo::memoryRequired() const noexcept
+std::uint64_t FileInfo::memoryRequired() const noexcept
 {
-    return m_memoryRequired;
+	return m_memoryRequired;
 }
 
-std::uint64_t Texas::FileInfo::workingMemoryRequired() const noexcept
+std::uint64_t FileInfo::workingMemoryRequired() const noexcept
 {
-    return m_workingMemoryRequired;
+	return m_workingMemoryRequired;
 }

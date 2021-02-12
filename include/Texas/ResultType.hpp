@@ -2,18 +2,18 @@
 
 namespace Texas
 {
-    /*
-        Enum for categorizing errors.
-    */
-    enum class ResultType : char
-    {
-        Success,
-        UnknownError,
+	/*
+		Enum for categorizing errors.
+	*/
+	enum class ResultType : char
+	{
+		Success,
+		UnknownError,
 
-        CouldNotOpenFile,
-        CorruptFileData,
-        FileNotSupported,
-        InvalidLibraryUsage,
-        PrematureEndOfFile,
-    };
+		CouldNotOpenFile,
+		CorruptFileData,
+		FileNotSupported,
+		InvalidLibraryUsage,
+		PrematureEndOfFile,
+	};
 }

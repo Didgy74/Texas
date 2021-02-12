@@ -24,6 +24,4 @@ namespace Texas
 		ChannelType channelType) noexcept;
 	[[nodiscard]] std::uint32_t toVkFormat(TextureInfo const& texInfo) noexcept;
 	[[nodiscard]] std::uint32_t toVkFormat(Texture const& texture) noexcept;
-
-
 }

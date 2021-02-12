@@ -75,8 +75,7 @@ namespace Texas::detail
 		virtual Result read(ByteSpan dst) noexcept override
 		{
 			if (offset + dst.size() > inputBuffer.size())
-				return { ResultType::PrematureEndOfFile,
-								 "Encountered premature end of file when loading." };
+				return { ResultType::PrematureEndOfFile, "Encountered premature end of file when loading." };
 			std::memcpy(dst.data(), inputBuffer.data() + offset, dst.size());
 			offset += dst.size();
 			return { ResultType::Success, nullptr };

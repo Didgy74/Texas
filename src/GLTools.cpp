@@ -1,4 +1,4 @@
-#include "Texas/GLTools.hpp"
+#include <Texas/GLTools.hpp>
 #include "detail_GLTools.hpp"
 
 Texas::PixelFormat Texas::GLToPixelFormat(std::uint32_t GLInternalFormat) noexcept

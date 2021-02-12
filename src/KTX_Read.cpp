@@ -1,11 +1,11 @@
 #include "KTX.hpp"
 
-#include "Texas/Span.hpp"
+#include <Texas/Span.hpp>
 #include "PrivateAccessor.hpp"
 
 #include "detail_GLTools.hpp"
 
-#include "Texas/Tools.hpp"
+#include <Texas/Tools.hpp>
 
 // For std::memcmp and std::memcpy
 #include <cstring>

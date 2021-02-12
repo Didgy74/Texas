@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Texas/Result.hpp"
+#include <Texas/Result.hpp>
 
 #include <cstdint>
 

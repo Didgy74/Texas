@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Texas/Result.hpp"
-#include "Texas/Span.hpp"
+#include <Texas/Result.hpp>
+#include <Texas/Span.hpp>
 
 #include <cstddef>
 

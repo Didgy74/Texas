@@ -13,15 +13,6 @@ namespace Texas::detail::PNG
 	using ChunkType_T = std::uint8_t[4];
 	using ChunkCRC_T = std::uint8_t[4];
 
-	[[nodiscard]] static constexpr std::uint32_t setupChunkTypeValue(
-		std::uint32_t a,
-		std::uint32_t b,
-		std::uint32_t c,
-		std::uint32_t d)
-	{
-		return a << 24 | b << 16 | c << 8 | d;
-	}
-
 	[[nodiscard]] static constexpr std::uint32_t getChunkTypeValue(char const* in)
 	{
 		return 
@@ -30,25 +21,6 @@ namespace Texas::detail::PNG
 			static_cast<std::uint32_t>(in[2]) << 8 |
 			static_cast<std::uint32_t>(in[3]);
 	}
-
-	constexpr auto IHDR_ChunkTypeValue = setupChunkTypeValue(73, 72, 68, 82);
-	constexpr auto PLTE_ChunkTypeValue = setupChunkTypeValue(80, 76, 84, 69);
-	constexpr auto IDAT_ChunkTypeValue = setupChunkTypeValue(73, 68, 65, 84);
-	constexpr auto IEND_ChunkTypeValue = setupChunkTypeValue(73, 69, 78, 68);
-	constexpr auto cHRM_ChunkTypeValue = setupChunkTypeValue(99, 72, 82, 77);
-	constexpr auto gAMA_ChunkTypeValue = setupChunkTypeValue(103, 65, 77, 65);
-	constexpr auto iCCP_ChunkTypeValue = setupChunkTypeValue(105, 67, 67, 80);
-	constexpr auto sBIT_ChunkTypeValue = setupChunkTypeValue(115, 66, 73, 84);
-	constexpr auto sRGB_ChunkTypeValue = setupChunkTypeValue(115, 82, 71, 66);
-	constexpr auto bKGD_ChunkTypeValue = setupChunkTypeValue(98, 75, 71, 68);
-	constexpr auto hIST_ChunkTypeValue = setupChunkTypeValue(104, 73, 83, 84);
-	constexpr auto tRNS_ChunkTypeValue = setupChunkTypeValue(116, 82, 78, 83);
-	constexpr auto pHYs_ChunkTypeValue = setupChunkTypeValue(112, 72, 89, 115);
-	constexpr auto sPLT_ChunkTypeValue = setupChunkTypeValue(115, 80, 76, 84);
-	constexpr auto tIME_ChunkTypeValue = setupChunkTypeValue(116, 73, 77, 69);
-	constexpr auto iTXt_ChunkTypeValue = setupChunkTypeValue(105, 84, 88, 116);
-	constexpr auto tEXt_ChunkTypeValue = setupChunkTypeValue(116, 69, 88, 116);
-	constexpr auto zTXt_ChunkTypeValue = setupChunkTypeValue(122, 84, 88, 116);
 
 	namespace Header
 	{
@@ -99,6 +71,13 @@ namespace Texas::detail::PNG
 		constexpr std::size_t blendOpOffset = 25;
 		using BlendOp_T = std::uint8_t;
 		constexpr std::size_t totalSize = 26;
+	}
+	namespace Chunk_fdAT
+	{
+		constexpr std::size_t sequenceNumberOffset = 0;
+		using SequenceNumer_T = std::uint32_t;
+		constexpr std::size_t headerSize = 4;
+		constexpr std::size_t frameDataOffset = 4;
 	}
 
 	enum class ColorType : char;
@@ -179,11 +158,12 @@ enum class Texas::detail::PNG::ChunkType : char
 
 	// Optional
 
-	cHRM,
-	gAMA,
+	//cHRM,
+	//gAMA,
 	iCCP,
-	sBIT,
+	//sBIT,
 	sRGB,
+	/*
 	bKGD,
 	hIST,
 	tRNS,
@@ -193,10 +173,12 @@ enum class Texas::detail::PNG::ChunkType : char
 	iTXt,
 	tEXt,
 	zTXt,
+	*/
 
 	// APNG
 	acTL,
 	fcTL,
+	fdAT,
 
 	COUNT
 };
@@ -267,48 +249,28 @@ static Texas::detail::PNG::ChunkType Texas::detail::PNG::getChunkType(std::byte 
 	std::uint32_t const value = toCorrectEndian_u32(in);
 	switch (value)
 	{
-	case IHDR_ChunkTypeValue:
+	case getChunkTypeValue("IHDR"):
 		return ChunkType::IHDR;
-	case PLTE_ChunkTypeValue:
+	case getChunkTypeValue("PLTE"):
 		return ChunkType::PLTE;
-	case IDAT_ChunkTypeValue:
+	case getChunkTypeValue("IDAT"):
 		return ChunkType::IDAT;
-	case IEND_ChunkTypeValue:
+	case getChunkTypeValue("IEND"):
 		return ChunkType::IEND;
-	case cHRM_ChunkTypeValue:
-		return ChunkType::cHRM;
-	case gAMA_ChunkTypeValue:
-		return ChunkType::gAMA;
-	case iCCP_ChunkTypeValue:
+	
+	// Optional chunk types
+	case getChunkTypeValue("iCCP"):
 		return ChunkType::iCCP;
-	case sBIT_ChunkTypeValue:
-		return ChunkType::sBIT;
-	case sRGB_ChunkTypeValue:
+	case getChunkTypeValue("sRGB"):
 		return ChunkType::sRGB;
-	case bKGD_ChunkTypeValue:
-		return ChunkType::bKGD;
-	case hIST_ChunkTypeValue:
-		return ChunkType::hIST;
-	case tRNS_ChunkTypeValue:
-		return ChunkType::tRNS;
-	case pHYs_ChunkTypeValue:
-		return ChunkType::pHYs;
-	case sPLT_ChunkTypeValue:
-		return ChunkType::sPLT;
-	case tIME_ChunkTypeValue:
-		return ChunkType::tIME;
-	case iTXt_ChunkTypeValue:
-		return ChunkType::iTXt;
-	case tEXt_ChunkTypeValue:
-		return ChunkType::tEXt;
-	case zTXt_ChunkTypeValue:
-		return ChunkType::zTXt;
 
 	// APNG
 	case getChunkTypeValue("acTL"):
 		return ChunkType::acTL;
 	case getChunkTypeValue("fcTL"):
 		return ChunkType::fcTL;
+	case getChunkTypeValue("fdAT"):
+		return ChunkType::fdAT;
 
 	default:
 		return ChunkType::Invalid;
@@ -519,7 +481,7 @@ namespace Texas::detail::PNG
 		if (interlaceMethod != 0)
 			return { ResultType::FileNotSupported, "PNG interlace method is not supported." };
 
-		return { ResultType::Success, nullptr };
+		return successResult;
 	}
 }
 
@@ -659,26 +621,6 @@ Texas::Result Texas::detail::PNG::parseStream(
 				textureInfo.colorSpace = ColorSpace::sRGB;
 			}
 			break;
-			case ChunkType::gAMA:
-			{
-				if (chunkTypeCounts[(std::size_t)ChunkType::gAMA] > 0)
-					return { ResultType::CorruptFileData,
-									 "Encountered a second gAMA chunk in PNG file. "
-									 "PNG specification requires that only one gAMA chunk exists in file." };
-				if (tempParsingData.colorType == ColorType::Indexed_colour && chunkTypeCounts[(std::size_t)ChunkType::PLTE] > 0)
-					return { ResultType::CorruptFileData,
-									 "PNG gAMA chunk appeared after a PLTE chunk. "
-									 "PNG specification requires gAMA chunk to appear before any "
-									 "PLTE chunk when IHDR field 'Colour type' equals 'Indexed colour'." };
-				if (chunkTypeCounts[(std::size_t)ChunkType::IDAT] > 0)
-					return { ResultType::CorruptFileData, "PNG gAMA chunk appeared after IDAT chunk(s). "
-									 "PNG specification requires gAMA chunk to appear before any IDAT chunk." };
-				if (chunkDataLength != 4)
-					return { ResultType::CorruptFileData, "Chunk data length of PNG gAMA chunk is not equal to 4. "
-									 "PNG specification demands that chunk data length of gAMA chunk is equal to 4." };
-				// TODO: At some point, TextureInfo might contain gamma. Catch it here
-			}
-			break;
 
 			case ChunkType::acTL:
 			{
@@ -733,16 +675,7 @@ Texas::Result Texas::detail::PNG::parseStream(
 				Chunk_fcTL::SequenceNumber_T sequenceNumber = toCorrectEndian_u32(chunkDataBuffer + Chunk_fcTL::sequenceNumberOffset);
 				
 				Chunk_fcTL::Width_T const width = toCorrectEndian_u32(chunkDataBuffer + Chunk_fcTL::widthOffset);
-				if (width != textureInfo.baseDimensions.width)
-					return {
-						ResultType::FileNotSupported,
-						"Texas does not support APNG files where animated frames are not same size as the full image." };
-
 				Chunk_fcTL::Height_T const height = toCorrectEndian_u32(chunkDataBuffer + Chunk_fcTL::heightOffset);
-				if (height != textureInfo.baseDimensions.height)
-					return {
-						ResultType::FileNotSupported,
-						"Texas does not support APNG files where animated frames are not same size as the full image." };
 
 				Chunk_fcTL::XOffset_T const xOffset = toCorrectEndian_u32(chunkDataBuffer + Chunk_fcTL::xOffsetOffset);
 				if ((std::uint64_t)xOffset + width > textureInfo.baseDimensions.width)
@@ -756,6 +689,12 @@ Texas::Result Texas::detail::PNG::parseStream(
 						ResultType::CorruptFileData,
 						"PNG fcTL chunk members y_offset + height is higher than base image height." };
 
+				if (width != textureInfo.baseDimensions.width || height != textureInfo.baseDimensions.height
+						|| xOffset != 0 || yOffset != 0)
+					return {
+						ResultType::FileNotSupported,
+						"Texas does not support APNG files where animated frames are not same size as the full image." };
+				
 				Chunk_fcTL::DelayNum_T const delayNum = toCorrectEndian_u32(chunkDataBuffer + Chunk_fcTL::delayNumOffset);
 				Chunk_fcTL::DelayDen_T delayDen = toCorrectEndian_u32(chunkDataBuffer + Chunk_fcTL::delayDenOffset);
 				if (delayDen == 0)
@@ -773,6 +712,20 @@ Texas::Result Texas::detail::PNG::parseStream(
 					fps = newFPS;
 					fpsSet = true;
 				}
+			}
+			break;
+
+			case ChunkType::fdAT:
+			{
+				std::byte chunkDataBuffer[Chunk_fdAT::headerSize];
+				result = stream.read({ chunkDataBuffer, sizeof(chunkDataBuffer) });
+				if (!result.isSuccessful())
+					return result;
+				chunkDataRead = sizeof(chunkDataBuffer);
+
+				Chunk_fdAT::SequenceNumer_T sequenceNumber = toCorrectEndian_u32(chunkDataBuffer + Chunk_fdAT::sequenceNumberOffset);
+
+				int i = 0; // TESTING.
 			}
 			break;
 

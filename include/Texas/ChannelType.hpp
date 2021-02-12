@@ -2,25 +2,25 @@
 
 namespace Texas
 {
-    /*
-        Provides a hint as to how each channel of a texture should be interpretted.
-    */
-    enum class ChannelType : char
-    {
-        Invalid,
+	/*
+		Provides a hint as to how each channel of a texture should be interpretted.
+	*/
+	enum class ChannelType : char
+	{
+		Invalid,
 
-        UnsignedNormalized,
-        SignedNormalized,
+		UnsignedNormalized,
+		SignedNormalized,
 
-        UnsignedScaled,
-        SignedScaled,
+		UnsignedScaled,
+		SignedScaled,
 
-        UnsignedInteger,
-        SignedInteger,
+		UnsignedInteger,
+		SignedInteger,
 
-        UnsignedFloat,
-        SignedFloat,
+		UnsignedFloat,
+		SignedFloat,
 
-        sRGB,
-    };
+		sRGB,
+	};
 }
