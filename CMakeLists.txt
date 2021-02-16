@@ -31,8 +31,7 @@ add_library(Texas STATIC
 
 target_include_directories(Texas
 	PUBLIC
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-		$<INSTALL_INTERFACE:include>)
+		${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # -----------------------
 # Options for 'Texas'
@@ -83,7 +82,7 @@ if (TEXAS_ENABLE_PNG_READ)
 	target_sources(Texas
 		PRIVATE
 			"src/PNG_Read.cpp")
-	set(TEXAS_LINK_ZLIB ON)
+	set(TEXAS_USE_ZLIB ON)
 endif()
 
 option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
@@ -93,12 +92,23 @@ if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 			TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 endif()
 
-if(TEXAS_LINK_ZLIB)
-	add_subdirectory("external/zlib")
-
+if(TEXAS_USE_ZLIB)
+	if(ANDROID)
+		set(MINGW OFF)
+		set(UNIX ON)
+	endif()
+	add_subdirectory("external/zlib" zlib/zlib)
+	if(ANDROID)
+		set(UNIX OFF)
+		set(MINGW ON)
+	endif()
+	target_include_directories(Texas
+		PRIVATE
+			"external"
+			"${CMAKE_CURRENT_BINARY_DIR}/zlib")
 	target_link_libraries(Texas
 		PRIVATE
-			zlib)
+			zlibstatic)
 endif()
 
 
