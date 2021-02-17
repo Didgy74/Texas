@@ -361,3 +361,17 @@ Texas::PixelFormat Texas::VkFormatToPixelFormat(std::uint32_t vkFormat) noexcept
 
 	return PixelFormat::Invalid;
 }
+
+Texas::ChannelType Texas::VkFormatToChannelType(std::uint32_t vkFormat) noexcept
+{
+	switch ((detail::VkFormat)vkFormat)
+	{
+	case detail::VkFormat::VK_FORMAT_R8G8B8A8_UNORM:
+		return ChannelType::UnsignedNormalized;
+
+	case detail::VkFormat::VK_FORMAT_R8G8B8A8_SRGB:
+		return ChannelType::sRGB;
+	}
+
+	return ChannelType::Invalid;
+}

@@ -26,4 +26,5 @@ namespace Texas
 	[[nodiscard]] std::uint32_t toVkFormat(Texture const& texture) noexcept;
 
 	[[nodiscard]] PixelFormat VkFormatToPixelFormat(std::uint32_t vkFormat) noexcept;
+	[[nodiscard]] ChannelType VkFormatToChannelType(std::uint32_t vkFormat) noexcept;
 }
