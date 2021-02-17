@@ -114,7 +114,8 @@ endif()
 
 option(TEXAS_BUILD_TESTS "Build test executables." ON)
 if (TEXAS_BUILD_TESTS)
-	add_executable(compiletest "tests/compiletest.cpp")
+	add_executable(compiletest
+		"tests/compiletest.cpp")
 	target_link_libraries(compiletest
 		PRIVATE
 			Texas)
