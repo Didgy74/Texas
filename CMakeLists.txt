@@ -97,14 +97,14 @@ if(TEXAS_USE_ZLIB)
 		set(MINGW OFF)
 		set(UNIX ON)
 	endif()
-	add_subdirectory("external/zlib" zlib/zlib)
+	add_subdirectory("external/zlib" "zlib")
 	if(ANDROID)
 		set(UNIX OFF)
 		set(MINGW ON)
 	endif()
 	target_include_directories(Texas
 		PRIVATE
-			"external"
+			"external/zlib"
 			"${CMAKE_CURRENT_BINARY_DIR}/zlib")
 	target_link_libraries(Texas
 		PRIVATE
