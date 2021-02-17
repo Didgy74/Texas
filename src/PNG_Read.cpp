@@ -2,7 +2,7 @@
 
 #include "PrivateAccessor.hpp"
 
-#include <zlib/zlib.h>
+#include <zlib.h>
 
 // For std::memcpy and std::memcmp
 #include <cstring>
