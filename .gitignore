@@ -4,6 +4,7 @@
 /.idea
 /cmake-build-debug
 /.vscode
+CMakeSettings.json
 
 /out
 
