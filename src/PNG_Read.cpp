@@ -406,7 +406,7 @@ namespace Texas::detail::PNG
 		TextureInfo& textureInfo,
 		TempParsingData& tempParsingData)
 	{
-		Result result{};
+		Result result = {};
 
 		std::byte headerBuffer[Header::totalSize];
 		result = stream.read({ headerBuffer, Header::totalSize });
@@ -440,9 +440,9 @@ namespace Texas::detail::PNG
 							 "PNG specification requires it to be higher than 0." };
 		textureInfo.baseDimensions.height = origHeight;
 
-		std::uint8_t const bitDepth = static_cast<std::uint8_t>(headerBuffer[Header::bitDepthOffset]);
-		ColorType const colorType = static_cast<ColorType>(headerBuffer[Header::colorTypeOffset]);
-		if (validateColorTypeAndBitDepth(colorType, bitDepth) == false)
+		auto const bitDepth = static_cast<std::uint8_t>(headerBuffer[Header::bitDepthOffset]);
+		auto const colorType = static_cast<ColorType>(headerBuffer[Header::colorTypeOffset]);
+		if (!validateColorTypeAndBitDepth(colorType, bitDepth))
 			return { ResultType::CorruptFileData,
 							 "PNG spec does not allow this combination of values from "
 							 "IHDR fields 'Colour type' and 'Bit depth'." };
@@ -455,15 +455,15 @@ namespace Texas::detail::PNG
 							 "PNG colortype and bitdepth combination is not supported." };
 		tempParsingData.colorType = colorType;
 
-		std::uint8_t const compressionMethod = static_cast<std::uint8_t>(headerBuffer[Header::compressionMethodOffset]);
+		auto const compressionMethod = static_cast<std::uint8_t>(headerBuffer[Header::compressionMethodOffset]);
 		if (compressionMethod != 0)
 			return { ResultType::FileNotSupported, "PNG compression method is not supported." };
 
-		std::uint8_t const filterMethod = static_cast<std::uint8_t>(headerBuffer[Header::filterMethodOffset]);
+		auto const filterMethod = static_cast<std::uint8_t>(headerBuffer[Header::filterMethodOffset]);
 		if (filterMethod != 0)
 			return { ResultType::FileNotSupported, "PNG filter method is not supported." };
 
-		std::uint8_t const interlaceMethod = static_cast<std::uint8_t>(headerBuffer[Header::interlaceMethodOffset]);
+		auto const interlaceMethod = static_cast<std::uint8_t>(headerBuffer[Header::interlaceMethodOffset]);
 		if (interlaceMethod != 0)
 			return { ResultType::FileNotSupported, "PNG interlace method is not supported." };
 
@@ -675,8 +675,9 @@ Texas::Result Texas::detail::PNG::parseStream(
 						ResultType::CorruptFileData,
 						"PNG fcTL chunk members y_offset + height is higher than base image height." };
 
-				if (width != textureInfo.baseDimensions.width || height != textureInfo.baseDimensions.height
-						|| xOffset != 0 || yOffset != 0)
+				if (width != textureInfo.baseDimensions.width ||
+					height != textureInfo.baseDimensions.height ||
+					xOffset != 0 || yOffset != 0)
 					return {
 						ResultType::FileNotSupported,
 						"Texas does not support APNG files where animated frames are not same size as the full image." };
@@ -709,15 +710,13 @@ Texas::Result Texas::detail::PNG::parseStream(
 					return result;
 				chunkDataRead = sizeof(chunkDataBuffer);
 
-				Chunk_fdAT::SequenceNumer_T sequenceNumber = toCorrectEndian_u32(chunkDataBuffer + Chunk_fdAT::sequenceNumberOffset);
-
-				int i = 0; // TESTING.
+				//Chunk_fdAT::SequenceNumer_T sequenceNumber = toCorrectEndian_u32(chunkDataBuffer + Chunk_fdAT::sequenceNumberOffset);
 			}
 			break;
 
 		default:
 			break;
-		};
+		}
 
 
 		// We ignore the chunk data and CRC part of the chunk
@@ -738,14 +737,15 @@ Texas::Result Texas::detail::PNG::parseStream(
 		return { ResultType::CorruptFileData,
 						 "Found no PLTE chunk in PNG file with color-type 'Indexed colour'. "
 						 "PNG specification requires a PLTE chunk to exist when color-type is 'Indexed colour'" };
-	if (chunkTypeCounts[(std::size_t)ChunkType::fcTL] != textureInfo.layerCount)
+	if (chunkTypeCounts[(std::size_t)ChunkType::fcTL] > 0 &&
+		chunkTypeCounts[(std::size_t)ChunkType::fcTL] != textureInfo.layerCount)
 		return {
 			ResultType::CorruptFileData,
 			"Number of PNG fcTL chunks does not match number described by acTL chunk." };
 
 	//backendData.idatChunkCount = chunkTypeCounts[(int)ChunkType::IDAT];
 
-	bool const isIndexedColor = tempParsingData.colorType == ColorType::Indexed_colour;
+	auto const isIndexedColor = tempParsingData.colorType == ColorType::Indexed_colour;
 	workingMemRequired = calcWorkingMemRequired_Stream(
 		textureInfo.baseDimensions,
 		textureInfo.pixelFormat,
