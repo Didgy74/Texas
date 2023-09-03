@@ -2,7 +2,7 @@
 
 #include "PrivateAccessor.hpp"
 
-#include <zlib.h>
+#include <zlib-ng.h>
 
 // For std::memcpy and std::memcmp
 #include <cstring>
@@ -1109,14 +1109,14 @@ static Texas::Result Texas::detail::PNG::decompressIdatChunks_Stream(
 {
 	Result result{};
 
-	z_stream zLibDecompressJob{};
+	zng_stream zLibDecompressJob{};
 	zLibDecompressJob.next_out = reinterpret_cast<Bytef*>(dst_filteredData.data());
 	zLibDecompressJob.avail_out = static_cast<uInt>(dst_filteredData.size());
 
-	int const initErr = inflateInit(&zLibDecompressJob);
+	int const initErr = zng_inflateInit(&zLibDecompressJob);
 	if (initErr != Z_OK)
 	{
-		inflateEnd(&zLibDecompressJob);
+		zng_inflateEnd(&zLibDecompressJob);
 		return { ResultType::CorruptFileData, "During PNG decompression, zLib failed to initialize the decompression job." };
 	}
 
@@ -1158,11 +1158,11 @@ static Texas::Result Texas::detail::PNG::decompressIdatChunks_Stream(
 		zLibDecompressJob.next_in = reinterpret_cast<Bytef*>(workingMem.data());
 		zLibDecompressJob.avail_in = static_cast<uInt>(chunkDataLength);
 
-		int const zLibError = inflate(&zLibDecompressJob, 0);
+		int const zLibError = zng_inflate(&zLibDecompressJob, 0);
 		if (zLibError == Z_STREAM_END)
 		{
 			// No more IDAT chunks to decompress
-			inflateEnd(&zLibDecompressJob);
+			zng_inflateEnd(&zLibDecompressJob);
 			break;
 		}
 		else if (zLibError == Z_OK)

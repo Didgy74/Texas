@@ -1,17 +1,18 @@
-cmake_minimum_required(VERSION 3.10)
-
-# -----------------------
-# Project-wide configuration
-# -----------------------
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
+cmake_minimum_required(VERSION 3.20)
 
 # -----------------------
 # Project 'Texas'
 # -----------------------
 
-project(Texas)
+project(Texas LANGUAGES CXX)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	set(TEXAS_IS_ROOT_PROJECT TRUE)
+else()
+	set(TEXAS_IS_ROOT_PROJECT FALSE)
+endif()
+set(BUILD_SHARED_LIBS FALSE)
+
+include(FetchContent)
 
 # -----------------------
 # Target 'Texas'
@@ -29,9 +30,9 @@ add_library(Texas STATIC
 	"src/GLTools.cpp"
 	"src/VkTools.cpp")
 
-target_include_directories(Texas
-	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_features(Texas PUBLIC cxx_std_23)
+
+target_include_directories(Texas PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # -----------------------
 # Options for 'Texas'
@@ -82,7 +83,7 @@ if (TEXAS_ENABLE_PNG_READ)
 	target_sources(Texas
 		PRIVATE
 			"src/PNG_Read.cpp")
-	set(TEXAS_USE_ZLIB ON)
+	set(TEXAS_USE_ZLIBNG ON)
 endif()
 
 option(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS "Enables new loading paths that use dynamic allocations." ON)
@@ -92,27 +93,32 @@ if(TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 			TEXAS_ENABLE_DYNAMIC_ALLOCATIONS)
 endif()
 
-if(TEXAS_USE_ZLIB)
-	if(ANDROID)
-		set(MINGW OFF)
-		set(UNIX ON)
+if(TEXAS_USE_ZLIBNG)
+	set(ZLIB_ENABLE_TESTS OFF)
+	set(ZLIBNG_ENABLE_TESTS OFF)
+	set(WITH_GTEST OFF)
+	FetchContent_Declare(
+		zlibng
+		GIT_REPOSITORY https://github.com/zlib-ng/zlib-ng.git
+		GIT_TAG        2.1.3
+	)
+	FetchContent_MakeAvailable(zlibng)
+	if (NOT TARGET zlibstatic)
+		message(FATAL_ERROR "zlib-ng target does not exist")
 	endif()
-	add_subdirectory("external/zlib" "zlib")
-	if(ANDROID)
-		set(UNIX OFF)
-		set(MINGW ON)
-	endif()
-	target_include_directories(Texas
-		PRIVATE
-			"external/zlib"
-			"${CMAKE_CURRENT_BINARY_DIR}/zlib")
-	target_link_libraries(Texas
-		PRIVATE
-			zlibstatic)
+	target_link_libraries(Texas PUBLIC zlibstatic)
+	# zlibng has issues with FetchContent style, this makes it work.
+	target_include_directories(Texas PUBLIC ${zlibng_BINARY_DIR})
 endif()
 
 
-option(TEXAS_BUILD_TESTS "Build test executables." ON)
+# Set the default value for build-test option
+if(TEXAS_IS_ROOT_PROJECT)
+	set(TEXAS_BUILD_TESTS_DEFAULT ON)
+else()
+	set(TEXAS_BUILD_TESTS_DEFAULT OFF)
+endif()
+option(TEXAS_BUILD_TESTS "Build test executables." ${TEXAS_BUILD_TESTS_DEFAULT})
 if (TEXAS_BUILD_TESTS)
 	add_executable(compiletest
 		"tests/compiletest.cpp")
