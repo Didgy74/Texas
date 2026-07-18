@@ -97,18 +97,18 @@ if(TEXAS_USE_ZLIBNG)
 	set(ZLIB_ENABLE_TESTS OFF)
 	set(ZLIBNG_ENABLE_TESTS OFF)
 	set(WITH_GTEST OFF)
+	set(ZLIB_ALIASES OFF)
+	set(ZLIB_COMPAT OFF)
 	FetchContent_Declare(
 		zlibng
 		GIT_REPOSITORY https://github.com/zlib-ng/zlib-ng.git
-		GIT_TAG        2.1.3
+		GIT_TAG        2.3.3
 	)
 	FetchContent_MakeAvailable(zlibng)
-	if (NOT TARGET zlibstatic)
-		message(FATAL_ERROR "zlib-ng target does not exist")
+	if (NOT TARGET zlib-ng-static)
+		message(FATAL_ERROR "static target does not exist")
 	endif()
-	target_link_libraries(Texas PUBLIC zlibstatic)
-	# zlibng has issues with FetchContent style, this makes it work.
-	target_include_directories(Texas PUBLIC ${zlibng_BINARY_DIR})
+	target_link_libraries(Texas PUBLIC zlib-ng-static)
 endif()
 
 

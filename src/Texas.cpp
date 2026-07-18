@@ -290,13 +290,6 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromStrea
 
 	std::uint64_t const dstBufferSize = fileInfo.memoryRequired();
 
-	// Test that the system can hold the size of the image-data.
-	if constexpr (detail::maxValue<std::uint64_t>() > detail::maxValue<std::size_t>())
-	{
-		if (dstBufferSize > detail::maxValue<std::size_t>())
-			return { ResultType::FileNotSupported, "Image requires more memory than the system can possibly allocate." };
-	}
-
 	// Allocate destination buffer
 	if (allocator != nullptr)
 	{
@@ -321,12 +314,6 @@ Texas::ResultValue<Texas::Texture> Texas::detail::PrivateAccessor::loadFromStrea
 	// Allocate working memory if needed
 	std::byte* workingMem = nullptr;
 	std::uint64_t workingMemSize = fileInfo.workingMemoryRequired();
-	if constexpr (detail::maxValue<std::uint64_t>() > detail::maxValue<std::size_t>())
-	{
-		if (workingMemSize > detail::maxValue<std::size_t>())
-			return { ResultType::FileNotSupported,
-							 "Texture requires more working memory than the system can possibly allocate." };
-	}
 	if (workingMemSize > 0)
 	{
 		if (allocator != nullptr)
